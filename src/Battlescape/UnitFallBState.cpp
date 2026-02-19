@@ -194,10 +194,19 @@ void UnitFallBState::think()
 				Position offset;
 				Pathfinding::directionToVector(dir, &offset);
 
+				_parent->getSave()->getPathfinding()->setUnit(unitBelow); //TODO: remove as was done by `getTUCost`
+				PathfindingStep r = _parent->getSave()->getPathfinding()->getTUCost(unitBelow->getPosition(), dir, unitBelow, 0, BAM_NORMAL);
+				if (r.cost.time == Pathfinding::INVALID_MOVE_COST)
+				{
+					// can't move this way, try another direction
+					continue;
+				}
+
 				for (auto bsIt = bodySections.begin(); bsIt < bodySections.end(); )
 				{
 					Position originalPosition = (*bsIt);
 					Position endPosition = originalPosition + offset;
+
 					Tile *t = _parent->getSave()->getTile(endPosition);
 					if (t == nullptr)
 					{
@@ -208,14 +217,10 @@ void UnitFallBState::think()
 					bool aboutToBeOccupiedFromAbove = std::find(tilesToFallInto.begin(), tilesToFallInto.end(), t) != tilesToFallInto.end();
 					bool alreadyTaken = std::find(escapeTiles.begin(), escapeTiles.end(), t) != escapeTiles.end();
 					bool alreadyOccupied = t->getUnit() && (t->getUnit() != unitBelow);
-					_parent->getSave()->getPathfinding()->setUnit(unitBelow); //TODO: remove as was done by `getTUCost`
-					PathfindingStep r = _parent->getSave()->getPathfinding()->getTUCost(originalPosition, dir, unitBelow, 0, BAM_NORMAL);
-					bool movementBlocked = r.cost.time == Pathfinding::INVALID_MOVE_COST;
-					endPosition = r.pos;
 					bool hasFloor = !t->hasNoFloor(_parent->getSave());
 					bool unitCanFly = unitBelow->getMovementType() == MT_FLY;
 
-					bool canMoveToTile = !alreadyOccupied && !alreadyTaken && !aboutToBeOccupiedFromAbove && !movementBlocked && (hasFloor || unitCanFly);
+					bool canMoveToTile = !alreadyOccupied && !alreadyTaken && !aboutToBeOccupiedFromAbove && (hasFloor || unitCanFly);
 					if (canMoveToTile)
 					{
 						// Check next section of the unit.
@@ -251,7 +256,7 @@ void UnitFallBState::think()
 			}
 			if (!escapeFound)
 			{
-				// STOMP THAT GOOMBAH!
+				// STOMP THAT GOOMBA!
 				unitBelow->knockOut(_parent);
 				ubIt = unitsToMove.erase(ubIt);
 			}
