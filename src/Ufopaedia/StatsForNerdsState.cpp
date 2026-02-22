@@ -3773,6 +3773,7 @@ void StatsForNerdsState::initUfoList()
 		addInteger(ss, ufoRule->getSoftlockThreshold(), "softlockThreshold", 100);
 		addSingleString(ss, ufoRule->getHitImage(), "hitImage");
 		addInteger(ss, ufoRule->getMissilePower(), "missilePower");
+		addInteger(ss, ufoRule->getMissileStopChance(), "missileStopChance");
 		addBoolean(ss, ufoRule->isUnmanned(), "unmanned");
 		addBoolean(ss, ufoRule->isInstaHyper(), "instaHyper");
 		addBoolean(ss, ufoRule->isNoAlert(), "noAlert");
