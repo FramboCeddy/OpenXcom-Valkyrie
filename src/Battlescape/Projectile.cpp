@@ -214,11 +214,9 @@ int Projectile::calculateThrow(double accuracy)
 	Tile *targetTile = _save->getTile(_action.target);
 
 	Position originVoxel = _save->getTileEngine()->getOriginVoxel(_action, 0);
-	Position targetVoxel;
+	Position targetVoxel = _action.target.toVoxel() + Position(8, 8, (1 + -targetTile->getTerrainLevel()));
 	std::vector<Position> targets;
-	double curvature;
-	targetVoxel = _action.target.toVoxel() + Position(8,8, (1 + -targetTile->getTerrainLevel()));
-	targets.clear();
+	targets.reserve(4);
 	bool forced = false;
 
 	if (_action.type == BA_THROW)
@@ -230,7 +228,7 @@ int Projectile::calculateThrow(double accuracy)
 		BattleUnit *tu = targetTile->getOverlappingUnit(_save);
 		if (Options::forceFire && _save->isCtrlPressed(true) && _save->getSide() == FACTION_PLAYER)
 		{
-			targets.push_back(_action.target.toVoxel() + Position(0, 0, 12));
+			targets.push_back(_action.target.toVoxel() + Position(8, 8, 12));
 			forced = true;
 		}
 		else if (tu && ((_action.actor->getFaction() != FACTION_PLAYER) ||
@@ -272,6 +270,7 @@ int Projectile::calculateThrow(double accuracy)
 	}
 
 	_distance = 0.0f;
+	double curvature;
 	int test = V_OUTOFBOUNDS;
 	for (const auto& pos : targets)
 	{
