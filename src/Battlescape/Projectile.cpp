@@ -330,13 +330,13 @@ int Projectile::calculateThrow(double accuracy)
  */
 void Projectile::applyAccuracy(Position origin, Position *target, double accuracy, bool keepRange, bool extendLine)
 {
-	int xdiff = origin.x - target->x;
-	int ydiff = origin.y - target->y;
-	int zdiff = origin.z - target->z;
-	double realDistance = sqrt((double)(xdiff*xdiff)+(double)(ydiff*ydiff)+(double)(zdiff*zdiff));
+	int xDist = abs(origin.x - target->x);
+	int yDist = abs(origin.y - target->y);
+	int zDist = abs(origin.z - target->z);
+	double realDistance = sqrt((xDist * xDist) + (yDist * yDist) + (zDist * zDist));
 	// maxRange is the maximum range a projectile shall ever travel in voxel space
-	double maxRange = keepRange?realDistance:16*1000; // 1000 tiles
-	maxRange = _action.type == BA_HIT?46:maxRange; // up to 2 tiles diagonally (as in the case of reaper v reaper)
+	// up to 2 tiles diagonally for melee hits (like reaper v reaper)			// 1000 tiles
+	double maxRange = (_action.type == BA_HIT) ? 46 : keepRange ? realDistance : 16 * 1000; 
 
 	if (_action.type != BA_HIT)
 	{
@@ -344,63 +344,69 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 		int dropoff = _action.weapon->getRules()->calculateLimits(upperLimit, lowerLimit, _save->getDepth(), _action.type);
 
 		double distance = realDistance / 16; // distance in tiles, but still fractional
-		double accuracyLoss = 0.0;
 		if (distance > upperLimit)
 		{
-			accuracyLoss = (dropoff * (distance - upperLimit)) / 100;
+			double accuracyLoss = (dropoff * (distance - upperLimit)) / 100;
+			accuracy = std::max(0.0, accuracy - accuracyLoss);
 		}
 		else if (distance < lowerLimit)
 		{
-			accuracyLoss = (dropoff * (lowerLimit - distance)) / 100;
+			double accuracyLoss = (dropoff * (lowerLimit - distance)) / 100;
+			accuracy = std::max(0.0, accuracy - accuracyLoss);
 		}
-		accuracy = std::max(0.0, accuracy - accuracyLoss);
 	}
 
-	int xDist = abs(origin.x - target->x);
-	int yDist = abs(origin.y - target->y);
-	int zDist = abs(origin.z - target->z);
 	int xyShift, zShift;
 
 	if (Options::oxceUniformShootingSpread) // Uniform shooting spread
 	{
 		if (xDist <= yDist)
+		{
 			xyShift = xDist / 4 + yDist;
+		}
 		else
+		{
 			xyShift = xDist + yDist / 4;
-
+		}
 		xyShift *= 0.839; // Constant to match average xyShift to vanilla
 	}
 	else
 	{
 		if (xDist / 2 <= yDist)				//yes, we need to add some x/y non-uniformity
+		{                                
 			xyShift = xDist / 4 + yDist;	//and don't ask why, please. it's The Commandment
+		}
 		else
-			xyShift = (xDist + yDist) / 2;	//that's uniform part of spreading
+		{
+			xyShift = (xDist + yDist) / 2; // that's uniform part of spreading
+		}
 	}
 
-	if (xyShift <= zDist)				//slight z deviation
+	if (xyShift <= zDist) // slight z deviation
+	{
 		zShift = xyShift / 2 + zDist;
+	}
 	else
+	{
 		zShift = xyShift + zDist / 2;
+	}
 
 	// Apply penalty for having no LOS to target
 	int noLOSAccuracyPenalty = _action.weapon->getRules()->getNoLOSAccuracyPenalty(_mod);
 	if (noLOSAccuracyPenalty != -1)
 	{
-		Tile *t = _save->getTile(target->toTile());
-		if (t)
+		Tile *tile = _save->getTile(target->toTile());
+		if (tile)
 		{
 			bool hasLOS = false;
-			BattleUnit *bu = _action.actor;
-			BattleUnit *targetUnit = t->getUnit(); // we can call TileEngine::visible() only if the target unit is on the same tile
-
-			if (targetUnit)
+			// we can call TileEngine::visible() only if the target unit is on the same tile
+			if (tile->getUnit())
 			{
-				hasLOS = _save->getTileEngine()->visible(bu, t);
+				hasLOS = _save->getTileEngine()->visible(_action.actor, tile);
 			}
 			else
 			{
-				hasLOS = _save->getTileEngine()->isTileInLOS(&_action, t, false);
+				hasLOS = _save->getTileEngine()->isTileInLOS(&_action, tile, false);
 			}
 
 			if (!hasLOS)
@@ -413,67 +419,51 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	int deviation = RNG::generate(0, 100) - (accuracy * 100);
 
 	if (deviation >= 0)
-		deviation += 50;				// add extra spread to "miss" cloud
-	else
-		deviation += 10;				//accuracy of 109 or greater will become 1 (tightest spread)
-
-	deviation = std::max(1, zShift * deviation / 200);	//range ratio
-
-	if (Options::oxceUniformShootingSpread)
 	{
-		// First, new target point is rolled as usual. Then, if it lies outside of outer circle (in square's corner)
-		// it's rerolled inside inner circle
+		deviation += 50; // add extra spread to "miss" cloud
+	}
+	else
+	{
+		deviation += 10; // accuracy of 110 or greater will become 0 (no spread)
+	}
 
-		const double SECONDARY_SPREAD_COEFF = 0.85; // Inner spread circle diameter compared to outer
+	deviation = std::max(0, zShift * deviation / 200); // range ratio
 
-		bool resultShifted = false;
-		int dX, dY;
-
-		for (int i = 0; i < 10; ++i) // Break from this cycle when proper target is found
+	if (deviation) // deviation 0 is exact shot to original target voxel
+	{
+		if (Options::oxceUniformShootingSpread)
 		{
-			dX = RNG::generate(0, deviation) - deviation / 2;
-			dY = RNG::generate(0, deviation) - deviation / 2;
-
-			int radiusSq = dX*dX + dY*dY;
-			int deviateRadius = deviation / 2;
-			int deviateRadiusSq = deviateRadius * deviateRadius;
-
-			if (radiusSq <= deviateRadiusSq) break;  // If we inside of the spread circle - we're done!
-
-			if (!resultShifted)
+			int deviateRadiusSq = deviation * deviation / 4; // deviation is the diameter
+			int radiusSq, dX, dY;
+			do // use rejection sampling to only select offsets inside a circle
 			{
-				resultShifted = true;
-				deviation *= SECONDARY_SPREAD_COEFF; // Change spread radius for second+ attempts
-			}
+				dX = RNG::generate(0, deviation) - deviation / 2;
+				dY = RNG::generate(0, deviation) - deviation / 2;
+				radiusSq = dX * dX + dY * dY;
+			} while (radiusSq > deviateRadiusSq); // 78.5% chance that a random point in square is also in inscribed circle -> 99% certainty after 3 iterations
+			target->x += dX;
+			target->y += dY;
+		}
+		else // Classic shooting spread
+		{
+			target->x += RNG::generate(0, deviation) - deviation / 2;
+			target->y += RNG::generate(0, deviation) - deviation / 2;
 		}
 
-		target->x += dX;
-		target->y += dY;
+		target->z += RNG::generate(0, deviation / 2) / 2 - deviation / 8;
 	}
-
-	else // Classic shooting spread
-	{
-		target->x += RNG::generate(0, deviation) - deviation / 2;
-		target->y += RNG::generate(0, deviation) - deviation / 2;
-	}
-
-	target->z += RNG::generate(0, deviation / 2) / 2 - deviation / 8;
 
 	if (extendLine)
 	{
 		double rotation, tilt;
-		rotation = atan2(double(target->y - origin.y), double(target->x - origin.x)) * 180 / M_PI;
+		rotation = atan2(double(target->y - origin.y), double(target->x - origin.x));
 		tilt = atan2(double(target->z - origin.z),
-			sqrt(double(target->x - origin.x)*double(target->x - origin.x)+double(target->y - origin.y)*double(target->y - origin.y))) * 180 / M_PI;
+			sqrt((target->x - origin.x) * (target->x - origin.x) + (target->y - origin.y) * (target->y - origin.y)));
 		// calculate new target
 		// this new target can be very far out of the map, but we don't care about that right now
-		double cos_fi = cos(Deg2Rad(tilt));
-		double sin_fi = sin(Deg2Rad(tilt));
-		double cos_te = cos(Deg2Rad(rotation));
-		double sin_te = sin(Deg2Rad(rotation));
-		target->x = (int)(origin.x + maxRange * cos_te * cos_fi);
-		target->y = (int)(origin.y + maxRange * sin_te * cos_fi);
-		target->z = (int)(origin.z + maxRange * sin_fi);
+		target->x = (int)(origin.x + maxRange * cos(rotation) * cos(tilt));
+		target->y = (int)(origin.y + maxRange * sin(rotation) * cos(tilt));
+		target->z = (int)(origin.z + maxRange * sin(tilt));
 	}
 }
 
