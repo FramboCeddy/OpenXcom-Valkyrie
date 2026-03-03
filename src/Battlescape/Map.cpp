@@ -886,6 +886,7 @@ void Map::drawTerrain(Surface *surface)
 	if (!_waypoints.empty() || (pathfinderTurnedOn && (_previewSettingTu || _previewSettingEnergy)))
 	{
 		_numWaypid = new NumberText(15, 15, 20, 30);
+		_numWaypid->setBordered(true);
 		_numWaypid->setPalette(getPalette());
 		_numWaypid->setColor(pathfinderTurnedOn ? _messageColor + 1 : Palette::blockOffset(1));
 	}
@@ -1564,34 +1565,35 @@ void Map::drawTerrain(Surface *surface)
 					}
 
 					// Draw waypoints if any on this tile
-					int waypid = 1;
+					int waypid = 0;
 					int waypXOff = 2;
 					int waypYOff = 2;
 
 					for (const auto& waypoint : _waypoints)
 					{
-						if (waypoint == mapPosition)
-						{
-							if (waypXOff == 2 && waypYOff == 2)
-							{
-								tmpSurface = _game->getMod()->getSurfaceSet("CURSOR.PCK")->getFrame(7);
-								Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y, 0);
-							}
-							if (_save->getBattleGame()->getCurrentAction()->type == BA_LAUNCH || _save->getBattleGame()->getCurrentAction()->sprayTargeting)
-							{
-								_numWaypid->setValue(waypid);
-								_numWaypid->draw();
-								_numWaypid->blitNShade(surface, screenPosition.x + waypXOff, screenPosition.y + waypYOff, 0);
-
-								waypXOff += waypid > 9 ? 8 : 6;
-								if (waypXOff >= 26)
-								{
-									waypXOff = 2;
-									waypYOff += 8;
-								}
-							}
-						}
 						waypid++;
+						if (waypoint != mapPosition)
+						{
+							continue;
+						}
+                        if (waypXOff == 2 && waypYOff == 2)
+                        {
+                            tmpSurface = _game->getMod()->getSurfaceSet("CURSOR.PCK")->getFrame(7);
+                            Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y, 0);
+                        }
+                        if (_save->getBattleGame()->getCurrentAction()->type == BA_LAUNCH || _save->getBattleGame()->getCurrentAction()->sprayTargeting)
+                        {
+                            _numWaypid->setValue(waypid);
+                            _numWaypid->draw();
+                            _numWaypid->blitNShade(surface, screenPosition.x + waypXOff, screenPosition.y + waypYOff, 0);
+
+                            waypXOff += waypid > 9 ? 10 : 6;
+                            if (waypXOff >= 26)
+                            {
+                                waypXOff = 2;
+                                waypYOff += 8;
+                            }
+                        }
 					}
 				}
 			}
@@ -1599,15 +1601,11 @@ void Map::drawTerrain(Surface *surface)
 	}
 	if (pathfinderTurnedOn)
 	{
-		if (_numWaypid)
-		{
-			_numWaypid->setBordered(true); // give it a border for the pathfinding display, makes it more visible on snow, etc.
-		}
 		for (int itZ = beginZ; itZ <= endZ; itZ++)
 		{
-			for (int itX = beginX; itX <= endX; itX++)
+			for (int itY = beginY; itY <= endY; itY++)
 			{
-				for (int itY = beginY; itY <= endY; itY++)
+				for (int itX = beginX; itX <= endX; itX++)
 				{
 					mapPosition = Position(itX, itY, itZ);
 					_camera->convertMapToScreen(mapPosition, &screenPosition);
@@ -1686,10 +1684,6 @@ void Map::drawTerrain(Surface *surface)
 					}
 				}
 			}
-		}
-		if (_numWaypid)
-		{
-			_numWaypid->setBordered(false); // make sure we remove the border in case it's being used for missile waypoints.
 		}
 	}
 
