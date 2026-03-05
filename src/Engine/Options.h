@@ -82,9 +82,9 @@ namespace Options
 	void createOptionsOXCE();
 	void createAdvancedOptionsOXCE();
 	void createControlsOXCE();
-	void createOptionsOTHER();
-	void createAdvancedOptionsOTHER();
-	void createControlsOTHER();
+	void createOptionsVALK();
+	void createAdvancedOptionsVALK();
+	void createControlsVALK();
 	/// Restores default options.
 	void resetDefault(bool includeMods);
 	/// Initializes the options settings.

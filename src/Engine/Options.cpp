@@ -63,7 +63,10 @@ bool _loadLastSaveExpended = false;
  */
 void create()
 {
-	if (!_info.empty()) { _info.clear(); }
+	if (!_info.empty())
+	{
+		_info.clear();
+	}
 
 	////////////////////////////////////////////////////////////
 	//					OXC - OpenXcom
@@ -82,12 +85,12 @@ void create()
 	createControlsOXCE();
 
 	////////////////////////////////////////////////////////////
-	//					OTHER - your fork name here
+	//					VALKYRIE - Fork by FramboCeddy
 	////////////////////////////////////////////////////////////
 
-	createOptionsOTHER();
-	createAdvancedOptionsOTHER();
-	createControlsOTHER();
+	createOptionsVALK();
+	createAdvancedOptionsVALK();
+	createControlsVALK();
 }
 
 void createOptionsOXC()
@@ -566,17 +569,17 @@ void createControlsOXCE()
 	_info.push_back(OptionInfo(OPTION_OXCE, "keySelectMusicTrack", &keySelectMusicTrack, SDLK_END, "STR_SELECT_MUSIC_TRACK", "STR_BATTLESCAPE"));
 }
 
-void createOptionsOTHER()
+void createOptionsVALK()
 {
 	// your fork's hidden options here
 }
 
-void createAdvancedOptionsOTHER()
+void createAdvancedOptionsVALK()
 {
-	// your fork's advanced options here
+	_info.push_back(OptionInfo(OPTION_VALK, "visualSmokeDensity", &visualSmokeDensity, false, "STR_VISUAL_SMOKE_DENSITY", "STR_BATTLESCAPE"));
 }
 
-void createControlsOTHER()
+void createControlsVALK()
 {
 	// your fork's controls here
 }

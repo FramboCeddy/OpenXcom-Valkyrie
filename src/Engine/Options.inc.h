@@ -183,3 +183,7 @@ OPT SoundFormat currentSound;
 
 OPT int battleXcomSpeedOrig;
 OPT int battleAlienSpeedOrig;
+
+
+// OpenXcom Valkyrie
+OPT bool visualSmokeDensity;

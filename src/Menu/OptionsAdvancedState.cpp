@@ -45,7 +45,7 @@ OptionsAdvancedState::OptionsAdvancedState(OptionsOrigin origin) : OptionsBaseSt
 	// Create objects
 	_btnOXC = new TextButton(70, 16, 94, 8);
 	_btnOXCE = new TextButton(70, 16, 168, 8);
-	_btnOTHER = new TextButton(70, 16, 242, 8);
+	_btnVALK = new TextButton(70, 16, 242, 8);
 	_lstOptions = new TextList(200, 120, 94, 26);
 
 	_owner = _btnOXC;
@@ -65,7 +65,7 @@ OptionsAdvancedState::OptionsAdvancedState(OptionsOrigin origin) : OptionsBaseSt
 
 	add(_btnOXC, "button", "advancedMenu");
 	add(_btnOXCE, "button", "advancedMenu");
-	add(_btnOTHER, "button", "advancedMenu");
+	add(_btnVALK, "button", "advancedMenu");
 
 	if (origin != OPT_BATTLESCAPE)
 	{
@@ -88,10 +88,10 @@ OptionsAdvancedState::OptionsAdvancedState(OptionsOrigin origin) : OptionsBaseSt
 	_btnOXCE->setGroup(&_owner);
 	_btnOXCE->onMousePress((ActionHandler)&OptionsAdvancedState::btnGroupPress, SDL_BUTTON_LEFT);
 
-	_btnOTHER->setText(tr("STR_ENGINE_OTHER")); // rename in your fork
-	_btnOTHER->setGroup(&_owner);
-	_btnOTHER->onMousePress((ActionHandler)&OptionsAdvancedState::btnGroupPress, SDL_BUTTON_LEFT);
-	_btnOTHER->setVisible(false); // enable in your fork
+	_btnVALK->setText(tr("STR_ENGINE_VALK"));
+	_btnVALK->setGroup(&_owner);
+	_btnVALK->onMousePress((ActionHandler)&OptionsAdvancedState::btnGroupPress, SDL_BUTTON_LEFT);
+	_btnVALK->setVisible(true);
 
 	// how much room do we need for YES/NO
 	Text text = Text(100, 9, 0, 0);
@@ -167,7 +167,7 @@ void OptionsAdvancedState::init()
  */
 void OptionsAdvancedState::updateList()
 {
-	OptionOwner idx = _owner == _btnOXC ? OPTION_OXC : _owner == _btnOXCE ? OPTION_OXCE : OPTION_OTHER;
+	OptionOwner idx = _owner == _btnOXC ? OPTION_OXC : _owner == _btnOXCE ? OPTION_OXCE : OPTION_VALK;
 
 	_offsetGeneralMin = -1;
 	_offsetGeneralMax = -1;
@@ -279,7 +279,7 @@ void OptionsAdvancedState::addSettings(const std::vector<OptionInfo> &settings)
 OptionInfo *OptionsAdvancedState::getSetting(size_t sel)
 {
 	int selInt = sel;
-	OptionOwner idx = _owner == _btnOXC ? OPTION_OXC : _owner == _btnOXCE ? OPTION_OXCE : OPTION_OTHER;
+	OptionOwner idx = _owner == _btnOXC ? OPTION_OXC : _owner == _btnOXCE ? OPTION_OXCE : OPTION_VALK;
 
 	if (selInt > _offsetGeneralMin && selInt <= _offsetGeneralMax)
 	{
