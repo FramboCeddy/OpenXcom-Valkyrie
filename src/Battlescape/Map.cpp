@@ -52,6 +52,8 @@
 #include "../Interface/NumberText.h"
 #include "../Interface/Text.h"
 #include "../fmath.h"
+#include "../Engine/Options.h"
+#include "../Mod/RuleDamageType.h"
 
 
 /*
@@ -111,17 +113,7 @@ Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) 
 	_unitDying(false), _smoothingEngaged(false), _flashScreen(false), _bgColor(15), _projectileSet(0), _showObstacles(false), _showInfoOnCursor(false)
 {
 	// TODO: extract to a better place later
-	for (const auto& pair : Options::mods)
-	{
-		if (pair.second)
-		{
-			if (pair.first == "xcom2")
-			{
-				_isTFTD = true;
-				break;
-			}
-		}
-	}
+	_isTFTD = Options::getActiveMaster() == "xcom2" ? true : false;
 
 	_iconHeight = _game->getMod()->getInterface("battlescape")->getElement("icons")->h;
 	_iconWidth = _game->getMod()->getInterface("battlescape")->getElement("icons")->w;
@@ -1473,49 +1465,39 @@ void Map::drawTerrain(Surface *surface)
 									// step 3: calculate and draw
 									if (rule && _cacheActiveWeaponUfopediaArticleUnlocked == 1)
 									{
-										if (rule->getBattleType() == BT_PSIAMP)
+										if (action->type != BA_THROW && rule->getBattleType() == BT_PSIAMP)
 										{
-											float attackStrength = BattleUnit::getPsiAccuracy(attack);
-											float defenseStrength = 30.0f; // indicator ignores: +victim->getArmor()->getPsiDefence(victim);
+											int attackStrength = BattleUnit::getPsiAccuracy(attack);
+											int defenseStrength = 30; // indicator ignores: +victim->getArmor()->getPsiDefence(victim);
 
 											float dis = Position::distance(action->actor->getPosition().toVoxel(), Position(itX, itY, itZ).toVoxel());
 											int min = attackStrength - defenseStrength - rule->getPsiAccuracyRangeReduction(dis);
 											int max = min + 55;
-											if (max <= 0)
-											{
-												ss << "0%";
-											}
-											else
-											{
-												ss << min << "-" << max << "%";
-											}
+											ss << min << "<>" << max;
 										}
-										if (rule->getBattleType() != BT_PSIAMP || action->type == BA_USE)
+										if ((action->type != BA_THROW && (rule->getBattleType() != BT_PSIAMP || action->type == BA_USE)) ||
+											(action->type == BA_THROW && (rule->getBattleType() == BT_GRENADE || rule->getBattleType() == BT_PROXIMITYGRENADE)))
 										{
-											int totalDamage = 0;
-											if (weapon->getIgnoreAmmoPower())
-											{
-												totalDamage += weapon->getPowerBonus(attack);
-												totalDamage -= weapon->getPowerRangeReduction(distance * 16);
-											}
-											else
-											{
-												totalDamage += rule->getPowerBonus(attack);
-												totalDamage -= rule->getPowerRangeReduction(distance * 16);
-											}
-											if (totalDamage < 0) totalDamage = 0;
 											if (_cursorType != CT_WAYPOINT)
+											{
 												ss << "\n";
+											}
+											int totalDamage = weapon->getIgnoreAmmoPower() ?
+															  weapon->getPowerBonus(attack) - weapon->getPowerRangeReduction(distance * 16) :
+															  rule->getPowerBonus(attack) - rule->getPowerRangeReduction(distance * 16);
+											totalDamage = std::max(0, totalDamage); // TODO: make grenade show damage only if primed
 											ss << rule->getDamageType()->getRandomDamage(totalDamage, 1);
-											ss << "-";
+											ss << "<>";
 											ss << rule->getDamageType()->getRandomDamage(totalDamage, 2);
 											if (rule->getDamageType()->RandomType == DRT_UFO_WITH_TWO_DICE)
+											{
 												ss << "*";
+											}
 										}
 									}
 									else
 									{
-										ss << "\n?-?";
+										ss << "\n?<>?";
 									}
 								}
 
@@ -1573,18 +1555,19 @@ void Map::drawTerrain(Surface *surface)
                             tmpSurface = _game->getMod()->getSurfaceSet("CURSOR.PCK")->getFrame(7);
                             Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y, 0);
                         }
-                        if (_save->getBattleGame()->getCurrentAction()->type == BA_LAUNCH || _save->getBattleGame()->getCurrentAction()->sprayTargeting)
-                        {
-                            _numWaypid->setValue(waypid);
-                            _numWaypid->draw();
-                            _numWaypid->blitNShade(surface, screenPosition.x + waypXOff, screenPosition.y + waypYOff, 0);
+						if (_save->getBattleGame()->getCurrentAction()->type != BA_LAUNCH && !_save->getBattleGame()->getCurrentAction()->sprayTargeting)
+						{
+							continue;
+						}
+                        _numWaypid->setValue(waypid);
+                        _numWaypid->draw();
+                        _numWaypid->blitNShade(surface, screenPosition.x + waypXOff, screenPosition.y + waypYOff, 0);
 
-                            waypXOff += waypid > 9 ? 10 : 6;
-                            if (waypXOff >= 26)
-                            {
-                                waypXOff = 2;
-                                waypYOff += 8;
-                            }
+                        waypXOff += waypid > 9 ? 10 : 6;
+                        if (waypXOff >= 26)
+                        {
+                            waypXOff = 2;
+                            waypYOff += 8;
                         }
 					}
 				}

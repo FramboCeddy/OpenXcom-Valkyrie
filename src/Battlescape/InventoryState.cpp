@@ -60,6 +60,7 @@
 #include "TileEngine.h"
 #include "../Mod/RuleInterface.h"
 #include "../Ufopaedia/Ufopaedia.h"
+#include "../Mod/RuleDamageType.h"
 
 namespace OpenXcom
 {
@@ -1862,20 +1863,23 @@ void InventoryState::calculateCurrentDamageTooltip()
 			int totalDamage = 0;
 			if (weaponRule->getIgnoreAmmoPower())
 			{
-				totalDamage += weaponRule->getPowerBonus({ BA_NONE, currentUnit, _currentDamageTooltipItem, damageItem });
+				totalDamage = weaponRule->getPowerBonus({ BA_NONE, currentUnit, _currentDamageTooltipItem, damageItem });
 			}
 			else
 			{
-				totalDamage += rule->getPowerBonus({ BA_NONE, currentUnit, _currentDamageTooltipItem, damageItem }); //TODO: find what exactly attack we can do
+				totalDamage = rule->getPowerBonus({ BA_NONE, currentUnit, _currentDamageTooltipItem, damageItem }); //TODO: find what exactly attack we can do
 			}
 			//totalDamage -= rule->getPowerRangeReduction(distance * 16);
-			if (totalDamage < 0) totalDamage = 0;
+			if (totalDamage < 0)
+			{
+				totalDamage = 0;
+			}
 			std::ostringstream ss;
-			ss << rule->getDamageType()->getRandomDamage(totalDamage, 1);
-			ss << "-";
-			ss << rule->getDamageType()->getRandomDamage(totalDamage, 2);
+			ss << rule->getDamageType()->getRandomDamage(totalDamage, 1) << "<>" << rule->getDamageType()->getRandomDamage(totalDamage, 2);
 			if (rule->getDamageType()->RandomType == DRT_UFO_WITH_TWO_DICE)
+			{
 				ss << "*";
+			}
 			_currentDamageTooltip = tr("STR_DAMAGE_UC_").arg(ss.str());
 		}
 	}
