@@ -117,15 +117,7 @@ int Projectile::calculateTrajectory(double accuracy, const Position& originVoxel
 	BattleUnit *bu = _action.actor;
 
 	_distance = 0.0f;
-	int test;
-	if (excludeUnit)
-	{
-		test = _save->getTileEngine()->calculateLineVoxel(originVoxel, _targetVoxel, false, &_trajectory, bu);
-	}
-	else
-	{
-		test = _save->getTileEngine()->calculateLineVoxel(originVoxel, _targetVoxel, false, &_trajectory, nullptr);
-	}
+	VoxelType test = _save->getTileEngine()->calculateLineVoxel(originVoxel, _targetVoxel, false, &_trajectory, excludeUnit ? bu : nullptr);
 
 	if (test != V_EMPTY &&
 		!_trajectory.empty() &&
@@ -139,7 +131,7 @@ int Projectile::calculateTrajectory(double accuracy, const Position& originVoxel
 		Position hitPos = _trajectory.at(0).toTile();
 		if (test == V_UNIT && _save->getTile(hitPos) && _save->getTile(hitPos)->getUnit() == 0) //no unit? must be lower
 		{
-			hitPos = Position(hitPos.x, hitPos.y, hitPos.z-1);
+			hitPos.z -= 1;
 		}
 
 		if (hitPos != _action.target && _action.result.empty())

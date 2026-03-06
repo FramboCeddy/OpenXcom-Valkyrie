@@ -1231,7 +1231,7 @@ int BattleUnit::getDiagonalWalkingPhase() const
  */
 void BattleUnit::lookAt(Position point, bool turret)
 {
-	int dir = directionTo (point);
+	int dir = directionTo(point);
 
 	if (turret)
 	{
@@ -1433,8 +1433,11 @@ void BattleUnit::aim(bool aiming)
  * Returns the direction from this unit to a given point.
  * 0 <-> y = -1, x = 0
  * 1 <-> y = -1, x = 1
+ * 2 <-> y = 0, x = 1
  * 3 <-> y = 1, x = 1
+ * 4 <-> y = 1, x = 0
  * 5 <-> y = 1, x = -1
+ * 6 <-> y = 0, x = -1
  * 7 <-> y = -1, x = -1
  * @param point given position.
  * @return direction.
@@ -1443,7 +1446,11 @@ int BattleUnit::directionTo(Position point) const
 {
 	double ox = point.x - _pos.x;
 	double oy = point.y - _pos.y;
-	double angle = atan2(ox, -oy);
+	if (ox == 0 && oy == 0)
+	{
+		return _direction; // Don't turn for tiles above/below
+	}
+	double angle = std::atan2(ox, -oy);
 	// divide the pie in 4 angles each at 1/8th before each quarter
 	double pie[4] = {(M_PI_4 * 4.0) - M_PI_4 / 2.0, (M_PI_4 * 3.0) - M_PI_4 / 2.0, (M_PI_4 * 2.0) - M_PI_4 / 2.0, (M_PI_4 * 1.0) - M_PI_4 / 2.0};
 	int dir = 0;
