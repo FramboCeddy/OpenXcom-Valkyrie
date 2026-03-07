@@ -577,6 +577,7 @@ void createOptionsVALK()
 void createAdvancedOptionsVALK()
 {
 	_info.push_back(OptionInfo(OPTION_VALK, "visualSmokeDensity", &visualSmokeDensity, false, "STR_VISUAL_SMOKE_DENSITY", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "euclidDistanceAccuracy", &euclidDistanceAccuracy, false, "STR_EUCLID_DISTANCE_ACCURACY", "STR_BATTLESCAPE"));
 }
 
 void createControlsVALK()

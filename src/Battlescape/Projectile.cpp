@@ -322,10 +322,10 @@ int Projectile::calculateThrow(double accuracy)
  */
 void Projectile::applyAccuracy(Position origin, Position *target, double accuracy, bool keepRange, bool extendLine)
 {
-	int xDist = abs(origin.x - target->x);
-	int yDist = abs(origin.y - target->y);
-	int zDist = abs(origin.z - target->z);
-	double realDistance = sqrt((xDist * xDist) + (yDist * yDist) + (zDist * zDist));
+	int xDist = std::abs(origin.x - target->x);
+	int yDist = std::abs(origin.y - target->y);
+	int zDist = std::abs(origin.z - target->z);
+	double realDistance = std::sqrt((xDist * xDist) + (yDist * yDist) + (zDist * zDist));
 	// maxRange is the maximum range a projectile shall ever travel in voxel space
 	// up to 2 tiles diagonally for melee hits (like reaper v reaper)			// 1000 tiles
 	double maxRange = (_action.type == BA_HIT) ? 46 : keepRange ? realDistance : 16 * 1000; 
@@ -349,38 +349,20 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	}
 
 	int xyShift, zShift;
-
-	if (Options::oxceUniformShootingSpread) // Uniform shooting spread
+	if (Options::euclidDistanceAccuracy)
 	{
-		if (xDist <= yDist)
-		{
-			xyShift = xDist / 4 + yDist;
-		}
-		else
-		{
-			xyShift = xDist + yDist / 4;
-		}
-		xyShift *= 0.839; // Constant to match average xyShift to vanilla
+		zShift = static_cast<int>(realDistance);
+	}
+	else if (Options::oxceUniformShootingSpread) // Uniform shooting spread
+	{
+		xyShift = xDist <= yDist ? xDist / 4 + yDist : xDist + yDist / 4;
+		xyShift = static_cast<int>(xyShift * 0.839); // Constant to match average xyShift to vanilla
+		zShift = xyShift <= zDist ? xyShift / 2 + zDist : xyShift + zDist / 2; // slight z deviation
 	}
 	else
 	{
-		if (xDist / 2 <= yDist)				//yes, we need to add some x/y non-uniformity
-		{                                
-			xyShift = xDist / 4 + yDist;	//and don't ask why, please. it's The Commandment
-		}
-		else
-		{
-			xyShift = (xDist + yDist) / 2; // that's uniform part of spreading
-		}
-	}
-
-	if (xyShift <= zDist) // slight z deviation
-	{
-		zShift = xyShift / 2 + zDist;
-	}
-	else
-	{
-		zShift = xyShift + zDist / 2;
+		xyShift = xDist / 2 <= yDist ? xDist / 4 + yDist : (xDist + yDist) / 2; // yes, we need to add some x/y non-uniformity
+		zShift = xyShift <= zDist ? xyShift / 2 + zDist : xyShift + zDist / 2;  // slight z deviation
 	}
 
 	// Apply penalty for having no LOS to target
@@ -403,22 +385,13 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 
 			if (!hasLOS)
 			{
-				accuracy = accuracy * noLOSAccuracyPenalty / 100;
+				accuracy *= noLOSAccuracyPenalty / 100.0;
 			}
 		}
 	}
 
-	int deviation = RNG::generate(0, 100) - (accuracy * 100);
-
-	if (deviation >= 0)
-	{
-		deviation += 50; // add extra spread to "miss" cloud
-	}
-	else
-	{
-		deviation += 10; // accuracy of 110 or greater will become 0 (no spread)
-	}
-
+	int deviation = RNG::generate(0, 100) - (accuracy * 100); // accuracy of 110 or greater will become 0 (no spread)
+	deviation += deviation >= 0 ? 50 : 10; // add extra spread to "miss" cloud
 	deviation = std::max(0, zShift * deviation / 200); // range ratio
 
 	if (deviation) // deviation 0 is exact shot to original target voxel
