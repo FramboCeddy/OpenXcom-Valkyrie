@@ -271,6 +271,7 @@ private:
 	int _alienInventoryOffsetX, _alienInventoryOffsetBigUnit;
 	bool _hidePediaInfoButton;
 	int _extraNerdyPediaInfoType;
+	bool _extraNerdyPediaInfoPercent;
 	bool _giveScoreAlsoForResearchedArtifacts, _statisticalBulletConservation, _stunningImprovesMorale;
 	int _tuRecoveryWakeUpNewTurn;
 	int _shortRadarRange;
@@ -989,6 +990,8 @@ public:
 	bool getShowPediaInfoButton() const { return !_hidePediaInfoButton; }
 	/// Display extra item info (accuracy modifier and power bonus) in the main pedia article?
 	int getExtraNerdyPediaInfoType() const { return _extraNerdyPediaInfoType; }
+	/// Display extra item info (accuracy modifier and power bonus) as a percentage instead of multiplier
+	int getExtraNerdyPediaInfoPercent() const { return _extraNerdyPediaInfoPercent; }
 	/// In debriefing, give score also for already researched alien artifacts?
 	bool getGiveScoreAlsoForResearchedArtifacts() const { return _giveScoreAlsoForResearchedArtifacts; }
 	/// When recovering ammo, should partially spent clip have a chance to recover as full?

@@ -460,8 +460,11 @@ namespace OpenXcom
 			for (float number : item.second)
 			{
 				++power;
-				if (!AreSame(number, 0.0f))
+				if (AreSame(number, 0.0f))
 				{
+					continue;
+				}
+
 					float numberAbs = number;
 					if (!isFirst)
 					{
@@ -475,17 +478,21 @@ namespace OpenXcom
 							numberAbs = std::abs(number);
 						}
 					}
-					if (item.first == "flatOne")
+				if (item.first == "flatOne") // TODO: Option to merge flatone and flathunderd into same var called flat and use array to determine multiple of tens [5, 2, 1] = 125
 					{
 						ss << numberAbs * 1;
 					}
-					if (item.first == "flatHundred")
+				else if (item.first == "flatHundred")
 					{
 						ss << numberAbs * pow(100, power);
 					}
 					else
 					{
-						if (!AreSame(numberAbs, 1.0f))
+						if (_game->getMod()->getExtraNerdyPediaInfoPercent())
+						{
+							ss << numberAbs * 100 << "% ";
+						}
+						else if (!AreSame(numberAbs, 1.0f))
 						{
 							ss << numberAbs << "*";
 						}
@@ -506,7 +513,6 @@ namespace OpenXcom
 					isFirst = false;
 				}
 			}
-		}
 		return ss.str();
 	}
 

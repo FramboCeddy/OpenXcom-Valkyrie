@@ -3306,6 +3306,7 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	reader.tryRead("alienInventoryOffsetBigUnit", _alienInventoryOffsetBigUnit);
 	reader.tryRead("hidePediaInfoButton", _hidePediaInfoButton);
 	reader.tryRead("extraNerdyPediaInfoType", _extraNerdyPediaInfoType);
+	reader.tryRead("extraNerdyPediaInfoPercent", _extraNerdyPediaInfoPercent);
 	reader.tryRead("giveScoreAlsoForResearchedArtifacts", _giveScoreAlsoForResearchedArtifacts);
 	reader.tryRead("statisticalBulletConservation", _statisticalBulletConservation);
 	reader.tryRead("stunningImprovesMorale", _stunningImprovesMorale);
