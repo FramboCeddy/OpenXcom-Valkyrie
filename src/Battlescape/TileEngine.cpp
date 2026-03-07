@@ -1853,7 +1853,7 @@ bool TileEngine::visible(BattleUnit *currentUnit, Tile *tile)
 	}
 
 	// friendlies are always seen
-	if (currentUnit->getFaction() == tile->getUnit()->getFaction()) return true;
+	//if (currentUnit->getFaction() == tile->getUnit()->getFaction()) return true;
 
 	// if beyond global max. range, nobody can see anyone
 	int currentDistanceSq = Position::distance2dSq(currentUnit->getPosition(), tile->getPosition());
