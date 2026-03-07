@@ -62,17 +62,20 @@ bool calculateLineHelper(const Position& origin, const Position& target, FuncNew
 	int x, x0, x1, delta_x, step_x;
 	int y, y0, y1, delta_y, step_y;
 	int z, z0, z1, delta_z, step_z;
-	int swap_xy, swap_xz;
+	bool swap_xy, swap_xz;
 	int drift_xy, drift_xz;
 	int cx, cy, cz;
 
 	//start and end points
-	x0 = origin.x;	 x1 = target.x;
-	y0 = origin.y;	 y1 = target.y;
-	z0 = origin.z;	 z1 = target.z;
+	x0 = origin.x;
+	x1 = target.x;
+	y0 = origin.y;
+	y1 = target.y;
+	z0 = origin.z;
+	z1 = target.z;
 
 	//'steep' xy Line, make longest delta x plane
-	swap_xy = abs(y1 - y0) > abs(x1 - x0);
+	swap_xy = std::abs(y1 - y0) > std::abs(x1 - x0);
 	if (swap_xy)
 	{
 		std::swap(x0, y0);
@@ -80,7 +83,7 @@ bool calculateLineHelper(const Position& origin, const Position& target, FuncNew
 	}
 
 	//do same for xz
-	swap_xz = abs(z1 - z0) > abs(x1 - x0);
+	swap_xz = std::abs(z1 - z0) > std::abs(x1 - x0);
 	if (swap_xz)
 	{
 		std::swap(x0, z0);
@@ -88,9 +91,9 @@ bool calculateLineHelper(const Position& origin, const Position& target, FuncNew
 	}
 
 	//delta is Length in each plane
-	delta_x = abs(x1 - x0);
-	delta_y = abs(y1 - y0);
-	delta_z = abs(z1 - z0);
+	delta_x = std::abs(x1 - x0);
+	delta_y = std::abs(y1 - y0);
+	delta_z = std::abs(z1 - z0);
 
 	//drift controls when to step in 'shallow' planes
 	//starting value keeps Line centred
@@ -98,9 +101,9 @@ bool calculateLineHelper(const Position& origin, const Position& target, FuncNew
 	drift_xz  = (delta_x / 2);
 
 	//direction of line
-	step_x = 1;  if (x0 > x1) {  step_x = -1; }
-	step_y = 1;  if (y0 > y1) {  step_y = -1; }
-	step_z = 1;  if (z0 > z1) {  step_z = -1; }
+	step_x = x0 > x1 ? -1 : 1;
+	step_y = y0 > y1 ? -1 : 1;
+	step_z = z0 > z1 ? -1 : 1;
 
 	//starting point
 	y = y0;
@@ -110,11 +113,19 @@ bool calculateLineHelper(const Position& origin, const Position& target, FuncNew
 	for (x = x0; ; x += step_x)
 	{
 		//copy position
-		cx = x;	cy = y;	cz = z;
+		cx = x;
+		cy = y;
+		cz = z;
 
 		//unswap (in reverse)
-		if (swap_xz) std::swap(cx, cz);
-		if (swap_xy) std::swap(cx, cy);
+		if (swap_xz)
+		{
+			std::swap(cx, cz);
+		}
+		if (swap_xy)
+		{
+			std::swap(cx, cy);
+		}
 		if (posFunc(Position(cx, cy, cz)))
 		{
 			return true;
@@ -123,18 +134,26 @@ bool calculateLineHelper(const Position& origin, const Position& target, FuncNew
 		if (x == x1) break;
 
 		//update progress in other planes
-		drift_xy = drift_xy - delta_y;
-		drift_xz = drift_xz - delta_z;
+		drift_xy -= delta_y;
+		drift_xz -= delta_z;
 
 		//step in y plane
 		if (drift_xy < 0)
 		{
-			y = y + step_y;
-			drift_xy = drift_xy + delta_x;
+			y += step_y;
+			drift_xy += delta_x;
 
-			cx = x;	cz = z; cy = y;
-			if (swap_xz) std::swap(cx, cz);
-			if (swap_xy) std::swap(cx, cy);
+			cx = x;
+			cz = z;
+			cy = y;
+			if (swap_xz)
+			{
+				std::swap(cx, cz);
+			}
+			if (swap_xy)
+			{
+				std::swap(cx, cy);
+			}
 			if (driftFunc(Position(cx, cy, cz)))
 			{
 				return true;
@@ -144,12 +163,20 @@ bool calculateLineHelper(const Position& origin, const Position& target, FuncNew
 		//same in z
 		if (drift_xz < 0)
 		{
-			z = z + step_z;
-			drift_xz = drift_xz + delta_x;
+			z += step_z;
+			drift_xz += delta_x;
 
-			cx = x;	cz = z; cy = y;
-			if (swap_xz) std::swap(cx, cz);
-			if (swap_xy) std::swap(cx, cy);
+			cx = x;
+			cz = z;
+			cy = y;
+			if (swap_xz)
+			{
+				std::swap(cx, cz);
+			}
+			if (swap_xy)
+			{
+				std::swap(cx, cy);
+			}
 			if (driftFunc(Position(cx, cy, cz)))
 			{
 				return true;
@@ -879,7 +906,7 @@ void iterateTilesLightMaxBound(SavedBattleGame* save, Position position, int eve
 
 } // namespace
 
-constexpr int TileEngine::heightFromCenter[11];
+constexpr int TileEngine::heightFromCenter[13];
 
 
 constexpr Position TileEngine::invalid;
@@ -2005,7 +2032,7 @@ bool TileEngine::isTileInLOS(BattleAction *action, Tile *tile, bool drawing)
 	}
 	else
 	{
-		scanVoxel = tile->getPosition().toVoxel() + Position(8, 8, 12);
+		scanVoxel = tile->getPosition().toVoxel() + TileEngine::voxelTileCenter;
 	}
 
 	// Secondary LOF check
@@ -2192,54 +2219,41 @@ bool TileEngine::canTargetUnit(Position *originVoxel, Tile *tile, Position *scan
 
 	if (potentialUnit == excludeUnit) return false; //skip self
 
-	int targetMinHeight = targetVoxel.z - tile->getTerrainLevel();
-	targetMinHeight += potentialUnit->getFloatHeight();
-
-	int targetMaxHeight = targetMinHeight;
-	int targetCenterHeight;
 	// if there is an other unit on target tile, we assume we want to check against this unit's height
-	int heightRange;
 
-	int unitRadius = potentialUnit->getLoftemps(); //width == loft in default loftemps set
 	int targetSize = potentialUnit->getArmor()->getSize() - 1;
+	int unitRadius = targetSize > 0 ? 3 : potentialUnit->getLoftemps(); //width == loft in default loftemps set
 	int xOffset = potentialUnit->getPosition().x - tile->getPosition().x;
 	int yOffset = potentialUnit->getPosition().y - tile->getPosition().y;
-	if (targetSize > 0)
-	{
-		unitRadius = 3;
-	}
 	// vector manipulation to make scan work in view-space
 	Position relPos = targetVoxel - *originVoxel;
-	float normal = unitRadius/sqrt((float)(relPos.x*relPos.x + relPos.y*relPos.y));
-	int relX = floor(((float)relPos.y)*normal+0.5);
-	int relY = floor(((float)-relPos.x)*normal+0.5);
+	double normal = unitRadius / sqrt(relPos.x * relPos.x + relPos.y * relPos.y);
+	int relX = floor((double)relPos.y * normal + 0.5);
+	int relY = floor((double)-relPos.x * normal + 0.5);
 
 	int sliceTargets[] = {0,0, relX,relY, -relX,-relY, relY,-relX, -relY,relX};
 
-	if (!potentialUnit->isOut())
-	{
-		heightRange = potentialUnit->getHeight();
-	}
-	else
-	{
-		heightRange = 12;
-	}
+	int heightRange = potentialUnit->isOut() ? 12 : potentialUnit->getHeight();
+	int targetMinHeight = targetVoxel.z - tile->getTerrainLevel() + potentialUnit->getFloatHeight();
+	int targetMaxHeight = targetMinHeight + heightRange;
+	int targetCenterHeight = (targetMaxHeight + targetMinHeight) / 2;
+	heightRange /= 2;
+	if (heightRange > 12) heightRange = 12;
+	if (heightRange <= 0) heightRange = 0;
 
-	targetMaxHeight += heightRange;
-	targetCenterHeight=(targetMaxHeight+targetMinHeight)/2;
-	heightRange/=2;
-	if (heightRange>10) heightRange=10;
-	if (heightRange<=0) heightRange=0;
-
-	// scan ray from top to bottom  plus different parts of target cylinder
+	// scan ray from middle height towards top/bottom + different parts of target cylinder
 	for (int i = 0; i <= heightRange; ++i)
 	{
-		scanVoxel->z=targetCenterHeight+heightFromCenter[i];
+		scanVoxel->z = targetCenterHeight + heightFromCenter[i];
+		if (scanVoxel->z < targetMinHeight || scanVoxel->z > targetMaxHeight)
+		{
+			continue; // Scan voxel is outside unit's height
+		}
 		for (int j = 0; j < 5; ++j)
 		{
-			if (i < (heightRange-1) && j>2) break; //skip unnecessary checks
-			scanVoxel->x=targetVoxel.x + sliceTargets[j*2];
-			scanVoxel->y=targetVoxel.y + sliceTargets[j*2+1];
+			if (i < (heightRange - 1) && j > 2) break; //skip unnecessary checks
+			scanVoxel->x = targetVoxel.x + sliceTargets[j*2];
+			scanVoxel->y = targetVoxel.y + sliceTargets[j*2 + 1];
 			_trajectory.clear();
 			int test = calculateLineVoxel(*originVoxel, *scanVoxel, false, &_trajectory, excludeUnit);
 			if (test == V_UNIT)
@@ -5828,69 +5842,54 @@ int TileEngine::getArcDirection(int directionA, int directionB) const
  */
 Position TileEngine::getOriginVoxel(BattleAction &action, Tile *tile)
 {
-	const int dirYshift[8] = {1, 1, 8, 15,15,15,8, 1};
-	const int dirXshift[8] = {8, 14,15,15,8, 1, 1, 1};
+	static const int dirXshift[8] = {5, 6, 8, 10, 11, 10, 8, 6};
+	static const int dirYshift[8] = {8, 6, 5, 6, 8, 10, 11, 10};
+
 	if (!tile)
 	{
 		tile = action.actor->getTile();
 	}
 
 	Position origin = tile->getPosition();
-	Tile *tileAbove = _save->getTile(origin + Position(0,0,1));
-	Position originVoxel = Position(origin.x*16, origin.y*16, origin.z*24);
+	Position originVoxel = origin.toVoxel();
 
 	// take into account soldier height and terrain level if the projectile is launched from a soldier
-	if (action.actor->getPosition() == origin || action.type != BA_LAUNCH)
+	if (action.type != BA_LAUNCH || action.actor->getPosition() == origin)
 	{
+		int weaponShift = action.actor->isKneeled() ? 2 : 4; // kneeled units put weapon closer to eyes
 		// calculate offset of the starting point of the projectile
-		originVoxel.z += -tile->getTerrainLevel();
+		originVoxel.z += -tile->getTerrainLevel() + action.actor->getHeight() + action.actor->getFloatHeight() - weaponShift;
 
-		originVoxel.z += action.actor->getHeight() + action.actor->getFloatHeight();
-
-		if (action.type == BA_THROW)
+		Tile* tileAbove = _save->getTile(origin + Position(0, 0, 1));
+		// bonk our head on the ceiling
+		if (!tileAbove || !tileAbove->hasNoFloor())
 		{
-			originVoxel.z -= 3;
-		}
-		else
-		{
-			originVoxel.z -= 4;
-		}
-
-		if (originVoxel.z >= (origin.z + 1)*24)
-		{
-			if (tileAbove && tileAbove->hasNoFloor(0))
+			while (originVoxel.z >= (origin.z + 1) * 24)
 			{
-				origin.z++;
+				--originVoxel.z;
 			}
-			else
-			{
-				while (originVoxel.z >= (origin.z + 1)*24)
-				{
-					originVoxel.z--;
-				}
-				originVoxel.z -= 4;
-			}
+			originVoxel.z -= weaponShift;
 		}
 		int direction = getDirectionTo(origin, action.target);
-
+		int unitSize = action.actor->getArmor()->getSize();
 		// Offset for different relativeOrigin values
 		switch (action.relativeOrigin)
 		{
 		case BattleActionOrigin::CENTRE:
 			// Standard offset.
-			originVoxel.x += dirXshift[direction] * action.actor->getArmor()->getSize();
-			originVoxel.y += dirYshift[direction] * action.actor->getArmor()->getSize();
+			originVoxel.x += 8 * unitSize;
+			originVoxel.y += 8 * unitSize;
 			break;
 
-			// 2:1 Weighted average of the standard offset and a rotation, either left or right.
 		case BattleActionOrigin::LEFT:
-			originVoxel.x += ((2 * dirXshift[direction] + dirXshift[(direction + 7) % 8]) * action.actor->getArmor()->getSize() + 1) / 3;
-			originVoxel.y += ((2 * dirYshift[direction] + dirYshift[(direction + 7) % 8]) * action.actor->getArmor()->getSize() + 1) / 3;
+			originVoxel.x += dirXshift[direction] * unitSize;
+			originVoxel.y += dirXshift[direction] * unitSize;
 			break;
 
 		case BattleActionOrigin::RIGHT:
-			originVoxel.x += ((2 * dirXshift[direction] + dirXshift[(direction + 1) % 8]) * action.actor->getArmor()->getSize() + 1) / 3;
-			originVoxel.y += ((2 * dirYshift[direction] + dirYshift[(direction + 1) % 8]) * action.actor->getArmor()->getSize() + 1) / 3;
+			direction = (direction + 4) % 8; // set opposite direction
+			originVoxel.x += dirXshift[direction] * unitSize;
+			originVoxel.y += dirXshift[direction] * unitSize;
 			break;
 		};
 	}
