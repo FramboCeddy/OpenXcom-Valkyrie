@@ -1057,9 +1057,23 @@ void GraphsState::drawRegionLines()
  */
 void GraphsState::drawFinanceLines()
 {
+	// TODO: this is copied over from MonthlyReportState, and should be refactored to avoid code duplication
+	int difficulty_threshold = _game->getMod()->getDefeatScore() + 100 * _game->getSavedGame()->getDifficultyCoefficient();
+	{
+		int diff = _game->getSavedGame()->getDifficulty();
+		auto& custom = _game->getMod()->getMonthlyRatingThresholds();
+		if (custom.size() > (size_t)diff)
+		{
+			// only negative values are allowed!
+			if (custom[diff] < 0)
+			{
+				difficulty_threshold = custom[diff];
+			}
+		}
+	}
 	//set up array
 	int upperLimit = 0;
-	int lowerLimit = 0;
+	int lowerLimit = _financeToggles.at(4) ? difficulty_threshold : 0;
 	int64_t incomeTotals[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	int64_t balanceTotals[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	int64_t expendTotals[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -1162,10 +1176,10 @@ void GraphsState::drawFinanceLines()
 	double units = range / 126;
 	for (int button = 0; button != 5; ++button)
 	{
-		std::vector<Sint16> newLineVector;
+		std::array<Sint16, 12> newLineVector{};
 		for (int iter = 0; iter != 12; ++iter)
 		{
-			int x = 312 - (iter*17);
+			int x = 312 - (iter * 17);
 			int y = 175 - (-lowerLimit / units);
 			int reduction = 0;
 			switch(button)
@@ -1187,12 +1201,20 @@ void GraphsState::drawFinanceLines()
 				break;
 			}
 			y -= reduction;
-			newLineVector.push_back(y);
+			newLineVector[iter] = y;
 			int offset = button % 2 ? 8 : 0;
-			if (newLineVector.size() > 1)
-				_financeLines.at(button)->drawLine(x, y, x+17, newLineVector.at(newLineVector.size()-2), Palette::blockOffset((button/2)+1)+offset);
+			if (iter > 0)
+			{
+				_financeLines.at(button)->drawLine(x, y, x + 17, newLineVector.at(iter - 1), Palette::blockOffset((button / 2) + 1) + offset);
+				if (button == 4 && Options::showDefeatScore) // draw alongside score
+				{
+					int defeatLineY = 175 - (-lowerLimit / units) - difficulty_threshold / units; // flat line at defeat score
+					_financeLines.at(button)->drawLine(x, defeatLineY, x + 17, defeatLineY, Palette::blockOffset(((button) / 2) + 1) + offset + 8); // +8 to use next color
+				}
+			}
 		}
 	}
+
 	updateScale(lowerLimit, upperLimit);
 	_txtFactor->setVisible(true);
 }
