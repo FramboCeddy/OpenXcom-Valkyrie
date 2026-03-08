@@ -301,7 +301,7 @@ void NewManufactureListState::lstProdClickMiddle(Action *)
 
 void NewManufactureListState::cbxFilterChange(Action *)
 {
-	fillProductionList(true);
+	fillProductionList(Options::manufactureKeepCategories ? false : true);
 }
 
 /**

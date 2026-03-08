@@ -571,7 +571,7 @@ void createControlsOXCE()
 
 void createOptionsVALK()
 {
-	// your fork's hidden options here
+	_info.push_back(OptionInfo(OPTION_VALK, "manufactureKeepCategories", &manufactureKeepCategories, false, "STR_MANUFACTURE_KEEP_CATEGORIES", "HIDDEN"));
 }
 
 void createAdvancedOptionsVALK()
