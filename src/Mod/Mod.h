@@ -277,6 +277,7 @@ private:
 	int _shortRadarRange;
 	int _buildTimeReductionScaling;
 	int _defeatScore, _defeatFunds;
+	bool _countriesIgnoreCouncilPoints;
 	bool _difficultyDemigod;
 	std::pair<std::string, int> _alienFuel;
 	RuleResearch* _finalResearch = nullptr;
@@ -1002,6 +1003,7 @@ public:
 	int getTURecoveryWakeUpNewTurn() const { return _tuRecoveryWakeUpNewTurn; }
 	/// Gets whether or not to load base defense terrain from globe texture
 	int getBaseDefenseMapFromLocation() const { return _baseDefenseMapFromLocation; }
+	bool getCountriesIgnoreCouncilPoints() const;
 
 	/// Return mod what created given rule object.
 	template<typename T>

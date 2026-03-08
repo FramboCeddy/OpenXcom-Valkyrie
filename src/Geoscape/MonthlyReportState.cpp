@@ -428,14 +428,24 @@ void MonthlyReportState::calculateChanges()
 		xcomSubTotal += region->getActivityXcom().at(monthOffset);
 		alienTotal += region->getActivityAlien().at(monthOffset);
 	}
-	// apply research bonus AFTER calculating our total, because this bonus applies to the council ONLY,
-	// and shouldn't influence each country's decision.
 
-	// the council is more lenient after the first month
-	if (_game->getSavedGame()->getMonthsPassed() > 1)
-		_game->getSavedGame()->getResearchScores().at(monthOffset) += 400;
-
-	xcomTotal = _game->getSavedGame()->getResearchScores().at(monthOffset) + xcomSubTotal;
+	// apply council points after calculating our total, so it does not affect council decisions
+	if (_game->getMod()->getCountriesIgnoreCouncilPoints())
+	{
+		xcomTotal = _game->getSavedGame()->getResearchScores().at(monthOffset) + xcomSubTotal;
+		if (_game->getSavedGame()->getMonthsPassed() > 1) // the council is more lenient after the first month
+		{
+			_game->getSavedGame()->getResearchScores().at(monthOffset) += 400;
+		}
+	}
+	else // apply council points before calculating our total, so it affects council decisions
+	{
+		if (_game->getSavedGame()->getMonthsPassed() > 1)
+		{
+			_game->getSavedGame()->getResearchScores().at(monthOffset) += 400;
+		}
+		xcomTotal = _game->getSavedGame()->getResearchScores().at(monthOffset) + xcomSubTotal;
+	}
 
 	if (_game->getSavedGame()->getResearchScores().size() > 2)
 		_lastMonthsRating += _game->getSavedGame()->getResearchScores().at(lastMonthOffset);
