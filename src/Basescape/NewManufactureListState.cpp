@@ -40,6 +40,8 @@
 #include "ManufactureStartState.h"
 #include "TechTreeViewerState.h"
 #include "../Ufopaedia/Ufopaedia.h"
+#include <vector>
+#include <string>
 
 namespace OpenXcom
 {
@@ -118,12 +120,15 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base), _sho
 	_btnShowOnlyNew->setText(tr("STR_SHOW_ONLY_NEW"));
 	_btnShowOnlyNew->onMouseClick((ActionHandler)&NewManufactureListState::btnShowOnlyNewClick);
 
-	std::vector<std::string> filterOptions;
-	filterOptions.push_back("STR_FILTER_DEFAULT");
-	filterOptions.push_back("STR_FILTER_DEFAULT_SUPPLIES_OK");
-	filterOptions.push_back("STR_FILTER_DEFAULT_NO_SUPPLIES");
-	filterOptions.push_back("STR_FILTER_FACILITY_REQUIRED");
-	filterOptions.push_back("STR_FILTER_HIDDEN");
+	static const std::vector<std::string> filterOptions = 
+	{
+		"STR_FILTER_DEFAULT",
+		"STR_FILTER_DEFAULT_SUPPLIES_OK",
+		"STR_FILTER_DEFAULT_NO_SUPPLIES",
+		"STR_FILTER_FACILITY_REQUIRED",
+		"STR_FILTER_PROFITABILITY",
+		"STR_FILTER_HIDDEN",
+	};
 	_cbxFilter->setOptions(filterOptions, true);
 	if (Options::oxceManufactureFilterSuppliesOK)
 	{
@@ -393,103 +398,112 @@ void NewManufactureListState::fillProductionList(bool refreshCategories)
 	ManufacturingFilterType basicFilter = (ManufacturingFilterType)(_cbxFilter->getSelected());
 	_game->getSavedGame()->getAvailableProductions(_possibleProductions, _game->getMod(), _base, basicFilter);
 	_displayedStrings.clear();
-
-	ItemContainer * itemContainer (_base->getStorageItems());
+	// Sort list based on profit or default listOrder
+	// TODO: find a way to show the profitability /hour /engineer
+	if (basicFilter == MANU_FILTER_PROFITABILITY)
+	{
+		std::sort(_possibleProductions.begin(), _possibleProductions.end(),
+			[](const RuleManufacture *first, const RuleManufacture *second)
+			{
+				return first->getProfitability() > second->getProfitability();  // higher profitability first
+			});
+	}
+	else // NOTE: this is not necessary as we reload the available producitions, however we may want to find a way to not always refresh the production list
+	{
+		std::sort(_possibleProductions.begin(), _possibleProductions.end(),
+			[](const RuleManufacture *first, const RuleManufacture *second)
+			{
+				return first->getListOrder() < second->getListOrder(); // lower listOrder first
+			});
+	}
+	ItemContainer *itemContainer (_base->getStorageItems());
 	int row = 0;
 	bool hasUnseen = false;
 	for (const auto* manuf : _possibleProductions)
 	{
-		if ((manuf->getCategory() == _catStrings[_cbxCategory->getSelected()]) || (_catStrings[_cbxCategory->getSelected()] == "STR_ALL_ITEMS"))
+		// category
+		if ((manuf->getCategory() != _catStrings[_cbxCategory->getSelected()]) && (_catStrings[_cbxCategory->getSelected()] != "STR_ALL_ITEMS"))
 		{
-			// filter
-			bool isHidden = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_HIDDEN;
-			if (basicFilter == MANU_FILTER_DEFAULT && isHidden)
-				continue;
-			if (basicFilter == MANU_FILTER_DEFAULT_SUPPLIES_OK && isHidden)
-				continue;
-			if (basicFilter == MANU_FILTER_DEFAULT_NO_SUPPLIES && isHidden)
-				continue;
-			if (basicFilter == MANU_FILTER_HIDDEN && !isHidden)
-				continue;
-
-			bool isNew = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_NEW;
-			if (_btnShowOnlyNew->getPressed())
-			{
-				if (!isNew)
-				{
-					continue;
-				}
-			}
-
-			// quick search
-			if (!searchString.empty())
-			{
-				std::string projectName = tr(manuf->getName());
-				Unicode::upperCase(projectName);
-				if (projectName.find(searchString) == std::string::npos)
-				{
-					continue;
-				}
-			}
-
-			// supplies calculation
-			int productionPossible = 10; // max
-			if (manuf->getManufactureCost() > 0)
-			{
-				int64_t byFunds = _game->getSavedGame()->getFunds() / manuf->getManufactureCost();
-				if (byFunds < 10LL)
-				{
-					int byFundsInt = (int)byFunds;
-					productionPossible = std::min(productionPossible, byFundsInt);
-				}
-			}
-			for (auto& iter : manuf->getRequiredItems())
-			{
-				productionPossible = std::min(productionPossible, itemContainer->getItem(iter.first) / iter.second);
-			}
-			std::ostringstream ss;
-			if (productionPossible <= 0)
-			{
-				if (basicFilter == MANU_FILTER_DEFAULT_SUPPLIES_OK)
-					continue;
-				ss << '-';
-			}
-			else
-			{
-				if (basicFilter == MANU_FILTER_DEFAULT_NO_SUPPLIES)
-					continue;
-				if (productionPossible < 10)
-				{
-					ss << productionPossible;
-				}
-				else
-				{
-					ss << '+';
-				}
-			}
-
-			_lstManufacture->addRow(3, tr(manuf->getName()).c_str(), tr(manuf->getCategory()).c_str(), ss.str().c_str());
-			_displayedStrings.push_back(manuf->getName().c_str());
-
-			// colors
-			if (basicFilter == MANU_FILTER_FACILITY_REQUIRED)
-			{
-				_lstManufacture->setRowColor(row, _colorFacilityRequired);
-			}
-			else
-			{
-				if (isHidden)
-				{
-					_lstManufacture->setRowColor(row, _colorHidden);
-				}
-				else if (isNew)
-				{
-					_lstManufacture->setRowColor(row, _colorNew);
-					hasUnseen = true;
-				}
-			}
-			row++;
+			continue;
 		}
+		// filter
+		bool isHidden = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_HIDDEN;
+		if ((basicFilter != MANU_FILTER_HIDDEN && isHidden) || (basicFilter == MANU_FILTER_HIDDEN && !isHidden))
+		{
+			continue;
+		}
+		// new button
+		bool isNew = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_NEW;
+		if (_btnShowOnlyNew->getPressed() && !isNew)
+		{
+			continue;
+		}
+		// quick search
+		if (!searchString.empty())
+		{
+			std::string projectName = tr(manuf->getName());
+			Unicode::upperCase(projectName);
+			if (projectName.find(searchString) == std::string::npos)
+			{
+				continue;
+			}
+		}
+		// supplies calculation
+		int productionPossible = 10; // max
+		if (manuf->getManufactureCost() > 0)
+		{
+			int64_t byFunds = _game->getSavedGame()->getFunds() / manuf->getManufactureCost();
+			if (byFunds < 10LL)
+			{
+				int byFundsInt = (int)byFunds;
+				productionPossible = std::min(productionPossible, byFundsInt);
+			}
+		}
+		for (auto& iter : manuf->getRequiredItems())
+		{
+			productionPossible = std::min(productionPossible, itemContainer->getItem(iter.first) / iter.second);
+		}
+
+		std::ostringstream ss;
+		if (productionPossible <= 0)
+		{
+			if (basicFilter == MANU_FILTER_DEFAULT_SUPPLIES_OK)
+			{
+				continue;
+			}
+			ss << '-';
+		}
+		else if (basicFilter == MANU_FILTER_DEFAULT_NO_SUPPLIES)
+		{
+			continue;
+		}
+		else if (productionPossible < 10)
+		{
+			ss << productionPossible;
+		}
+		else
+		{
+			ss << '+';
+		}
+
+		_lstManufacture->addRow(3, tr(manuf->getName()).c_str(), tr(manuf->getCategory()).c_str(), ss.str().c_str());
+		_displayedStrings.push_back(manuf->getName().c_str());
+
+		// colors
+		if (basicFilter == MANU_FILTER_FACILITY_REQUIRED)
+		{
+			_lstManufacture->setRowColor(row, _colorFacilityRequired);
+		}
+		else if (isHidden)
+		{
+			_lstManufacture->setRowColor(row, _colorHidden);
+		}
+		else if (isNew)
+		{
+			_lstManufacture->setRowColor(row, _colorNew);
+			hasUnseen = true;
+		}
+		++row;
 	}
 
 	std::string label = tr("STR_SHOW_ONLY_NEW");
@@ -508,21 +522,22 @@ void NewManufactureListState::fillProductionList(bool refreshCategories)
 		for (size_t r = 0; r < _lstManufacture->getTexts(); ++r)
 		{
 			RuleManufacture *info = _game->getMod()->getManufacture(_displayedStrings[r]);
-			if (info)
+			if (!info)
 			{
-				bool addCategory = true;
-				for (size_t x = 0; x < _catStrings.size(); ++x)
+				continue;
+			}
+			bool addCategory = true;
+			for (size_t x = 0; x < _catStrings.size(); ++x)
+			{
+				if (info->getCategory().c_str() == _catStrings[x])
 				{
-					if (info->getCategory().c_str() == _catStrings[x])
-					{
-						addCategory = false;
-						break;
-					}
+					addCategory = false;
+					break;
 				}
-				if (addCategory)
-				{
-					_catStrings.push_back(info->getCategory().c_str());
-				}
+			}
+			if (addCategory)
+			{
+				_catStrings.push_back(info->getCategory().c_str());
 			}
 		}
 

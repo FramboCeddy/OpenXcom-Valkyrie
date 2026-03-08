@@ -4,3 +4,4 @@ en-GB:
   STR_VISUAL_SMOKE_DENSITY_DESC: "Displays the density of smoke visually through a different graphical representation."
   STR_EUCLID_DISTANCE_ACCURACY: "Euclidean Distance for Accuracy"
   STR_EUCLID_DISTANCE_ACCURACY_DESC: "Uses Euclidean distance for accuracy calculations."
+  STR_FILTER_PROFITABILITY: "Profitability"

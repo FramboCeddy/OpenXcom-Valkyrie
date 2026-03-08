@@ -32,7 +32,7 @@ namespace OpenXcom
  * @param name The unique manufacture name.
  */
 RuleManufacture::RuleManufacture(const std::string& name, int listOrder)
-	: _name(name), _space(0), _time(0), _cost(0), _points(0), _refund(false), _producedCraft(0), _listOrder(listOrder)
+	: _name(name), _space(0), _time(0), _cost(0), _points(0), _refund(false), _producedCraft(0), _listOrder(listOrder), _profitablity(0)
 {
 	_producedItemsNames[name] = 1;
 }
@@ -81,6 +81,7 @@ void RuleManufacture::afterLoad(const Mod* mod)
 		throw Exception("Manufacturing time must be greater than zero.");
 	}
 
+	int profit = -getManufactureCost();
 	_requires = mod->getResearch(_requiresName);
 	if (_category == "STR_CRAFT")
 	{
@@ -96,30 +97,36 @@ void RuleManufacture::afterLoad(const Mod* mod)
 		else
 		{
 			_producedCraft = mod->getCraft(item->first, true);
+			profit += _producedCraft->getSellCost();
 		}
 	}
 	else
 	{
-		for (auto& i : _producedItemsNames)
+		for (const auto& [itemName, itemAmount] : _producedItemsNames)
 		{
-			_producedItems[mod->getItem(i.first, true)] = i.second;
+			auto item = mod->getItem(itemName, true);
+			_producedItems[item] = itemAmount;
+			profit += item->getSellCost() * itemAmount;
 		}
 	}
-	for (auto& i : _requiredItemsNames)
+	for (const auto& [itemName, itemAmount] : _requiredItemsNames)
 	{
-		auto* itemRule = mod->getItem(i.first, false);
-		auto* craftRule = mod->getCraft(i.first, false);
+		auto* itemRule = mod->getItem(itemName, false);
+		auto* craftRule = mod->getCraft(itemName, false);
 		if (itemRule)
 		{
-			_requiredItems[itemRule] = i.second;
+			_requiredItems[itemRule] = itemAmount;
+			// subtract sell value of comsumed items
+			profit -= itemRule->getSellCost() * itemAmount;
 		}
 		else if (craftRule)
 		{
-			_requiredCrafts[craftRule] = i.second;
+			_requiredCrafts[craftRule] = itemAmount;
+			profit -= craftRule->getSellCost() * itemAmount;
 		}
 		else
 		{
-			throw Exception("Unknown required item '" + i.first + "'");
+			throw Exception("Unknown required item '" + itemName + "'");
 		}
 	}
 
@@ -132,6 +139,11 @@ void RuleManufacture::afterLoad(const Mod* mod)
 		}
 		_randomProducedItems.push_back(std::make_pair(itemSet.first, tmp));
 	}
+	// calculate profitability per hour
+	// TODO: account for random items and/or workshop space and/or engineer monthly cost
+	// NOTE: maybe calculating profitability per hour is not the greatest idea, so we can make profitability per item and have 2 filters
+	// 1 for per item and 1 for per hour;
+	_profitablity = (double)profit / (double)_time;
 
 	//remove not needed data
 	Collections::removeAll(_requiresName);

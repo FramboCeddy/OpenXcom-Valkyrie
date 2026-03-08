@@ -32,6 +32,7 @@ enum ManufacturingFilterType
 	MANU_FILTER_DEFAULT_SUPPLIES_OK,
 	MANU_FILTER_DEFAULT_NO_SUPPLIES,
 	MANU_FILTER_FACILITY_REQUIRED,
+	MANU_FILTER_PROFITABILITY,
 	MANU_FILTER_HIDDEN
 };
 
@@ -64,8 +65,9 @@ private:
 	std::vector<std::pair<int, std::map<const RuleItem*, int> > > _randomProducedItems;
 	std::vector<int> _transferTimes;
 	int _listOrder;
-public:
-	static const int MANU_STATUS_NEW = 0;
+	double _profitablity;
+  public:
+	static const int MANU_STATUS_NEW = 0; // TODO: make enum
 	static const int MANU_STATUS_NORMAL = 1;
 	static const int MANU_STATUS_HIDDEN = 2;
 	static const int MANU_STATUSES = 3;
@@ -122,6 +124,8 @@ public:
 	const std::vector<int>& getTransferTimes() const { return _transferTimes; }
 	/// Gets the list weight for this manufacture item.
 	int getListOrder() const;
+	/// Gets the profitablity of this manufacture item.
+	double getProfitability() const { return _profitablity; }
 };
 
 }
