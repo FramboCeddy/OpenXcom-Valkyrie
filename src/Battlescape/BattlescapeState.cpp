@@ -3777,140 +3777,147 @@ void BattlescapeState::btnZeroTUsClick(Action *action)
 * Shows a tooltip with extra information (used for medikit-type equipment).
 * @param action Pointer to an action.
 */
-void BattlescapeState::txtTooltipInExtra(Action *action, bool leftHand, bool special)
+void BattlescapeState::txtTooltipInExtra(Action* action, bool leftHand, bool special)
 {
-	if (allowButtons() && Options::battleTooltips)
+	if (!allowButtons() || !Options::battleTooltips)
 	{
-		// no one selected... do normal tooltip
-		if(!playableUnitSelected())
-		{
-			_currentTooltip = action->getSender()->getTooltip();
-			_txtTooltip->setText(tr(_currentTooltip));
-			return;
-		}
+		return;
+	}
+	// no one selected... do normal tooltip
+	if (!playableUnitSelected())
+	{
+		_currentTooltip = action->getSender()->getTooltip();
+		_txtTooltip->setText(tr(_currentTooltip));
+		return;
+	}
 
-		BattleUnit *selectedUnit = _save->getSelectedUnit();
-		BattleItem *weapon;
-		if (leftHand)
-		{
-			weapon = selectedUnit->getLeftHandWeapon();
-		}
-		else if (special)
-		{
-			BattleType type;
-			weapon = selectedUnit->getSpecialIconWeapon(type);
-		}
-		else
-		{
-			weapon = selectedUnit->getRightHandWeapon();
-		}
+	BattleUnit* selectedUnit = _save->getSelectedUnit();
+	BattleItem* weapon;
+	if (leftHand)
+	{
+		weapon = selectedUnit->getLeftHandWeapon();
+	}
+	else if (special)
+	{
+		BattleType type;
+		weapon = selectedUnit->getSpecialIconWeapon(type);
+	}
+	else
+	{
+		weapon = selectedUnit->getRightHandWeapon();
+	}
 
-		// no weapon selected... do normal tooltip
-		if(!weapon)
+	// no weapon selected... do normal tooltip
+	if (!weapon)
+	{
+		_currentTooltip = action->getSender()->getTooltip();
+		_txtTooltip->setText(tr(_currentTooltip));
+		return;
+	}
+
+	auto* weaponRule = weapon->getRules();
+	// not a medikit... do normal tooltip
+	if (weaponRule->getBattleType() != BT_MEDIKIT)
+	{
+		_currentTooltip = action->getSender()->getTooltip();
+		_txtTooltip->setText(tr(_currentTooltip));
+		return;
+	}
+	// find the target unit
+	// TODO: This functionality is basically the same as ActionMenuState::handleAction
+	BattleUnit* targetUnit = 0;
+
+	// search for target in front of the selected unit
+	if (weaponRule->getAllowTargetStanding())
+	{
+		Position dest;
+		if (_save->getTileEngine()->validMeleeRange(
+				selectedUnit->getPosition(),
+				selectedUnit->getDirection(),
+				selectedUnit, 0, &dest, false))
 		{
-			_currentTooltip = action->getSender()->getTooltip();
-			_txtTooltip->setText(tr(_currentTooltip));
-			return;
-		}
-
-		auto* weaponRule = weapon->getRules();
-
-		// find the target unit
-		if (weaponRule->getBattleType() == BT_MEDIKIT)
-		{
-			BattleUnit *targetUnit = 0;
-
-			// search for target on the ground
-			bool onGround = false;
-			for (auto* bu : *_save->getUnits())
+			Tile* tile = _save->getTile(dest);
+			if (tile && tile->getUnit() && (tile->getUnit()->isWoundable() || weaponRule->getAllowTargetImmune()))
 			{
-				if (targetUnit) break; // loop finished
-				// we can heal a unit that is at the same position, unconscious and healable(=woundable)
-				if (bu->getPosition() == selectedUnit->getPosition() && bu != selectedUnit && bu->getStatus() == STATUS_UNCONSCIOUS && (bu->isWoundable() || weaponRule->getAllowTargetImmune()) && weaponRule->getAllowTargetGround())
+				if ((weaponRule->getAllowTargetFriendStanding() && tile->getUnit()->getOriginalFaction() == FACTION_PLAYER) ||
+					(weaponRule->getAllowTargetNeutralStanding() && tile->getUnit()->getOriginalFaction() == FACTION_NEUTRAL) ||
+					(weaponRule->getAllowTargetHostileStanding() && tile->getUnit()->getOriginalFaction() == FACTION_HOSTILE))
 				{
-					if (bu->isBigUnit())
-					{
-						// never EVER apply anything to 2x2 units on the ground
-						continue;
-					}
-					if ((weaponRule->getAllowTargetFriendGround() && bu->getOriginalFaction() == FACTION_PLAYER) ||
-						(weaponRule->getAllowTargetNeutralGround() && bu->getOriginalFaction() == FACTION_NEUTRAL) ||
-						(weaponRule->getAllowTargetHostileGround() && bu->getOriginalFaction() == FACTION_HOSTILE))
-					{
-						targetUnit = bu;
-						onGround = true;
-					}
-				}
-			}
-
-			// search for target in front of the selected unit
-			if (!targetUnit && weaponRule->getAllowTargetStanding())
-			{
-				Position dest;
-				if (_save->getTileEngine()->validMeleeRange(
-					selectedUnit->getPosition(),
-					selectedUnit->getDirection(),
-					selectedUnit,
-					0, &dest, false))
-				{
-					Tile *tile = _save->getTile(dest);
-					if (tile != 0 && tile->getUnit() && (tile->getUnit()->isWoundable() || weaponRule->getAllowTargetImmune()))
-					{
-						if ((weaponRule->getAllowTargetFriendStanding() && tile->getUnit()->getOriginalFaction() == FACTION_PLAYER) ||
-							(weaponRule->getAllowTargetNeutralStanding() && tile->getUnit()->getOriginalFaction() == FACTION_NEUTRAL) ||
-							(weaponRule->getAllowTargetHostileStanding() && tile->getUnit()->getOriginalFaction() == FACTION_HOSTILE))
-						{
-							targetUnit = tile->getUnit();
-						}
-					}
-				}
-			}
-
-			_currentTooltip = action->getSender()->getTooltip();
-			std::ostringstream tooltipExtra;
-			tooltipExtra << tr(_currentTooltip);
-
-			// target unit found
-			if (targetUnit)
-			{
-				if (targetUnit->getOriginalFaction() == FACTION_HOSTILE) {
-					_txtTooltip->setColor(Palette::blockOffset(_medikitRed));
-					tooltipExtra << tr("STR_TARGET_ENEMY");
-				} else if (targetUnit->getOriginalFaction() == FACTION_NEUTRAL) {
-					_txtTooltip->setColor(Palette::blockOffset(_medikitOrange));
-					tooltipExtra << tr("STR_TARGET_NEUTRAL");
-				} else if (targetUnit->getOriginalFaction() == FACTION_PLAYER) {
-					_txtTooltip->setColor(Palette::blockOffset(_medikitGreen));
-					tooltipExtra << tr("STR_TARGET_FRIEND");
-				}
-				if (onGround) tooltipExtra << tr("STR_TARGET_ON_THE_GROUND");
-				_txtTooltip->setText(tooltipExtra.str());
-			}
-			else
-			{
-				// target unit not found => selected unit is the target (if self-heal is possible)
-				if (weaponRule->getAllowTargetSelf())
-				{
-					targetUnit = selectedUnit;
-					_txtTooltip->setColor(Palette::blockOffset(_medikitBlue));
-					tooltipExtra << tr("STR_TARGET_YOURSELF");
-					if (onGround) tooltipExtra << tr("STR_TARGET_ON_THE_GROUND");
-					_txtTooltip->setText(tooltipExtra.str());
-				}
-				else
-				{
-					// cannot use the weapon (medikit) on anyone
-					_currentTooltip = action->getSender()->getTooltip();
-					_txtTooltip->setText(tr(_currentTooltip));
+					targetUnit = tile->getUnit();
 				}
 			}
 		}
-		else
+	}
+
+	bool onGround = false;
+	if (!targetUnit && weaponRule->getAllowTargetGround())
+	{
+		// search for target on the ground
+		for (auto* bu : *_save->getUnits())
 		{
-			// weapon is not of medikit battle type
-			_currentTooltip = action->getSender()->getTooltip();
-			_txtTooltip->setText(tr(_currentTooltip));
+			if (bu->getPosition() != selectedUnit->getPosition() ||            // not same position
+				bu == selectedUnit ||                                          // not targeting self at this moment
+				bu->getStatus() != STATUS_UNCONSCIOUS ||                       // unit is not down
+				(!bu->isWoundable() && !weaponRule->getAllowTargetImmune()) || // unit is not woundable and we can't target those
+				bu->isBigUnit())                                               // never EVER apply anything to 2x2 units on the ground
+			{
+				continue;
+			}
+			if ((weaponRule->getAllowTargetFriendGround() && bu->getOriginalFaction() == FACTION_PLAYER) ||
+				(weaponRule->getAllowTargetNeutralGround() && bu->getOriginalFaction() == FACTION_NEUTRAL) ||
+				(weaponRule->getAllowTargetHostileGround() && bu->getOriginalFaction() == FACTION_HOSTILE))
+			{
+				targetUnit = bu;
+				onGround = true;
+				break; // loop finished
+			}
 		}
+	}
+
+	_currentTooltip = action->getSender()->getTooltip();
+	std::ostringstream tooltipExtra;
+	tooltipExtra << tr(_currentTooltip);
+
+	// target unit found
+	if (targetUnit)
+	{
+		if (targetUnit->getOriginalFaction() == FACTION_HOSTILE)
+		{
+			_txtTooltip->setColor(Palette::blockOffset(_medikitRed));
+			tooltipExtra << tr("STR_TARGET_ENEMY");
+		}
+		else if (targetUnit->getOriginalFaction() == FACTION_NEUTRAL)
+		{
+			_txtTooltip->setColor(Palette::blockOffset(_medikitOrange));
+			tooltipExtra << tr("STR_TARGET_NEUTRAL");
+		}
+		else if (targetUnit->getOriginalFaction() == FACTION_PLAYER)
+		{
+			_txtTooltip->setColor(Palette::blockOffset(_medikitGreen));
+			tooltipExtra << tr("STR_TARGET_FRIEND");
+		}
+		if (onGround)
+		{
+			tooltipExtra << tr("STR_TARGET_ON_THE_GROUND");
+		}
+		_txtTooltip->setText(tooltipExtra.str());
+	}
+	else if (weaponRule->getAllowTargetSelf()) // target unit not found => selected unit is the target (if self-heal is possible)
+	{
+		targetUnit = selectedUnit;
+		_txtTooltip->setColor(Palette::blockOffset(_medikitBlue));
+		tooltipExtra << tr("STR_TARGET_YOURSELF");
+		//if (onGround) // How do you use medkit on yourself if you are on the ground?
+		//{
+		//	tooltipExtra << tr("STR_TARGET_ON_THE_GROUND");
+		//}
+		_txtTooltip->setText(tooltipExtra.str());
+	}
+	else
+	{
+		// cannot use the weapon (medikit) on anyone
+		_currentTooltip = action->getSender()->getTooltip();
+		_txtTooltip->setText(tr(_currentTooltip));
 	}
 }
 

@@ -341,20 +341,36 @@ void ActionMenuState::handleAction()
 		}
 		else if (_action->type == BA_USE && weapon->getBattleType() == BT_MEDIKIT)
 		{
-			BattleUnit *targetUnit = 0;
-			TileEngine *tileEngine = _game->getSavedGame()->getSavedBattle()->getTileEngine();
-			for (auto* bu : *_game->getSavedGame()->getSavedBattle()->getUnits())
+			BattleUnit* targetUnit = 0;
+			TileEngine* tileEngine = _game->getSavedGame()->getSavedBattle()->getTileEngine();
+
+			if (weapon->getAllowTargetStanding() &&
+				tileEngine->validMeleeRange(_action->actor->getPosition(), _action->actor->getDirection(),
+											_action->actor, 0, &_action->target, false))
 			{
-				// we can heal a unit that is at the same position, unconscious and healable(=woundable)
-				if (bu->getPosition() == _action->actor->getPosition() &&
-					bu != _action->actor &&
-					bu->getStatus() == STATUS_UNCONSCIOUS &&
-					(bu->isWoundable() || weapon->getAllowTargetImmune()) &&
-					weapon->getAllowTargetGround())
+				Tile* tile = _game->getSavedGame()->getSavedBattle()->getTile(_action->target);
+				if (tile && tile->getUnit() && (tile->getUnit()->isWoundable() || weapon->getAllowTargetImmune()))
 				{
-					if (bu->isBigUnit())
+					// TODO: create a generic function for AllowTargetStanding and Ground that takes a faction in as parameter
+					// ALSO: same for heal/pain/stim quantity
+					if ((weapon->getAllowTargetFriendStanding() && tile->getUnit()->getOriginalFaction() == FACTION_PLAYER) ||
+						(weapon->getAllowTargetNeutralStanding() && tile->getUnit()->getOriginalFaction() == FACTION_NEUTRAL) ||
+						(weapon->getAllowTargetHostileStanding() && tile->getUnit()->getOriginalFaction() == FACTION_HOSTILE))
 					{
-						// never EVER apply anything to 2x2 units on the ground
+						targetUnit = tile->getUnit();
+					}
+				}
+			}
+			if (!targetUnit && weapon->getAllowTargetGround())
+			{
+				for (auto* bu : *_game->getSavedGame()->getSavedBattle()->getUnits())
+				{
+					if (bu->getPosition() != _action->actor->getPosition() ||		// not same position
+						bu == _action->actor ||										// not targeting self at this moment
+						bu->getStatus() != STATUS_UNCONSCIOUS ||					// unit is not down
+						(!bu->isWoundable() && !weapon->getAllowTargetImmune()) ||	// unit is not woundable and we can't target those
+						bu->isBigUnit())											// never EVER apply anything to 2x2 units on the ground
+					{
 						continue;
 					}
 					if ((weapon->getAllowTargetFriendGround() && bu->getOriginalFaction() == FACTION_PLAYER) ||
@@ -363,26 +379,6 @@ void ActionMenuState::handleAction()
 					{
 						targetUnit = bu;
 						break; // loop finished
-					}
-				}
-			}
-			if (!targetUnit && weapon->getAllowTargetStanding())
-			{
-				if (tileEngine->validMeleeRange(
-					_action->actor->getPosition(),
-					_action->actor->getDirection(),
-					_action->actor,
-					0, &_action->target, false))
-				{
-					Tile *tile = _game->getSavedGame()->getSavedBattle()->getTile(_action->target);
-					if (tile != 0 && tile->getUnit() && (tile->getUnit()->isWoundable() || weapon->getAllowTargetImmune()))
-					{
-						if ((weapon->getAllowTargetFriendStanding() && tile->getUnit()->getOriginalFaction() == FACTION_PLAYER) ||
-							(weapon->getAllowTargetNeutralStanding() && tile->getUnit()->getOriginalFaction() == FACTION_NEUTRAL) ||
-							(weapon->getAllowTargetHostileStanding() && tile->getUnit()->getOriginalFaction() == FACTION_HOSTILE))
-						{
-							targetUnit = tile->getUnit();
-						}
 					}
 				}
 			}
