@@ -181,6 +181,7 @@ int Mod::GRAPHS_CURSOR;
 int Mod::DAMAGE_RANGE;
 int Mod::EXPLOSIVE_DAMAGE_RANGE;
 int Mod::FIRE_DAMAGE_RANGE[2];
+int Mod::RESEARCH_RANGE;
 std::string Mod::DEBRIEF_MUSIC_GOOD;
 std::string Mod::DEBRIEF_MUSIC_BAD;
 int Mod::DIFFICULTY_COEFFICIENT[5];
@@ -252,6 +253,7 @@ void Mod::resetGlobalStatics()
 	EXPLOSIVE_DAMAGE_RANGE = 50;
 	FIRE_DAMAGE_RANGE[0] = 5;
 	FIRE_DAMAGE_RANGE[1] = 10;
+	RESEARCH_RANGE = 50;
 	DEBRIEF_MUSIC_GOOD = "GMMARS";
 	DEBRIEF_MUSIC_BAD = "GMMARS";
 
@@ -2698,6 +2700,8 @@ void Mod::loadConstants(const YAML::YamlNodeReader &reader)
 	if (const auto& arrayReader = reader["fireDamageRange"])
 		for (size_t j = 0; j < std::size(FIRE_DAMAGE_RANGE); j++)
 			arrayReader[j].tryReadVal(FIRE_DAMAGE_RANGE[j]);
+	reader.tryRead("researchRange", RESEARCH_RANGE);
+	RESEARCH_RANGE = std::clamp(RESEARCH_RANGE, 0, 100); // Force research range in [0, 100]
 	reader.tryRead("goodDebriefingMusic", DEBRIEF_MUSIC_GOOD);
 	reader.tryRead("badDebriefingMusic", DEBRIEF_MUSIC_BAD);
 	if (const auto& arrayReader = reader["extendedPediaFacilityParams"])
@@ -6497,7 +6501,10 @@ bool Mod::isDemigod() const
 {
 	return _difficultyDemigod;
 }
-
+/**
+ * @brief Makes countries' funding decision ignore council points
+ * @return 
+ */
 bool Mod::getCountriesIgnoreCouncilPoints() const
 {
 	return _countriesIgnoreCouncilPoints;

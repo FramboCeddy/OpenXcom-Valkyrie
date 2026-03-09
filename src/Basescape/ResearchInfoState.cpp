@@ -34,6 +34,7 @@
 #include "../Engine/Timer.h"
 #include "../Engine/RNG.h"
 #include <climits>
+#include <algorithm>
 
 namespace OpenXcom
 {
@@ -46,14 +47,14 @@ namespace OpenXcom
  */
 ResearchInfoState::ResearchInfoState(Base *base, RuleResearch *rule) : _base(base), _project(nullptr), _rule(rule)
 {
-	int rng = RNG::generate(50, 150);
-	int randomizedCost = rule->getCost() * rng / 100;
-	if (rule->getCost() > 0)
+	int cost = rule->getCost();
+	if (Mod::RESEARCH_RANGE && cost) // only invoke RNG seed when necessary
 	{
-		randomizedCost = std::max(1, randomizedCost);
+		int rng = RNG::generate(100 - Mod::RESEARCH_RANGE, 100 + Mod::RESEARCH_RANGE);
+		cost = std::max(1, cost * rng / 100);
 	}
-	_project = new ResearchProject(rule, randomizedCost);
 
+	_project = new ResearchProject(rule, cost);
 	buildUi();
 }
 
