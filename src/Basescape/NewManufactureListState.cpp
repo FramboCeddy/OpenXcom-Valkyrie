@@ -438,6 +438,12 @@ void NewManufactureListState::fillProductionList(bool refreshCategories)
 		{
 			continue;
 		}
+		// not profitable
+		if (basicFilter == MANU_FILTER_PROFITABILITY && manuf->getProfitability() <= 0)
+		{
+			break; // because the list is sorted descending by profitability, we can stop entirely once we hit a single non-profitable item
+		}
+
 		// quick search
 		if (!searchString.empty())
 		{
