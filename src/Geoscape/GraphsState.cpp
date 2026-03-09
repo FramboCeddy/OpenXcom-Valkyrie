@@ -1206,13 +1206,14 @@ void GraphsState::drawFinanceLines()
 			if (iter > 0)
 			{
 				_financeLines.at(button)->drawLine(x, y, x + 17, newLineVector.at(iter - 1), Palette::blockOffset((button / 2) + 1) + offset);
-				if (button == 4 && Options::showDefeatScore) // draw alongside score
-				{
-					int defeatLineY = 175 - (-lowerLimit / units) - difficulty_threshold / units; // flat line at defeat score
-					_financeLines.at(button)->drawLine(x, defeatLineY, x + 17, defeatLineY, Palette::blockOffset(((button) / 2) + 1) + offset + 8); // +8 to use next color
-				}
 			}
 		}
+	}
+
+	if (Options::showDefeatScore && _financeToggles.at(4)) // draw alongside score
+	{
+		int defeatLineY = 175 - (-lowerLimit / units) - difficulty_threshold / units; // flat line at defeat score
+		_financeLines.at(4)->drawLine(125, defeatLineY, 312, defeatLineY, Palette::blockOffset(3) + 8); // +8 to use next color
 	}
 
 	updateScale(lowerLimit, upperLimit);
