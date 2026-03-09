@@ -1079,14 +1079,22 @@ int Base::getAllocatedEngineers() const
 int Base::getDefenseValue() const
 {
 	int total = 0;
+	int gravShieldPower = 0;
 	for (const auto* fac : _facilities)
 	{
-		if (fac->getBuildTime() == 0)
+		if (fac->getBuildTime() > 0)
 		{
-			total += fac->getRules()->getDefenseValue();
+			continue;
+		}
+
+		total += fac->getRules()->getDefenseValue();
+
+		if (fac->getRules()->isGravShield())
+		{
+			++gravShieldPower;
 		}
 	}
-	return total;
+	return total * gravShieldPower;
 }
 
 /**

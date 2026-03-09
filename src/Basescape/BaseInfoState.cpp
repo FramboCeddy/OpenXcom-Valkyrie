@@ -35,6 +35,8 @@
 #include "TransfersState.h"
 #include "StoresState.h"
 #include "BasescapeState.h"
+#include "../Engine/Options.inc.h"
+#include "../Engine/State.h"
 
 namespace OpenXcom
 {
