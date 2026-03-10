@@ -81,7 +81,8 @@ CraftEquipmentState::CraftEquipmentState(Base *base, size_t craft) :
 	_btnInventory = new TextButton(102, 16, 164, 176);
 	_txtTitle = new Text(300, 17, 16, 7);
 	_txtItem = new Text(144, 9, 16, 32);
-	_txtStores = new Text(150, 9, 160, 32);
+	_txtStores = new Text(84, 9, 160, 32);
+	_txtLoaded = new Text(75, 9, 240, 32);
 	_txtAvailable = new Text(110, 9, 16, 24);
 	_txtUsed = new Text(110, 9, 130, 24);
 	_txtCrew = new Text(71, 9, 244, 24);
@@ -103,6 +104,7 @@ CraftEquipmentState::CraftEquipmentState(Base *base, size_t craft) :
 	add(_txtTitle, "text", "craftEquipment");
 	add(_txtItem, "text", "craftEquipment");
 	add(_txtStores, "text", "craftEquipment");
+	add(_txtLoaded, "text", "craftEquipment");
 	add(_txtAvailable, "text", "craftEquipment");
 	add(_txtUsed, "text", "craftEquipment");
 	add(_txtCrew, "text", "craftEquipment");
@@ -157,6 +159,17 @@ CraftEquipmentState::CraftEquipmentState(Base *base, size_t craft) :
 	std::ostringstream ss3;
 	ss3 << tr("STR_SOLDIERS_UC") << ">" << Unicode::TOK_COLOR_FLIP << c->getNumTotalSoldiers();
 	_txtCrew->setText(ss3.str());
+
+	// TODO: craft can have both an #item limit and a space/weight limit
+	// So we need to figure out how to display both
+	if (c->getRules()->getMaxItems() > 0 && c->getRules()->getMaxItems() < 999999)
+	{
+		_txtLoaded->setText(tr("STR_ITEMS_LOADED").arg(c->getNumEquipment()).arg(c->getMaxItemsClamped()));
+	}
+	else if (c->getRules()->getMaxStorageSpace() > 0 && c->getRules()->getMaxStorageSpace() < 99999)
+	{
+		_txtLoaded->setText(tr("STR_SPACE_LOADED").arg(c->getTotalItemStorageSize()).arg(c->getMaxStorageSpaceClamped()));
+	}
 
 	// populate sort options
 	_categoryStrings.push_back("STR_ALL");
@@ -711,6 +724,16 @@ void CraftEquipmentState::updateQuantity()
 
 	_txtAvailable->setText(tr("STR_SPACE_AVAILABLE").arg(c->getSpaceAvailable()));
 	_txtUsed->setText(tr("STR_SPACE_USED").arg(c->getSpaceUsed()));
+	// TODO: craft can have both an #item limit and a space/weight limit
+	// So we need to figure out how to display both
+	if (c->getRules()->getMaxItems() > 0 && c->getRules()->getMaxItems() < 999999)
+	{
+		_txtLoaded->setText(tr("STR_ITEMS_LOADED").arg(c->getNumEquipment()).arg(c->getMaxItemsClamped()));
+	}
+	else if (c->getRules()->getMaxStorageSpace() > 0 && c->getRules()->getMaxStorageSpace() < 99999)
+	{
+		_txtLoaded->setText(tr("STR_SPACE_LOADED").arg(c->getTotalItemStorageSize()).arg(c->getMaxStorageSpaceClamped()));
+	}
 }
 
 /**

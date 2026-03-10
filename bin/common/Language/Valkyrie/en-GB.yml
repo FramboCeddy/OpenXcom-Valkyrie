@@ -5,3 +5,5 @@ en-GB:
   STR_EUCLID_DISTANCE_ACCURACY: "Euclidean Distance for Accuracy"
   STR_EUCLID_DISTANCE_ACCURACY_DESC: "Uses Euclidean distance for accuracy calculations."
   STR_FILTER_PROFITABILITY: "Profitability"
+  STR_ITEMS_LOADED: "Items>{ALT}{0}{ALT}/{ALT}{1}"
+  STR_SPACE_LOADED: "Space>{ALT}{0}{ALT}/{ALT}{1}"
