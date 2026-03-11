@@ -1079,7 +1079,7 @@ int Base::getAllocatedEngineers() const
 int Base::getDefenseValue() const
 {
 	int total = 0;
-	int gravShieldPower = 0;
+	int gravShieldPower = 1;
 	for (const auto* fac : _facilities)
 	{
 		if (fac->getBuildTime() > 0)
