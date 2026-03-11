@@ -952,7 +952,7 @@ void BattlescapeGenerator::run()
 
 	if (!isPreview && _ufo && _ufo->getStatus() == Ufo::CRASHED)
 	{
-		explodePowerSources();
+		explodePowerSources(_ufo->getExplodeChance());
 	}
 
 	if (!isPreview)
@@ -2523,18 +2523,15 @@ void BattlescapeGenerator::fuelPowerSources()
 
 
 /**
- * When a UFO crashes, there is a 75% chance for each power source to explode.
+ * When a UFO crashes, there is a default 75% chance for each power source to explode.
  */
-void BattlescapeGenerator::explodePowerSources()
+void BattlescapeGenerator::explodePowerSources(int explodeChance)
 {
 	for (int i = 0; i < _save->getMapSizeXYZ(); ++i)
 	{
-		if (_save->getTile(i)->getObjectSpecialTileType() == UFO_POWER_SOURCE && RNG::percent(75))
+		if (_save->getTile(i)->getObjectSpecialTileType() == UFO_POWER_SOURCE && explodeChance && RNG::percent(explodeChance))
 		{
-			Position pos;
-			pos.x = _save->getTile(i)->getPosition().x*16;
-			pos.y = _save->getTile(i)->getPosition().y*16;
-			pos.z = (_save->getTile(i)->getPosition().z*24) +12;
+			Position pos = _save->getTile(i)->getPosition().toVoxel() + TileEngine::voxelTileCenter;
 			_save->getTileEngine()->explode({ }, pos, 180+RNG::generate(0,70), _save->getMod()->getDamageType(DT_HE), 10);
 		}
 	}
@@ -2543,7 +2540,7 @@ void BattlescapeGenerator::explodePowerSources()
 	{
 		int power = t->getExplosive();
 		t->setExplosive(0, 0, true);
-		Position p = t->getPosition().toVoxel() + Position(8,8,0);
+		Position p = t->getPosition().toVoxel() + TileEngine::voxelTileCenter;
 		_save->getTileEngine()->explode({ }, p, power, _game->getMod()->getDamageType(DT_HE), power / 10);
 		t = _save->getTileEngine()->checkForTerrainExplosions();
 	}

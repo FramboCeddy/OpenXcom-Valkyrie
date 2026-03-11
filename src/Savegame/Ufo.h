@@ -83,6 +83,7 @@ private:
 	int _softlockShotCounter;
 	Waypoint *_origWaypoint;
 	ScriptValues<Ufo> _scriptValues;
+	int _explodeChance;
 
 	using MovingTarget::load;
 	using MovingTarget::save;
@@ -254,6 +255,8 @@ public:
 	void increaseSoftlockShotCounter() { _softlockShotCounter++; }
 	/// Checks if a target is inside the UFO's radar range.
 	bool insideRadarRange(Target *target) const;
-};
+	/// Gets the chance for each power source to blow up when the UFO is shot down.
+	int getExplodeChance() const { return _explodeChance; }
+	};
 
 }

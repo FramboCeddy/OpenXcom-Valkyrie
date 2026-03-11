@@ -119,7 +119,7 @@ private:
 	/// Fills power sources with an alien fuel object.
 	void fuelPowerSources();
 	/// Possibly explodes ufo power sources.
-	void explodePowerSources();
+	void explodePowerSources(int explodeChance);
 	void explodeOtherJunk();
 	/// Deploys the XCOM units on the mission.
 	void deployXCOM(const RuleStartingCondition* startingCondition, const RuleEnviroEffects* enviro);
