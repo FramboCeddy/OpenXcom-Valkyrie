@@ -1087,7 +1087,9 @@ int Base::getDefenseValue() const
 			continue;
 		}
 
-		total += fac->getRules()->getDefenseValue();
+		total += Options::defenseValueMean ?
+				fac->getRules()->getDefenseValue() * fac->getRules()->getHitRatio() / 100 :
+				fac->getRules()->getDefenseValue();
 
 		if (fac->getRules()->isGravShield())
 		{

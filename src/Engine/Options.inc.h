@@ -190,3 +190,4 @@ OPT bool visualSmokeDensity;
 OPT bool euclidDistanceAccuracy;
 OPT bool manufactureKeepCategories;
 OPT bool showDefeatScore;
+OPT bool defenseValueMean;

@@ -573,6 +573,7 @@ void createOptionsVALK()
 {
 	_info.push_back(OptionInfo(OPTION_VALK, "manufactureKeepCategories", &manufactureKeepCategories, false, "STR_MANUFACTURE_KEEP_CATEGORIES", "HIDDEN"));
 	_info.push_back(OptionInfo(OPTION_VALK, "showDefeatScore", &showDefeatScore, false, "STR_SHOW_DEFEAT_SCORE", "HIDDEN"));
+	_info.push_back(OptionInfo(OPTION_VALK, "defenseValueMean", &defenseValueMean, false, "STR_DEFENSE_VALUE_MEAN", "HIDDEN"));
 }
 
 void createAdvancedOptionsVALK()
