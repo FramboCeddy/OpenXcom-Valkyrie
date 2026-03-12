@@ -346,6 +346,7 @@ void TechTreeViewerState::initLists()
 		}
 
 		// Cost indicator
+		if (!Options::techTreeCensorCost)
 		{
 			std::ostringstream ss;
 			int cost = rule->getCost();
