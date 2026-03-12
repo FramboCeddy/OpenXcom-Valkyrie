@@ -41,6 +41,9 @@
 #include "../Savegame/SavedGame.h"
 #include <algorithm>
 #include <unordered_set>
+#include <utility>
+#include <array>
+#include <string>
 
 namespace OpenXcom
 {
@@ -338,34 +341,26 @@ void TechTreeViewerState::initLists()
 		int row = 0;
 		RuleResearch *rule = _game->getMod()->getResearch(_selectedTopic);
 		if (rule == 0)
+		{
 			return;
+		}
 
 		// Cost indicator
 		{
 			std::ostringstream ss;
 			int cost = rule->getCost();
-			std::vector<std::pair<int, std::string>> symbol_values
-					({{100, "#"}, {20, "="}, {5, "-"}});
+			static const std::array<std::pair<int, std::string>, 4> symbol_values = {{{100, "#"}, {20, "="}, {5, "-"}, {1, "."}}};
 
-			for (const auto& sym : symbol_values)
+			for (const auto& [value, symbol] : symbol_values)
 			{
-				while (cost >= std::get<0>(sym))
+				while (cost >= value)
 				{
-					cost -= std::get<0>(sym);
-					ss << std::get<1>(sym);
-				}
-			}
-			if (rule->getCost() < 10)
-			{
-				while (cost >= 1)
-				{
-					cost -= 1;
-					ss << ".";
+					cost -= value;
+					ss << symbol;
 				}
 			}
 			_txtCostIndicator->setText(ss.str());
 		}
-		//
 
 		const std::vector<std::string> &researchList = _game->getMod()->getResearchList();
 		const std::vector<std::string> &manufactureList = _game->getMod()->getManufactureList();
