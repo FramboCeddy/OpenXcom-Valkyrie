@@ -398,12 +398,13 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	{
 		if (Options::oxceUniformShootingSpread)
 		{
-			int deviateRadiusSq = deviation * deviation / 4; // deviation is the diameter
+			int diameter = deviation * sqrt(4.0/M_PI); // scale diameter of inscribed circle so the area matches the square
+			int deviateRadiusSq = diameter * diameter / 4; // r^2 = (d^2)/4
 			int radiusSq, dX, dY;
 			do // use rejection sampling to only select offsets inside a circle
 			{
-				dX = RNG::generate(0, deviation) - deviation / 2;
-				dY = RNG::generate(0, deviation) - deviation / 2;
+				dX = RNG::generate(0, diameter) - diameter / 2;
+				dY = RNG::generate(0, diameter) - diameter / 2;
 				radiusSq = dX * dX + dY * dY;
 			} while (radiusSq > deviateRadiusSq); // 78.5% chance that a random point in square is also in inscribed circle -> 99% certainty after 3 iterations
 			target->x += dX;
@@ -414,7 +415,6 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 			target->x += RNG::generate(0, deviation) - deviation / 2;
 			target->y += RNG::generate(0, deviation) - deviation / 2;
 		}
-
 		target->z += RNG::generate(0, deviation / 2) / 2 - deviation / 8;
 	}
 
