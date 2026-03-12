@@ -1088,7 +1088,7 @@ int Base::getDefenseValue() const
 		}
 
 		total += Options::defenseValueMean ?
-				fac->getRules()->getDefenseValue() * fac->getRules()->getHitRatio() / 100 :
+				fac->getRules()->getDefenseValue() * std::clamp(fac->getRules()->getHitRatio(), 0, 100) / 100 :
 				fac->getRules()->getDefenseValue();
 
 		if (fac->getRules()->isGravShield())
