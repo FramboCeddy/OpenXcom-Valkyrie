@@ -1476,7 +1476,7 @@ void Map::drawTerrain(Surface *surface)
 											ss << min << "<>" << max;
 										}
 										if ((action->type != BA_THROW && (rule->getBattleType() != BT_PSIAMP || action->type == BA_USE)) ||
-											(action->type == BA_THROW && (rule->getBattleType() == BT_GRENADE || rule->getBattleType() == BT_PROXIMITYGRENADE)))
+										(action->type == BA_THROW && action->weapon->isFuseEnabled() && (rule->getBattleType() == BT_GRENADE || rule->getBattleType() == BT_PROXIMITYGRENADE)))
 										{
 											if (_cursorType != CT_WAYPOINT)
 											{
