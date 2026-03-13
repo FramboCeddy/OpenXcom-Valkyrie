@@ -328,7 +328,8 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	double realDistance = std::sqrt((xDist * xDist) + (yDist * yDist) + (zDist * zDist));
 	// maxRange is the maximum range a projectile shall ever travel in voxel space
 	// up to 2 tiles diagonally for melee hits (like reaper v reaper)			// 1000 tiles
-	double maxRange = (_action.type == BA_HIT) ? 46 : keepRange ? realDistance : 16 * 1000; 
+	double maxRange = (_action.type == BA_HIT) ? 46 :
+					  keepRange ? realDistance : 16 * 1000; 
 
 	if (_action.type != BA_HIT)
 	{
@@ -372,16 +373,10 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 		Tile *tile = _save->getTile(target->toTile());
 		if (tile)
 		{
-			bool hasLOS = false;
 			// we can call TileEngine::visible() only if the target unit is on the same tile
-			if (tile->getUnit())
-			{
-				hasLOS = _save->getTileEngine()->visible(_action.actor, tile);
-			}
-			else
-			{
-				hasLOS = _save->getTileEngine()->isTileInLOS(&_action, tile, false);
-			}
+			bool hasLOS = tile->getUnit() ?
+				_save->getTileEngine()->visible(_action.actor, tile) :
+				_save->getTileEngine()->isTileInLOS(&_action, tile, false);
 
 			if (!hasLOS)
 			{
@@ -398,7 +393,7 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	{
 		if (Options::oxceUniformShootingSpread)
 		{
-			int diameter = deviation * sqrt(4.0/M_PI); // scale diameter of inscribed circle so the area matches the square
+			int diameter = deviation * std::sqrt(4.0/M_PI); // scale diameter of inscribed circle so the area matches the square
 			int deviateRadiusSq = diameter * diameter / 4; // r^2 = (d^2)/4
 			int radiusSq, dX, dY;
 			do // use rejection sampling to only select offsets inside a circle

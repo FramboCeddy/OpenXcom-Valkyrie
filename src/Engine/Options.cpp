@@ -578,9 +578,10 @@ void createOptionsVALK()
 
 void createAdvancedOptionsVALK()
 {
+	_info.push_back(OptionInfo(OPTION_VALK, "techTreeCensorCost", &techTreeCensorCost, false, "STR_TECHTREE_CENSOR_COST", "STR_GENERAL"));
+
 	_info.push_back(OptionInfo(OPTION_VALK, "visualSmokeDensity", &visualSmokeDensity, false, "STR_VISUAL_SMOKE_DENSITY", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "euclidDistanceAccuracy", &euclidDistanceAccuracy, false, "STR_EUCLID_DISTANCE_ACCURACY", "STR_BATTLESCAPE"));
-	_info.push_back(OptionInfo(OPTION_VALK, "techTreeCensorCost", &techTreeCensorCost, false, "STR_TECHTREE_CENSOR_COST", "STR_GENERAL"));
 }
 
 void createControlsVALK()

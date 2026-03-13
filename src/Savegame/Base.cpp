@@ -1109,7 +1109,10 @@ int Base::getShortRangeDetection() const
 	int total = 0;
 	int minRadarRange = _mod->getShortRadarRange();
 
-	if (minRadarRange == 0) return 0;
+	if (minRadarRange == 0)
+	{
+		return 0;
+	}
 	for (const auto* fac : _facilities)
 	{
 		if (fac->getRules()->getRadarRange() > 0 && fac->getRules()->getRadarRange() <= minRadarRange && fac->getBuildTime() == 0)
@@ -1322,12 +1325,9 @@ void Base::removeResearch(ResearchProject * project)
 {
 	_scientists += project->getAssigned();
 	const RuleResearch *ruleResearch = project->getRules();
-	if (!project->isFinished())
+	if (!project->isFinished() && ruleResearch->needItem() && ruleResearch->destroyItem())
 	{
-		if (ruleResearch->needItem() && ruleResearch->destroyItem())
-		{
-			getStorageItems()->addItem(ruleResearch->getNeededItem(), 1);
-		}
+		getStorageItems()->addItem(ruleResearch->getNeededItem(), 1);
 	}
 
 	Collections::deleteIf(_research, 1,
