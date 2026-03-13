@@ -1,13 +1,13 @@
 MCDPatches:
-# pathFinding Hacks.
-# bigWall 1 = regular bigwall, no movement allowed.
-# bigWall 2 = can walk by north-east/south-west
-# bigWall 3 = can walk by north-west/south-east
-# bigWall 4 = acts as west wall
-# bigWall 5 = acts as north wall
-# bigWall 6 = acts as east wall
-# bigWall 7 = acts as south wall
-# bigWall 8 = acts as east and south wall
+  # pathFinding Hacks.
+  # bigWall 1 = regular bigwall, no movement allowed.
+  # bigWall 2 = can walk by north-east/south-west
+  # bigWall 3 = can walk by north-west/south-east
+  # bigWall 4 = acts as west wall
+  # bigWall 5 = acts as north wall
+  # bigWall 6 = acts as east wall
+  # bigWall 7 = acts as south wall
+  # bigWall 8 = acts as east and south wall
   - type: XBASE1
     data:
       - MCDIndex: 2
@@ -31,9 +31,9 @@ MCDPatches:
       - MCDIndex: 16
         bigWall: 3
       - MCDIndex: 24
-        LOFTS: [0,0,0,0,0,0,44,43,43,42,42,14]
+        LOFTS: [0, 0, 0, 0, 0, 0, 44, 43, 43, 42, 42, 14]
       - MCDIndex: 25
-        LOFTS: [0,0,0,0,0,0,44,43,43,42,42,14]
+        LOFTS: [0, 0, 0, 0, 0, 0, 44, 43, 43, 42, 42, 14]
       - MCDIndex: 26
         bigWall: 4
       - MCDIndex: 30
@@ -45,9 +45,9 @@ MCDPatches:
       - MCDIndex: 33
         bigWall: 4
       - MCDIndex: 39
-        LOFTS: [6,29,29,29,29,29,0,0,0,0,0,0]
+        LOFTS: [6, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0]
       - MCDIndex: 40
-        LOFTS: [6,29,29,29,29,29,0,0,0,0,0,0]
+        LOFTS: [6, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0]
       - MCDIndex: 43
         bigWall: 6
       - MCDIndex: 44
@@ -59,12 +59,12 @@ MCDPatches:
       - MCDIndex: 48
         bigWall: 2
       - MCDIndex: 53
-        LOFTS: [0,0,0,0,0,0,0,0,14,42,43,44]
+        LOFTS: [0, 0, 0, 0, 0, 0, 0, 0, 14, 42, 43, 44]
       - MCDIndex: 54
         TUSlide: 2
-        LOFTS: [0,0,0,0,14,42,43,44,0,0,0,0]
+        LOFTS: [0, 0, 0, 0, 14, 42, 43, 44, 0, 0, 0, 0]
       - MCDIndex: 55
-        LOFTS: [14,42,43,44,0,0,0,0,0,0,0,0]
+        LOFTS: [14, 42, 43, 44, 0, 0, 0, 0, 0, 0, 0, 0]
       - MCDIndex: 56
         terrainHeight: -7
   - type: LIGHTNIN
@@ -97,11 +97,11 @@ MCDPatches:
         bigWall: 2
       - MCDIndex: 13
         bigWall: 7
-        LOFTS: [44,44,44,44,44,44,44,44,44,44,44,44]
+        LOFTS: [44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44]
       - MCDIndex: 38
-        LOFTS: [47,46,46,45,45,13,0,0,0,0,0,0]
+        LOFTS: [47, 46, 46, 45, 45, 13, 0, 0, 0, 0, 0, 0]
       - MCDIndex: 39
-        LOFTS: [0,0,0,0,0,0,47,46,46,45,45,13]
+        LOFTS: [0, 0, 0, 0, 0, 0, 47, 46, 46, 45, 45, 13]
   - type: PLANE
     data:
       - MCDIndex: 13
@@ -109,16 +109,16 @@ MCDPatches:
       - MCDIndex: 14
         bigWall: 6
       - MCDIndex: 49
-        LOFTS: [6,6,6,6,6,6,6,6,6,6,6,6]
+        LOFTS: [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
       - MCDIndex: 51
-        LOFTS: [6,6,6,6,6,6,6,6,6,6,6,6]
+        LOFTS: [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
       - MCDIndex: 62
         bigWall: 0
-        LOFTS: [0,0,0,0,0,0,0,0,14,42,43,44]
+        LOFTS: [0, 0, 0, 0, 0, 0, 0, 0, 14, 42, 43, 44]
       - MCDIndex: 63
-        LOFTS: [0,0,0,0,14,42,43,44,0,0,0,0]
+        LOFTS: [0, 0, 0, 0, 14, 42, 43, 44, 0, 0, 0, 0]
       - MCDIndex: 64
-        LOFTS: [14,42,43,44,0,0,0,0,0,0,0,0]
+        LOFTS: [14, 42, 43, 44, 0, 0, 0, 0, 0, 0, 0, 0]
   - type: U_EXT02
     data:
       - MCDIndex: 2
@@ -174,7 +174,7 @@ MCDPatches:
       - MCDIndex: 25
         flammability: 40
         fuel: 4
-# Mountain terrain death tile fix
+  # Mountain terrain death tile fix
   - type: MOUNT
     data:
       - MCDIndex: 0
@@ -270,6 +270,22 @@ MCDPatches:
       - MCDIndex: 0
         TUFly: 4
         noFloor: true
+      - MCDIndex: 9
+        TUFly: 255
+        TUSlide: 255
+        TUWalk: 255
+      - MCDIndex: 10
+        TUFly: 255
+        TUSlide: 255
+        TUWalk: 255
+      - MCDIndex: 11
+        TUFly: 255
+        TUSlide: 255
+        TUWalk: 255
+      - MCDIndex: 12
+        TUFly: 255
+        TUSlide: 255
+        TUWalk: 255
       - MCDIndex: 63
         noFloor: true
       - MCDIndex: 64
@@ -309,11 +325,11 @@ MCDPatches:
   - type: URBAN
     data:
       - MCDIndex: 89
-        LOFTS: [85,85,85,6,85,85,85,6,63,63,63,0]
+        LOFTS: [85, 85, 85, 6, 85, 85, 85, 6, 63, 63, 63, 0]
       - MCDIndex: 90
-        LOFTS: [84,84,84,6,85,85,85,6,85,0,0,0]
+        LOFTS: [84, 84, 84, 6, 85, 85, 85, 6, 85, 0, 0, 0]
       - MCDIndex: 91
-        LOFTS: [85,85,85,6,85,85,85,6,100,100,0,0]
+        LOFTS: [85, 85, 85, 6, 85, 85, 85, 6, 100, 100, 0, 0]
   - type: ROADS
     data:
       - MCDIndex: 18
