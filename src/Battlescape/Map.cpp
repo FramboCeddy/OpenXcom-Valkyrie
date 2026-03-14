@@ -16,48 +16,64 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Map.h"
-#include "Camera.h"
-#include "UnitSprite.h"
-#include "ItemSprite.h"
-#include "Pathfinding.h"
-#include "TileEngine.h"
-#include "Projectile.h"
-#include "Explosion.h"
-#include "BattlescapeState.h"
-#include "Particle.h"
-#include "../Mod/Mod.h"
 #include "../Engine/Action.h"
-#include "../Engine/SurfaceSet.h"
-#include "../Engine/Timer.h"
-#include "../Engine/Language.h"
-#include "../Engine/Palette.h"
+#include "../Engine/Collections.h"
+#include "../Engine/Exception.h"
 #include "../Engine/Game.h"
+#include "../Engine/GraphSubset.h"
+#include "../Engine/InteractiveSurface.h"
+#include "../Engine/Language.h"
+#include "../Engine/Options.h"
+#include "../Engine/Palette.h"
 #include "../Engine/Screen.h"
 #include "../Engine/ShaderDraw.h"
 #include "../Engine/ShaderMove.h"
-#include "../Savegame/SavedBattleGame.h"
-#include "../Savegame/Tile.h"
-#include "../Savegame/BattleUnit.h"
-#include "../Savegame/BattleItem.h"
-#include "../Ufopaedia/Ufopaedia.h"
-#include "../Mod/RuleItem.h"
-#include "../Mod/RuleInterface.h"
-#include "../Mod/MapDataSet.h"
-#include "../Mod/MapData.h"
-#include "../Mod/Armor.h"
-#include "../Mod/RuleEnviroEffects.h"
-#include "BattlescapeMessage.h"
-#include "../Savegame/SavedGame.h"
+#include "../Engine/State.h"
+#include "../Engine/Surface.h"
+#include "../Engine/SurfaceSet.h"
+#include "../Engine/Timer.h"
+#include "../fmath.h"
 #include "../Interface/NumberText.h"
 #include "../Interface/Text.h"
-#include "../fmath.h"
-#include "../Engine/Options.h"
+#include "../Mod/Armor.h"
+#include "../Mod/MapData.h"
+#include "../Mod/MapDataSet.h"
+#include "../Mod/Mod.h"
 #include "../Mod/RuleDamageType.h"
+#include "../Mod/RuleEnviroEffects.h"
+#include "../Mod/RuleInterface.h"
+#include "../Mod/RuleItem.h"
+#include "../Mod/Unit.h"
+#include "../Savegame/BattleItem.h"
+#include "../Savegame/BattleUnit.h"
+#include "../Savegame/SavedBattleGame.h"
+#include "../Savegame/SavedGame.h"
+#include "../Savegame/Tile.h"
+#include "../Ufopaedia/Ufopaedia.h"
+#include "BattlescapeGame.h"
+#include "BattlescapeMessage.h"
+#include "BattlescapeState.h"
+#include "Camera.h"
+#include "Explosion.h"
+#include "ItemSprite.h"
+#include "Map.h"
+#include "Particle.h"
+#include "Pathfinding.h"
+#include "Position.h"
+#include "Projectile.h"
+#include "TileEngine.h"
+#include "UnitSprite.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
-#include "BattlescapeGame.h"
+#include <cstdlib>
+#include <iterator>
+#include <list>
+#include <SDL_keyboard.h>
+#include <SDL_stdinc.h>
+#include <SDL_video.h>
 #include <sstream>
+#include <vector>
 
 
 /*
@@ -211,20 +227,16 @@ Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) 
 	_fadeTimer->onTimer((SurfaceHandler)&Map::fadeShade);
 	_fadeTimer->start();
 
-	auto* enviro = _save->getEnviroEffects();
-	if (enviro)
-	{
-		_bgColor = enviro->getMapBackgroundColor();
-	}
-
 	_stunIndicator = _game->getMod()->getSurface("FloorStunIndicator", false);
 	_woundIndicator = _game->getMod()->getSurface("FloorWoundIndicator", false);
 	_burnIndicator = _game->getMod()->getSurface("FloorBurnIndicator", false);
 	_shockIndicator = _game->getMod()->getSurface("FloorShockIndicator", false);
 	_anyIndicator = _stunIndicator || _woundIndicator || _burnIndicator || _shockIndicator;
 
+	auto* enviro = _save->getEnviroEffects();
 	if (enviro)
 	{
+		_bgColor = enviro->getMapBackgroundColor();
 		if (!enviro->getMapShockIndicator().empty())
 		{
 			_shockIndicator = _game->getMod()->getSurface(enviro->getMapShockIndicator(), false);
@@ -273,14 +285,7 @@ void Map::init()
 	_arrow->loadRaw(pixels);
 
 	_projectile = 0;
-	if (_save->getDepth() == 0)
-	{
-		_projectileSet = _game->getMod()->getSurfaceSet("Projectiles");
-	}
-	else
-	{
-		_projectileSet = _game->getMod()->getSurfaceSet("UnderwaterProjectiles");
-	}
+	_projectileSet = _save->getDepth() == 0 ? _game->getMod()->getSurfaceSet("Projectiles") : _game->getMod()->getSurfaceSet("UnderwaterProjectiles");
 }
 
 /**
@@ -403,34 +408,23 @@ void Map::refreshHiddenMovementBackground()
  */
 int Map::getWallShade(TilePart part, Tile* tileFrot)
 {
-	int shade;
-	if (tileFrot->isDiscovered(O_FLOOR))
+	int shade = tileFrot->isDiscovered(O_FLOOR) ? reShade(tileFrot) : 16;
+	if (part && (tileFrot->isDoor(part) || tileFrot->isUfoDoor(part)) && tileFrot->isDiscovered(part))
 	{
-		shade = reShade(tileFrot);
-	}
-	else
-	{
-		shade = 16;
-	}
-	if (part)
-	{
-		if ((tileFrot->isDoor(part) || tileFrot->isUfoDoor(part)) && tileFrot->isDiscovered(part))
-		{
-			Position offset =
-				part == O_NORTHWALL ? Position(1,0,0) :
-				part == O_WESTWALL ? Position(0,1,0) :
-					throw Exception("Unsupported tile part for wall shade");
+		Position offset =
+			part == O_NORTHWALL ? Position(1,0,0) :
+			part == O_WESTWALL ? Position(0,1,0) :
+				throw Exception("Unsupported tile part for wall shade");
 
-			Tile *tileBehind = _save->getTile(tileFrot->getPosition() - offset);
+		Tile *tileBehind = _save->getTile(tileFrot->getPosition() - offset);
 
-			shade = std::min(reShade(tileFrot), tileBehind ? tileBehind->getShade() + 5 : 16);
-		}
+		shade = std::min(reShade(tileFrot), tileBehind ? tileBehind->getShade() + 5 : 16);
 	}
 	return shade;
 }
 
 /**
- * Check two positions if have same XY cords
+ * Check two positions if have same XY coords
  */
 static bool positionHaveSameXY(Position a, Position b)
 {
@@ -438,7 +432,7 @@ static bool positionHaveSameXY(Position a, Position b)
 }
 
 /**
- * Check two positions if have same XY cords
+ * Check two positions to have lower or equal difference in x and y coords independently than diff
  */
 static bool positionInRangeXY(Position a, Position b, int diff)
 {
@@ -460,10 +454,7 @@ int getArrowBobForFrame(int frame)
 
 int getShadePulseForFrame(int shade, int frame)
 {
-	if (shade > 7) shade = 7;
-	if (shade < 2) shade = 2;
-	shade += (ArrowBobOffsets[frame % 8] * 2 - 2);
-	return shade;
+	return std::clamp(shade, 2, 7) + (getArrowBobForFrame(frame) * 2 - 2);
 }
 
 }
@@ -1009,13 +1000,10 @@ void Map::drawTerrain(Surface *surface)
 					}
 					// Draw object
 					tmpSurface = tile->getSprite(O_OBJECT);
-					if (tmpSurface)
+					if (tmpSurface && tile->isBackTileObject(O_OBJECT))
 					{
-						if (tile->isBackTileObject(O_OBJECT))
-						{
-							Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y - tile->getYOffset(O_OBJECT),
-											 tile->getObstacle(O_OBJECT) ? obstacleShade : tileShade, false, _nvColor);
-						}
+						Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y - tile->getYOffset(O_OBJECT),
+										 tile->getObstacle(O_OBJECT) ? obstacleShade : tileShade, false, _nvColor);
 					}
 					// draw an item on top of the floor (if any)
 					BattleItem* item = tile->getTopItem();
@@ -1578,6 +1566,8 @@ void Map::drawTerrain(Surface *surface)
 	}
 	// draw the pathfinding numbers and dithered arrows on top of the main surface
 	movementSurface->blitNShade(surface, 0, 0, 0);
+	delete _numWaypid;
+	delete movementSurface;
 
 	// draw selection arrow
 	auto* selectedUnit = _save->getSelectedUnit();
@@ -1651,7 +1641,6 @@ void Map::drawTerrain(Surface *surface)
 			}
 		}
 	}
-	//delete _numWaypid; // why this explicit delete?
 
 	// Draw craft deployment preview arrows
 	if (_isAltPressed && _save->isPreview() && this->getCursorType() != CT_NONE)
@@ -1970,7 +1959,6 @@ void Map::animate(bool redraw)
 		{
 			vDest.insert(std::begin(vDest), std::begin(vi), std::end(vi));
 		}
-
 
 		Collections::removeAll(vi);
 	}
