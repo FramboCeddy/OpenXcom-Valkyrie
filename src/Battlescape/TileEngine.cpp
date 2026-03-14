@@ -4501,7 +4501,10 @@ int TileEngine::castedShade(Position voxel)
 	for (z = zstart; z>0; z--)
 	{
 		tmpVoxel.z = z;
-		if (voxelCheck(tmpVoxel, 0) != V_EMPTY) break;
+		if (voxelCheck(tmpVoxel, 0) != V_EMPTY)
+		{
+			break;
+		}
 	}
 	return z;
 }
