@@ -569,9 +569,9 @@ void DebriefingState::init()
 	SavedGame *save = _game->getSavedGame();
 	SavedBattleGame *battle = save->getSavedBattle();
 
-	_missionStatistics->daylight = save->getSavedBattle()->getGlobalShade();
-	_missionStatistics->id = _game->getSavedGame()->getMissionStatistics()->size();
-	_game->getSavedGame()->getMissionStatistics()->push_back(_missionStatistics);
+	_missionStatistics->daylight = battle->getGlobalShade();
+	_missionStatistics->id = save->getMissionStatistics()->size();
+	save->getMissionStatistics()->push_back(_missionStatistics);
 
 	// Award Best-of commendations.
 	int bestScoreID[7] = {0, 0, 0, 0, 0, 0, 0};
@@ -768,15 +768,7 @@ void DebriefingState::init()
 	}
 
 	_game->getSavedGame()->setBattleGame(0);
-
-	if (_positiveScore)
-	{
-		_game->getMod()->playMusic(Mod::DEBRIEF_MUSIC_GOOD);
-	}
-	else
-	{
-		_game->getMod()->playMusic(Mod::DEBRIEF_MUSIC_BAD);
-	}
+	_game->getMod()->playMusic(_positiveScore ? Mod::DEBRIEF_MUSIC_GOOD : Mod::DEBRIEF_MUSIC_BAD);
 }
 
 /**
@@ -951,8 +943,8 @@ void DebriefingState::addStat(const std::string &name, int quantity, int score)
 	{
 		if (ds->item == name)
 		{
-			ds->qty = ds->qty + quantity;
-			ds->score = ds->score + score;
+			ds->qty += quantity;
+			ds->score += score;
 			break;
 		}
 	}
@@ -2426,14 +2418,26 @@ void DebriefingState::recoverItems(std::vector<BattleItem*> *from, Base *base, C
 						}
 					}
 				}
-				// only add recovery points for unresearched items
-				else if (!_game->getSavedGame()->isResearched(rule->getRequirements()))
+				// only add recovery points for unresearched items except mod allows
+				else if (!_game->getSavedGame()->isResearched(rule->getRequirements()) ||
+						  _game->getMod()->getGiveScoreAlsoForResearchedArtifacts())
 				{
 					addStat("STR_ALIEN_ARTIFACTS_RECOVERED", 1, rule->getRecoveryPoints());
-				}
-				else if (_game->getMod()->getGiveScoreAlsoForResearchedArtifacts())
-				{
-					addStat("STR_ALIEN_ARTIFACTS_RECOVERED", 1, rule->getRecoveryPoints());
+					if (Options::recoveryPointsForAmmo && (rule->getBattleType() == BT_FIREARM || rule->getBattleType() == BT_MELEE))
+					{
+						for (int slot = 0; slot < RuleItem::AmmoSlotMax; ++slot)
+						{
+							BattleItem* clip = bi->getAmmoForSlot(slot);
+							if (clip && clip != bi)
+							{
+								const RuleItem* rule = clip->getRules();
+								if (checkForRecovery(clip, rule))
+								{
+									addStat("STR_ALIEN_ARTIFACTS_RECOVERED", 1, rule->getRecoveryPoints()); // gain recovery points for ammo in weapons
+								}
+							}
+						}
+					}
 				}
 			}
 
