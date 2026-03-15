@@ -1,7 +1,7 @@
 # X-COM 2 (Terror From The Deep) ruleset
 # For documentation on these values, see http://ufopaedia.org/index.php?title=Rulesets_(OpenXcom)
 
-startingTime: #done
+startingTime:
   second: 0
   minute: 0
   hour: 12
@@ -16,6 +16,13 @@ timePersonnel: 72
 initialFunding: 6000
 alienFuel: [STR_ZRBITE, 50]
 fontName: Font.dat
+
+missionRatings:
+  500: STR_RATING_EXCELLENT
+  200: STR_RATING_GOOD
+  0: STR_RATING_OK
+  -200: STR_RATING_POOR
+  -999999: STR_RATING_TERRIBLE
 
 constants: #done
   doorSound: 47
@@ -48,22 +55,22 @@ soundDefs: #done: double check explosions.
   - type: GEO.CAT
     file: SAMPLE.CAT
     sounds:
-    # UI sounds: press and popup
+      # UI sounds: press and popup
       - 120
       - 98
-    # ufo hit interceptor/ufo crash/interceptor crash, ufo explode, interceptor hit ufo, ufo fire
+      # ufo hit interceptor/ufo crash/interceptor crash, ufo explode, interceptor hit ufo, ufo fire
       - 27
       - 28
       - 31
       - 37
-    # craft weapon sounds: ajax, dup, cannon, pwt, gauss, plasma
+      # craft weapon sounds: ajax, dup, cannon, pwt, gauss, plasma
       - 14
       - 15
       - 33
       - 97
       - 37
       - 18
-    # base defenses: torpedo, gauss, sonic, pwt
+      # base defenses: torpedo, gauss, sonic, pwt
       - 13
       - 14
       - 15
@@ -83,7 +90,7 @@ soundDefs: #done: double check explosions.
 
 transparencyLUTs: #done
   - colors:
-      - [  8,  8, 12, 2 ] # "white"
-      - [ 16,  8,  0, 2 ] # orange
-      - [  0, 12, 12, 2 ] # cyan
-      - [  4, 16,  4, 2 ] # green
+      - [8, 8, 12, 2] # "white"
+      - [16, 8, 0, 2] # orange
+      - [0, 12, 12, 2] # cyan
+      - [4, 16, 4, 2] # green

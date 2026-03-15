@@ -469,7 +469,9 @@ void DebriefingState::init()
 	for (const auto* ds : _stats)
 	{
 		if (ds->qty == 0)
+		{
 			continue;
+		}
 
 		std::ostringstream ss, ss2;
 		ss << Unicode::TOK_COLOR_FLIP << ds->qty << Unicode::TOK_COLOR_FLIP;
@@ -549,39 +551,14 @@ void DebriefingState::init()
 	}
 
 	// Calculate rating
-	std::string rating;
-	if (total <= -200)
+	std::string rating = "STR_RATING_TERRIBLE";
+	int temp = INT_MIN;
+	for (auto& [threshold, text] : *_game->getMod()->getMissionRatings())
 	{
-		rating = "STR_RATING_TERRIBLE";
-	}
-	else if (total <= 0)
-	{
-		rating = "STR_RATING_POOR";
-	}
-	else if (total <= 200)
-	{
-		rating = "STR_RATING_OK";
-	}
-	else if (total <= 500)
-	{
-		rating = "STR_RATING_GOOD";
-	}
-	else
-	{
-		rating = "STR_RATING_EXCELLENT";
-	}
-
-	if (!_game->getMod()->getMissionRatings()->empty())
-	{
-		rating = "";
-		int temp = INT_MIN;
-		for (auto& pair : *_game->getMod()->getMissionRatings())
+		if (threshold > temp && total >= threshold)
 		{
-			if (pair.first > temp && pair.first <= total)
-			{
-				temp = pair.first;
-				rating = pair.second;
-			}
+			temp = threshold;
+			rating = text;
 		}
 	}
 
