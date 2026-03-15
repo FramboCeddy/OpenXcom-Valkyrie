@@ -7,3 +7,7 @@ en-US:
   STR_FILTER_PROFITABILITY: "Profitability"
   STR_ITEMS_LOADED: "Items>{ALT}{0}{ALT}/{ALT}{1}"
   STR_SPACE_LOADED: "Space>{ALT}{0}{ALT}/{ALT}{1}"
+  STR_TECHTREE_CENSOR_COST: "Censor Tech Tree Research Cost"
+  STR_TECHTREE_CENSOR_COST_DESC: "Censor the research cost symbols when looking up a research in the Tech Tree view."
+  STR_CENSORED: "***"
+  STR_HIDE_SPOILERS: "Hide spoilers"

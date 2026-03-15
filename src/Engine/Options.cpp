@@ -1112,11 +1112,8 @@ bool isPasswordCorrect()
 {
 	if (_passwordCheck < 0)
 	{
-		std::string md5hash = md5(Options::password);
-		if (md5hash == "52bd8e15118862c40fc0d6107e197f42")
-			_passwordCheck = 1;
-		else
-			_passwordCheck = 0;
+		static const std::string md5hash = md5(Options::password);
+		_passwordCheck = (md5hash == "0af3f80a54716414f24a166e5c1b6c26") ? 1 : 0;
 	}
 
 	return _passwordCheck > 0;

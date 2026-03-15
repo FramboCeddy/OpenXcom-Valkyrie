@@ -43,7 +43,7 @@ enum TTVMode { TTV_NONE, TTV_RESEARCH, TTV_MANUFACTURING, TTV_FACILITIES, TTV_IT
 class TechTreeViewerState : public State
 {
 private:
-	TextButton *_btnOk, *_btnNew;
+	TextButton *_btnOk, *_btnNew, *_btnShow;
 	Window *_window;
 	Text *_txtTitle, *_txtSelectedTopic, *_txtProgress, *_txtCostIndicator;
 	TextList *_lstLeft, *_lstRight, *_lstFull;
@@ -56,6 +56,7 @@ private:
 	std::unordered_set<std::string> _disabledResearch;
 	std::unordered_set<std::string> _alreadyAvailableResearch, _alreadyAvailableManufacture, _alreadyAvailableFacilities, _alreadyAvailableCrafts;
 	std::unordered_set<std::string> _protectedItems, _alreadyAvailableItems;
+	bool _showAll;
 	void initLists();
 	void onSelectLeftTopic(Action *action);
 	void onSelectRightTopic(Action *action);
@@ -73,6 +74,10 @@ public:
 	void btnBackClick(Action *action);
 	/// Handler for clicking the New button.
 	void btnNewClick(Action *action);
+	/// Handler for clicking the Show All button.
+	void btnShowAllClick(Action *action);
+	/// Should we censor unavailable research?
+	bool isSpoilerEnabled() const { return _showAll; }
 	/// Sets the selected topic.
 	void setSelectedTopic(const std::string &selectedTopic, TTVMode topicType);
 	/// Gets the color coding for the given research topic.

@@ -83,8 +83,9 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 	_lstLeft = new TextList(132, 128, 8, 40);
 	_lstRight = new TextList(132, 128, 164, 40);
 	_lstFull = new TextList(288, 128, 8, 40);
-	_btnNew = new TextButton(148, 16, 8, 176);
-	_btnOk = new TextButton(148, 16, 164, 176);
+	_btnNew = new TextButton(96, 16, 8, 176);
+	_btnShow = new TextButton(96, 16, 112, 176);
+	_btnOk = new TextButton(96, 16, 216, 176);
 
 	// Set palette
 	setInterface("techTreeViewer");
@@ -105,6 +106,7 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 	add(_lstRight, "list", "techTreeViewer");
 	add(_lstFull, "list", "techTreeViewer");
 	add(_btnNew, "button", "techTreeViewer");
+	add(_btnShow, "button", "techTreeViewer");
 	add(_btnOk, "button", "techTreeViewer");
 
 	centerAllSurfaces();
@@ -145,6 +147,10 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 	_btnOk->onKeyboardPress((ActionHandler)&TechTreeViewerState::btnOkClick, Options::keyCancel);
 	_btnOk->onKeyboardPress((ActionHandler)&TechTreeViewerState::btnBackClick, SDLK_BACKSPACE);
 
+	_btnShow->setText(tr("STR_SHOW_ALL"));
+	_btnShow->onMouseClick((ActionHandler)&TechTreeViewerState::btnShowAllClick); // TODO make it do something else
+	_showAll = false;
+
 	if (Options::oxceDisableTechTreeViewer)
 	{
 		_txtTitle->setHeight(_txtTitle->getHeight() * 9);
@@ -157,6 +163,7 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 		_lstRight->setVisible(false);
 		_lstFull->setVisible(false);
 		_btnNew->setVisible(false);
+		_btnShow->setVisible(false);
 		return;
 	}
 
@@ -167,14 +174,14 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 		_alreadyAvailableResearch.insert(discoveredResearchRule->getName());
 		discoveredSum += discoveredResearchRule->getCost();
 	}
-	for (auto& info : _game->getSavedGame()->getResearchRuleStatusRaw())
+	for (auto& [name, researchStatus] : _game->getSavedGame()->getResearchRuleStatusRaw())
 	{
-		if (info.second == RuleResearch::RESEARCH_STATUS_DISABLED)
+		if (researchStatus == RuleResearch::RESEARCH_STATUS_DISABLED)
 		{
-			auto* rr = _game->getMod()->getResearch(info.first, false);
+			auto* rr = _game->getMod()->getResearch(name, false);
 			if (rr)
 			{
-				_disabledResearch.insert(rr->getName());
+				_disabledResearch.insert(rr->getName()); // FIXME: Is there ever a way for for a research name in research rule status to be different from rr->getName()?
 			}
 		}
 	}
@@ -196,7 +203,7 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 		manRule = _game->getMod()->getManufacture(manuf);
 		if (_game->getSavedGame()->isResearched(manRule->getRequirements()))
 		{
-			_alreadyAvailableManufacture.insert(manRule->getName());
+			_alreadyAvailableManufacture.insert(manRule->getName()); // The above fixme also applies to all of these getName() calls
 		}
 	}
 
@@ -292,6 +299,16 @@ void TechTreeViewerState::btnNewClick(Action *)
 }
 
 /**
+ * Shows spoilers.
+ * @param action Pointer to an action.
+ */
+void TechTreeViewerState::btnShowAllClick(Action*)
+{
+	_showAll = !_showAll;
+	_btnShow->setText(_showAll ? tr("STR_HIDE_SPOILERS") : tr("STR_SHOW_ALL"));
+	initLists();
+}
+/**
  * Shows the filtered topics.
  */
 void TechTreeViewerState::initLists()
@@ -299,22 +316,27 @@ void TechTreeViewerState::initLists()
 	// Set topic name
 	{
 		std::ostringstream ss;
-		ss << tr(_selectedTopic);
-		if (_selectedFlag == TTV_MANUFACTURING)
+		switch (_selectedFlag)
 		{
+		case TTV_RESEARCH:
+			ss << (_showAll || isDiscoveredResearch(_selectedTopic) ? tr(_selectedTopic) : tr("STR_CENSORED"));
+			break;
+		case TTV_MANUFACTURING:
+			ss << (_showAll || isDiscoveredManufacture(_selectedTopic) ? tr(_selectedTopic) : tr("STR_CENSORED"));
 			ss << tr("STR_M_FLAG");
-		}
-		else if (_selectedFlag == TTV_FACILITIES)
-		{
+			break;
+		case TTV_FACILITIES:
+			ss << (_showAll || isDiscoveredFacility(_selectedTopic) ? tr(_selectedTopic) : tr("STR_CENSORED"));
 			ss << tr("STR_F_FLAG");
-		}
-		else if (_selectedFlag == TTV_ITEMS)
-		{
+			break;
+		case TTV_ITEMS:
+			ss << (_showAll || isProtectedAndDiscoveredItem(_selectedTopic) ? tr(_selectedTopic) : tr("STR_CENSORED"));
 			ss << tr("STR_I_FLAG");
-		}
-		else if (_selectedFlag == TTV_CRAFTS)
-		{
+			break;
+		case TTV_CRAFTS:
+			ss << (_showAll || isDiscoveredCraft(_selectedTopic) ? tr(_selectedTopic) : tr("STR_CENSORED"));
 			ss << tr("STR_C_FLAG");
+			break;
 		}
 		_txtSelectedTopic->setText(tr("STR_TOPIC").arg(ss.str()));
 		_txtCostIndicator->setText("");
@@ -535,11 +557,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			if (rule->getNeededItem())
 			{
-				std::string itemName = tr(rule->getNeededItem()->getType());
+				const std::string strName = rule->getNeededItem()->getType();
+				std::string itemName = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				itemName.insert(0, "  ");
 				_lstLeft->addRow(1, itemName.c_str());
-				_lstLeft->setRowColor(row, getResearchColor(rule->getNeededItem()->getType()));
-				_leftTopics.push_back(rule->getNeededItem()->getType());
+				_lstLeft->setRowColor(row, getResearchColor(strName));
+				_leftTopics.push_back(strName);
 				_leftFlags.push_back(TTV_ITEMS);
 			}
 			else
@@ -563,7 +586,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& reqServiceType : _game->getMod()->getBaseFunctionNames(rule->getRequireBaseFunc()))
 			{
-				std::string name = tr(reqServiceType);
+				std::string name = tr(reqServiceType); // TODO censor: required services need special rules (like checking if you have a facility with that service)
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, _gold);
@@ -583,11 +606,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : reqs)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
-				_lstLeft->setRowColor(row, getResearchColor(i->getName()));
-				_leftTopics.push_back(i->getName());
+				_lstLeft->setRowColor(row, getResearchColor(strName));
+				_leftTopics.push_back(strName);
 				_leftFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -603,16 +627,17 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : deps)
 			{
-				if (std::find(unlockedBy.begin(), unlockedBy.end(), i->getName()) != unlockedBy.end())
+				const std::string strName = i->getName();
+				if (std::find(unlockedBy.begin(), unlockedBy.end(), strName) != unlockedBy.end())
 				{
 					// if the same item is also in the "Unlocked by" section, skip it
 					continue;
 				}
-				std::string name = tr(i->getName());
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
-				_lstLeft->setRowColor(row, getResearchColor(i->getName()));
-				_leftTopics.push_back(i->getName());
+				_lstLeft->setRowColor(row, getResearchColor(strName));
+				_leftTopics.push_back(strName);
 				_leftFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -628,7 +653,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : unlockedBy)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(res));
@@ -648,7 +673,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : disabledBy)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(res));
@@ -668,7 +693,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : reenabledBy)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(res));
@@ -688,7 +713,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : getForFreeFrom)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(res));
@@ -708,7 +733,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : lookupOf)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(res));
@@ -728,12 +753,12 @@ void TechTreeViewerState::initLists()
 			_rightTopics.push_back("-");
 			_rightFlags.push_back(TTV_NONE);
 			++row;
-
-			std::string name = tr(rule->getLookup());
+			const std::string strName = rule->getLookup();
+			std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 			name.insert(0, "  ");
 			_lstRight->addRow(1, name.c_str());
-			_lstRight->setRowColor(row, getResearchColor(rule->getLookup()));
-			_rightTopics.push_back(rule->getLookup());
+			_lstRight->setRowColor(row, getResearchColor(strName));
+			_rightTopics.push_back(strName);
 			_rightFlags.push_back(TTV_RESEARCH);
 			++row;
 		}
@@ -747,7 +772,7 @@ void TechTreeViewerState::initLists()
 			_rightFlags.push_back(TTV_NONE);
 			++row;
 		}
-		if (!Mod::isEmptyRuleName(rule->getSpawnedItem()))
+		if (!Mod::isEmptyRuleName(rule->getSpawnedItem())) // TODO censor: spawned items need special censor rules? (like checking if you have the item in your stores)
 		{
 			std::string name = tr(rule->getSpawnedItem());
 			name.insert(0, "  ");
@@ -774,7 +799,7 @@ void TechTreeViewerState::initLists()
 		}
 
 		// spawned event
-		if (!Mod::isEmptyRuleName(rule->getSpawnedEvent()))
+		if (!Mod::isEmptyRuleName(rule->getSpawnedEvent())) // TODO censor: spawned events need special rules (maybe always censor or censor until such event has spawned in the past)
 		{
 			_lstRight->addRow(1, tr("STR_SPAWNED_EVENT").c_str());
 			_lstRight->setRowColor(row, _blue);
@@ -806,7 +831,7 @@ void TechTreeViewerState::initLists()
 		{
 			for (const auto& res : requiredByResearch)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstRight->addRow(1, name.c_str());
 				_lstRight->setRowColor(row, getResearchColor(res));
@@ -821,7 +846,7 @@ void TechTreeViewerState::initLists()
 		{
 			for (const auto& manuf : requiredByManufacture)
 			{
-				std::string name = tr(manuf);
+				std::string name = _showAll || isDiscoveredManufacture(manuf) ? tr(manuf) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				name.append(tr("STR_M_FLAG"));
 				_lstRight->addRow(1, name.c_str());
@@ -840,7 +865,7 @@ void TechTreeViewerState::initLists()
 		{
 			for (const auto& facType : requiredByFacilities)
 			{
-				std::string name = tr(facType);
+				std::string name = _showAll || isDiscoveredFacility(facType) ? tr(facType) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				name.append(tr("STR_F_FLAG"));
 				_lstRight->addRow(1, name.c_str());
@@ -859,7 +884,7 @@ void TechTreeViewerState::initLists()
 		{
 			for (const auto& itemType : requiredByItems)
 			{
-				std::string name = tr(itemType);
+				std::string name = _showAll || isProtectedAndDiscoveredItem(itemType) ? tr(itemType) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				name.append(tr("STR_I_FLAG"));
 				_lstRight->addRow(1, name.c_str());
@@ -878,7 +903,7 @@ void TechTreeViewerState::initLists()
 		{
 			for (const auto& craftType : requiredByCrafts)
 			{
-				std::string name = tr(craftType);
+				std::string name = _showAll || isDiscoveredCraft(craftType) ? tr(craftType) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				name.append(tr("STR_C_FLAG"));
 				_lstRight->addRow(1, name.c_str());
@@ -929,7 +954,7 @@ void TechTreeViewerState::initLists()
 					// if the same topic is also in the "Unlocks" section, skip it
 					continue;
 				}
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstRight->addRow(1, name.c_str());
 				_lstRight->setRowColor(row, getResearchColor(res));
@@ -949,11 +974,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : unlocks)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstRight->addRow(1, name.c_str());
-				_lstRight->setRowColor(row, getResearchColor(i->getName()));
-				_rightTopics.push_back(i->getName());
+				_lstRight->setRowColor(row, getResearchColor(strName));
+				_rightTopics.push_back(strName);
 				_rightFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -969,11 +995,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : disables)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstRight->addRow(1, name.c_str());
-				_lstRight->setRowColor(row, getResearchColor(i->getName()));
-				_rightTopics.push_back(i->getName());
+				_lstRight->setRowColor(row, getResearchColor(strName));
+				_rightTopics.push_back(strName);
 				_rightFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -989,11 +1016,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : reenables)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstRight->addRow(1, name.c_str());
-				_lstRight->setRowColor(row, getResearchColor(i->getName()));
-				_rightTopics.push_back(i->getName());
+				_lstRight->setRowColor(row, getResearchColor(strName));
+				_rightTopics.push_back(strName);
 				_rightFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -1040,31 +1068,34 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : free)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstRight->addRow(1, name.c_str());
-				_lstRight->setRowColor(row, getResearchColor(i->getName()));
-				_rightTopics.push_back(i->getName());
+				_lstRight->setRowColor(row, getResearchColor(strName));
+				_rightTopics.push_back(strName);
 				_rightFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
-			for (auto& itMap : freeProtected)
+			for (auto& [protectRes, resList] : freeProtected)
 			{
-				std::string name2 = tr(itMap.first->getName());
+				const std::string strName2 = protectRes->getName();
+				std::string name2 = _showAll || isDiscoveredResearch(strName2) ? tr(strName2) : tr("STR_CENSORED"); // TODO censor: maybe we never want to hide this protect research? ALSO consider a check for tr(name) being equal to strName and hiding based on that
 				name2.insert(0, " ");
 				name2.append(":");
 				_lstRight->addRow(1, name2.c_str());
-				_lstRight->setRowColor(row, getAltResearchColor(itMap.first->getName()));
-				_rightTopics.push_back(itMap.first->getName());
+				_lstRight->setRowColor(row, getAltResearchColor(strName2));
+				_rightTopics.push_back(strName2);
 				_rightFlags.push_back(TTV_RESEARCH);
 				++row;
-				for (auto* i : itMap.second)
+				for (auto* i : resList)
 				{
-					std::string name = tr(i->getName());
+					const std::string strName = i->getName();
+					std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 					name.insert(0, "  ");
 					_lstRight->addRow(1, name.c_str());
-					_lstRight->setRowColor(row, getResearchColor(i->getName()));
-					_rightTopics.push_back(i->getName());
+					_lstRight->setRowColor(row, getResearchColor(strName));
+					_rightTopics.push_back(strName);
 					_rightFlags.push_back(TTV_RESEARCH);
 					++row;
 				}
@@ -1087,9 +1118,13 @@ void TechTreeViewerState::initLists()
 					if (trigger.first == _selectedTopic)
 					{
 						if (trigger.second)
+						{
 							unlocksArcs.insert(arcScriptId);
+						}
 						else
+						{
 							disablesArcs.insert(arcScriptId);
+						}
 					}
 				}
 			}
@@ -1103,11 +1138,18 @@ void TechTreeViewerState::initLists()
 				{
 					if (trigger.first == _selectedTopic)
 					{
-						if (eventScript->getAffectsGameProgression()) affectsGameProgression = true; // remember for later
+						if (eventScript->getAffectsGameProgression())
+						{
+							affectsGameProgression = true; // remember for later
+						}
 						if (trigger.second)
+						{
 							unlocksEvents.insert(eventScriptId);
+						}
 						else
+						{
 							disablesEvents.insert(eventScriptId);
+						}
 					}
 				}
 			}
@@ -1122,19 +1164,18 @@ void TechTreeViewerState::initLists()
 					if (trigger.first == _selectedTopic)
 					{
 						if (trigger.second)
+						{
 							unlocksMissions.insert(missionScriptId);
+						}
 						else
+						{
 							disablesMissions.insert(missionScriptId);
+						}
 					}
 				}
 			}
 		}
-		bool showDetails = false;
 		if (Options::isPasswordCorrect() && _game->isAltPressed())
-		{
-			showDetails = true;
-		}
-		if (showDetails)
 		{
 			auto addGameProgressionEntry = [&](const std::unordered_set<std::string>& list, const std::string& label)
 			{
@@ -1188,10 +1229,7 @@ void TechTreeViewerState::initLists()
 			if (showDisclaimer > 0)
 			{
 				_lstRight->addRow(1, tr("STR_AFFECTS_GAME_PROGRESSION").c_str());
-				if (showDisclaimer == 1)
-					_lstRight->setRowColor(row, _gold);
-				else
-					_lstRight->setRowColor(row, _white);
+				_lstRight->setRowColor(row, (showDisclaimer == 1) ? _gold : _white);
 				_rightTopics.push_back("-");
 				_rightFlags.push_back(TTV_NONE);
 				++row;
@@ -1203,7 +1241,9 @@ void TechTreeViewerState::initLists()
 		int row = 0;
 		RuleManufacture *rule = _game->getMod()->getManufacture(_selectedTopic);
 		if (rule == 0)
+		{
 			return;
+		}
 
 		// 1. requires
 		const std::vector<const RuleResearch*> reqs = rule->getRequirements();
@@ -1216,11 +1256,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : reqs)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
-				_lstLeft->setRowColor(row, getResearchColor(i->getName()));
-				_leftTopics.push_back(i->getName());
+				_lstLeft->setRowColor(row, getResearchColor(strName));
+				_leftTopics.push_back(strName);
 				_leftFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -1467,7 +1508,9 @@ void TechTreeViewerState::initLists()
 		int row = 0;
 		RuleBaseFacility *rule = _game->getMod()->getBaseFacility(_selectedTopic);
 		if (rule == 0)
+		{
 			return;
+		}
 
 		// 1. requires
 		const std::vector<std::string> reqs = rule->getRequirements();
@@ -1480,7 +1523,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : reqs)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(res));
@@ -1574,11 +1617,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : reqs)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstFull->addRow(1, name.c_str());
-				_lstFull->setRowColor(row, getResearchColor(i->getName()));
-				_leftTopics.push_back(i->getName());
+				_lstFull->setRowColor(row, getResearchColor(strName));
+				_leftTopics.push_back(strName);
 				_leftFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -1595,11 +1639,12 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (auto* i : reqsBuy)
 			{
-				std::string name = tr(i->getName());
+				const std::string strName = i->getName();
+				std::string name = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstFull->addRow(1, name.c_str());
-				_lstFull->setRowColor(row, getResearchColor(i->getName()));
-				_leftTopics.push_back(i->getName());
+				_lstFull->setRowColor(row, getResearchColor(strName));
+				_leftTopics.push_back(strName);
 				_leftFlags.push_back(TTV_RESEARCH);
 				++row;
 			}
@@ -1654,7 +1699,10 @@ void TechTreeViewerState::initLists()
 							break;
 						}
 					}
-					if (found) break;
+					if (found)
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -1667,7 +1715,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& manuf : producedBy)
 			{
-				std::string name = tr(manuf);
+				std::string name = _showAll || isDiscoveredManufacture(manuf) ? tr(manuf) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				name.append(tr("STR_M_FLAG"));
 				_lstFull->addRow(1, name.c_str());
@@ -1711,7 +1759,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : spawnedBy)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstFull->addRow(1, name.c_str());
 				_lstFull->setRowColor(row, getResearchColor(res));
@@ -1751,7 +1799,9 @@ void TechTreeViewerState::initLists()
 		int row = 0;
 		RuleCraft *rule = _game->getMod()->getCraft(_selectedTopic);
 		if (rule == 0)
+		{
 			return;
+		}
 
 		// 1. requires
 		const std::vector<std::string> reqs = rule->getRequirements();
@@ -1764,7 +1814,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& res : reqs)
 			{
-				std::string name = tr(res);
+				std::string name = _showAll || isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstLeft->addRow(1, name.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(res));
@@ -1814,7 +1864,7 @@ void TechTreeViewerState::initLists()
 			++row;
 			for (const auto& manuf : producedBy)
 			{
-				std::string name = tr(manuf);
+				std::string name = _showAll || isDiscoveredManufacture(manuf) ? tr(manuf) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				name.append(tr("STR_M_FLAG"));
 				_lstLeft->addRow(1, name.c_str());

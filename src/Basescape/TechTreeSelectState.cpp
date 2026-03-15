@@ -208,8 +208,9 @@ void TechTreeSelectState::initLists()
 	{
 		for (auto& tmp : tmpList)
 		{
+			const std::string name = _parent->isSpoilerEnabled() || _parent->isDiscoveredResearch(tmp) ? tr(tmp) : tr("STR_CENSORED");
 			_availableTopics.push_back(tmp);
-			_lstTopics->addRow(1, tr(tmp).c_str());
+			_lstTopics->addRow(1, name.c_str());
 			_lstTopics->setRowColor(row, _parent->getResearchColor(tmp));
 			++row;
 		}
@@ -236,8 +237,9 @@ void TechTreeSelectState::initLists()
 			continue;
 		}
 
+		const std::string name = _parent->isSpoilerEnabled() || _parent->isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 		_availableTopics.push_back(res);
-		_lstTopics->addRow(1, tr(res).c_str());
+		_lstTopics->addRow(1, tr(name).c_str());
 		_lstTopics->setRowColor(row, _parent->getResearchColor(res));
 		++row;
 	}
@@ -259,11 +261,10 @@ void TechTreeSelectState::initLists()
 		{
 			continue;
 		}
-
+		const std::string name = _parent->isSpoilerEnabled() || _parent->isDiscoveredManufacture(manuf) ? tr(manuf) : tr("STR_CENSORED");
 		_availableTopics.push_back(manuf);
 		std::ostringstream ss;
-		ss << tr(manuf);
-		ss << tr("STR_M_FLAG");
+		ss << name << tr("STR_M_FLAG");
 		_lstTopics->addRow(1, ss.str().c_str());
 		if (!_parent->isDiscoveredManufacture(manuf))
 		{
@@ -289,11 +290,10 @@ void TechTreeSelectState::initLists()
 		{
 			continue;
 		}
-
+		const std::string name = _parent->isSpoilerEnabled() || _parent->isDiscoveredFacility(facType) ? tr(facType) : tr("STR_CENSORED");
 		_availableTopics.push_back(facType);
 		std::ostringstream ss;
-		ss << tr(facType);
-		ss << tr("STR_F_FLAG");
+		ss << name << tr("STR_F_FLAG");
 		_lstTopics->addRow(1, ss.str().c_str());
 		if (!_parent->isDiscoveredFacility(facType))
 		{
@@ -324,11 +324,10 @@ void TechTreeSelectState::initLists()
 		{
 			continue;
 		}
-
+		const std::string name = _parent->isSpoilerEnabled() || _parent->isProtectedAndDiscoveredItem(itemType) ? tr(itemType) : tr("STR_CENSORED");
 		_availableTopics.push_back(itemType);
 		std::ostringstream ss;
-		ss << tr(itemType);
-		ss << tr("STR_I_FLAG");
+		ss << name << tr("STR_I_FLAG");
 		_lstTopics->addRow(1, ss.str().c_str());
 		if (!_parent->isProtectedAndDiscoveredItem(itemType))
 		{
@@ -354,11 +353,10 @@ void TechTreeSelectState::initLists()
 		{
 			continue;
 		}
-
+		const std::string name = _parent->isSpoilerEnabled() || _parent->isDiscoveredCraft(craftType) ? tr(craftType) : tr("STR_CENSORED");
 		_availableTopics.push_back(craftType);
 		std::ostringstream ss;
-		ss << tr(craftType);
-		ss << tr("STR_C_FLAG");
+		ss << name << tr("STR_C_FLAG");
 		_lstTopics->addRow(1, ss.str().c_str());
 		if (!_parent->isDiscoveredCraft(craftType))
 		{
