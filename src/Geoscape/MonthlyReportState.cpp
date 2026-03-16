@@ -143,11 +143,7 @@ MonthlyReportState::MonthlyReportState(Globe *globe) : _gameOver(0), _ratingTota
 		auto& custom = _game->getMod()->getMonthlyRatingThresholds();
 		if (custom.size() > (size_t)diff)
 		{
-			// only negative values are allowed!
-			if (custom[diff] < 0)
-			{
-				difficulty_threshold = custom[diff];
-			}
+			difficulty_threshold = custom[diff];
 		}
 	}
 	std::string rating = tr("STR_RATING_TERRIBLE");
