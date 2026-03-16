@@ -1,0 +1,8 @@
+# metadata.yaml for Valkyrie's Fix for drawing 2x2 units
+# Achieved by making the bottom tile of a 2x2 unit draw as greedily as it can
+name: "Valkyrie: Fix Drawing Large Units"
+version: "1.0"
+description: "Cause unit's bottom sprite to draw as much of the sprite as it can so that objects like wheat won't draw over parts of the sprite."
+author: Valkyrie
+
+master: xcom1

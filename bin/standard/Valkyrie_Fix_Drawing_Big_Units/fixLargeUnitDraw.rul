@@ -1,0 +1,29 @@
+extraSprites:
+  - type: CYBER.PCK
+    width: 256
+    height: 280
+    subX: 32
+    subY: 40
+    files:
+      0: UNITS/CYBER.PNG
+  - type: TANKS.PCK
+    width: 256
+    height: 640
+    subX: 32
+    subY: 40
+    files:
+      0: UNITS/TANKS.PNG
+  - type: X_REAP.PCK
+    width: 256
+    height: 800
+    subX: 32
+    subY: 40
+    files:
+      0: UNITS/X_REAP.PNG
+  - type: X_ROB.PCK
+    width: 256
+    height: 800
+    subX: 32
+    subY: 40
+    files:
+      0: UNITS/X_ROB.PNG
