@@ -11,3 +11,5 @@ en-GB:
   STR_TECHTREE_CENSOR_COST_DESC: "Censor the research cost symbols when looking up a research in the Tech Tree view."
   STR_CENSORED: "***"
   STR_HIDE_SPOILERS: "Hide spoilers"
+  STR_RECOVERY_POINTS_FOR_AMMO: "Recovery Points for Ammo"
+  STR_RECOVERY_POINTS_FOR_AMMO_DESC: "Gain the recovery points for ammo that is currently loaded inside of weapons you recover."
