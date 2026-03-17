@@ -111,7 +111,8 @@ MonthlyReportState::MonthlyReportState(Globe *globe) : _gameOver(0), _ratingTota
 
 	calculateChanges();
 
-	int month = _game->getSavedGame()->getTime()->getMonth() - 1, year = _game->getSavedGame()->getTime()->getYear();
+	int month = _game->getSavedGame()->getTime()->getMonth() - 1;
+	int year = _game->getSavedGame()->getTime()->getYear();
 	if (month == 0)
 	{
 		month = 12;
@@ -146,45 +147,26 @@ MonthlyReportState::MonthlyReportState(Globe *globe) : _gameOver(0), _ratingTota
 			difficulty_threshold = custom[diff];
 		}
 	}
-	std::string rating = tr("STR_RATING_TERRIBLE");
-	if (_ratingTotal > difficulty_threshold - 300)
-	{
-		rating = tr("STR_RATING_POOR");
-	}
-	if (_ratingTotal > difficulty_threshold)
-	{
-		rating = tr("STR_RATING_OK");
-	}
-	if (_ratingTotal > 0)
-	{
-		rating = tr("STR_RATING_GOOD");
-	}
-	if (_ratingTotal > 500)
-	{
-		rating = tr("STR_RATING_EXCELLENT");
-	}
 
-	if (!_game->getMod()->getMonthlyRatings()->empty())
+	std::string rating = "STR_RATING_TERRIBLE";
+	int temp = INT_MIN;
+	for (auto& [threshold, text] : *_game->getMod()->getMonthlyRatings())
 	{
-		rating = "";
-		int temp = INT_MIN;
-		for (auto& pair : *_game->getMod()->getMonthlyRatings())
+		if (threshold > temp && _ratingTotal >= threshold)
 		{
-			if (pair.first > temp && pair.first <= _ratingTotal)
-			{
-				temp = pair.first;
-				rating = tr(pair.second);
-			}
+			temp = threshold;
+			rating = text;
 		}
 	}
-
-	_txtRating->setText(tr("STR_MONTHLY_RATING").arg(_ratingTotal).arg(rating));
+	_txtRating->setText(tr("STR_MONTHLY_RATING").arg(_ratingTotal).arg(tr(rating)));
 
 	std::ostringstream ss;
 	ss << tr("STR_INCOME") << "> " << Unicode::TOK_COLOR_FLIP << Unicode::formatFunding(_game->getSavedGame()->getCountryFunding());
 	ss << " (";
 	if (_fundingDiff > 0)
+	{
 		ss << '+';
+	}
 	ss << Unicode::formatFunding(_fundingDiff) << ")";
 	_txtIncome->setText(ss.str());
 
@@ -413,14 +395,18 @@ void MonthlyReportState::calculateChanges()
 	int monthOffset = _game->getSavedGame()->getFundsList().size() - 2;
 	int lastMonthOffset = _game->getSavedGame()->getFundsList().size() - 3;
 	if (lastMonthOffset < 0)
+	{
 		lastMonthOffset += 2;
+	}
 	// update activity meters, calculate a total score based on regional activity
 	// and gather last month's score
 	for (auto* region : *_game->getSavedGame()->getRegions())
 	{
 		region->newMonth();
 		if (region->getActivityXcom().size() > 2)
+		{
 			_lastMonthsRating += region->getActivityXcom().at(lastMonthOffset) - region->getActivityAlien().at(lastMonthOffset);
+		}
 		xcomSubTotal += region->getActivityXcom().at(monthOffset);
 		alienTotal += region->getActivityAlien().at(monthOffset);
 	}
@@ -444,7 +430,9 @@ void MonthlyReportState::calculateChanges()
 	}
 
 	if (_game->getSavedGame()->getResearchScores().size() > 2)
+	{
 		_lastMonthsRating += _game->getSavedGame()->getResearchScores().at(lastMonthOffset);
+	}
 
 	// now that we have our totals we can send the relevant info to the countries
 	// and have them make their decisions weighted on the council's perspective.

@@ -24,6 +24,13 @@ missionRatings:
   -200: STR_RATING_POOR
   -999999: STR_RATING_TERRIBLE
 
+monthlyRatings:
+  500: STR_RATING_EXCELLENT
+  0: STR_RATING_GOOD
+  -500: STR_RATING_OK
+  -1000: STR_RATING_POOR
+  -999999: STR_RATING_TERRIBLE
+
 constants: #done
   doorSound: 47
   slidingDoorSound: 46
