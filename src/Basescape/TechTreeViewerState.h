@@ -82,6 +82,7 @@ public:
 	void setSelectedTopic(const std::string &selectedTopic, TTVMode topicType);
 	/// Gets the color coding for the given research topic.
 	Uint8 getResearchColor(const std::string &topic) const;
+	/// Gets the alternative color coding for the given research topic.
 	Uint8 getAltResearchColor(const std::string &topic) const;
 	/// Is given research topic discovered/available?
 	bool isDiscoveredResearch(const std::string &topic) const;

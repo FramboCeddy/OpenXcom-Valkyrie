@@ -135,6 +135,8 @@ CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft)
 
 	// populate sort options
 	std::vector<std::string> sortOptions;
+	sortOptions.reserve(23); // 23 sort options below
+	_sortFunctors.reserve(23);
 	sortOptions.push_back(tr("STR_ORIGINAL_ORDER"));
 	_sortFunctors.push_back(NULL);
 

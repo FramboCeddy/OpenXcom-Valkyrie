@@ -22,6 +22,8 @@
 #include "../Engine/RNG.h"
 #include "../Engine/ScriptBind.h"
 #include "../Savegame/SavedGame.h"
+#include <algorithm>
+#include <tuple>
 
 namespace OpenXcom
 {
@@ -174,60 +176,47 @@ std::vector<int> &Country::getActivityAlien()
 
 void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int averageFunding, const SavedGame* save)
 {
-	// Note: this is a TEMPORARY variable! it's not saved in the save file, i.e. we don't know the value from the previous month!
-	_satisfaction = Satisfaction::SATISFIED;
-	const int funding = getFunding().back();
 	const int good = (xcomTotal / 10) + _activityXcom.back();
 	const int bad = (alienTotal / 20) + _activityAlien.back();
-	const int oldFunding = _funding.back() / 1000;
-	int newFunding = (oldFunding * RNG::generate(5, 20) / 100) * 1000;
-	if (newFunding == 0)
-	{
-		newFunding = 1000; // increase at least by 1000
-	}
+	const int funding = _funding.back(); // TODO: have funding always be stored in thousands? or remove the concept of funding being in thousands at all?
+	const int oldFunding = funding / 1000;
 
-	if (bad <= good + 30)
-	{
-		if (good > bad + 30)
-		{
-			if (RNG::generate(0, good) > bad)
-			{
-				// don't go over the cap
-				int cap = getRules()->getFundingCap()*1000;
-				if (funding + newFunding > cap)
-					newFunding = cap - funding;
-				if (newFunding)
-					_satisfaction = Satisfaction::HAPPY;
-			}
-		}
-	}
-	else
-	{
-		if (RNG::generate(0, bad) > good)
-		{
-			if (newFunding)
-			{
-				newFunding = -newFunding;
-				// don't go below zero
-				if (funding + newFunding < 0)
-					newFunding = 0 - funding;
-				if (newFunding)
-					_satisfaction = Satisfaction::UNHAPPY;
-			}
-		}
-	}
+	// Note: this is a TEMPORARY variable! it's not saved in the save file, i.e. we don't know the value from the previous month!
+	_satisfaction = good - bad < -30 ? Satisfaction::UNHAPPY :		// unhappy
+					good - bad <= 30 ? Satisfaction::SATISFIED :	// satisfied
+									   Satisfaction::HAPPY;			// happy
 
-	if (_satisfaction == Satisfaction::SATISFIED)
+	int newFunding;
+	switch (_satisfaction)
 	{
+	case Satisfaction::UNHAPPY:
+		if (RNG::generate(0, bad) <= good)
+		{
+			_satisfaction = Satisfaction::SATISFIED;
+			break;
+		}
+		newFunding = (oldFunding * RNG::generate(5, 20) / 100) * 1000;
+		newFunding = - std::clamp(newFunding, 1000, funding); // decrease at least by 1000, but not more than current funding
+		break;
+	case Satisfaction::SATISFIED:
 		newFunding = 0;
-	}
-	if (_cancelPact)
-	{
-		if (oldFunding <= 0)
+		break;
+	case Satisfaction::HAPPY:
+		if (RNG::generate(0, good) <= bad)
 		{
-			_satisfaction = Satisfaction::SATISFIED; // satisfied, not happy or unhappy
-			newFunding = averageFunding;
+			_satisfaction = Satisfaction::SATISFIED;
+			break;
 		}
+		newFunding = (oldFunding * RNG::generate(5, 20) / 100) * 1000;
+		int cap = getRules()->getFundingCap() * 1000;
+		newFunding = std::clamp(newFunding, 1000, cap - funding); // increase at least by 1000, but not more than the cap allows
+		break;
+	}
+
+	if (_cancelPact && oldFunding <= 0)
+	{
+		_satisfaction = Satisfaction::SATISFIED; // satisfied, not happy or unhappy
+		newFunding = averageFunding;
 	}
 
 	// call script which can adjust values.
@@ -244,7 +233,7 @@ void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int average
 	if (_newPact)
 	{
 		_pact = true;
-		addActivityAlien(pactScore);
+		addActivityAlien(pactScore); // FIXME: this adds alien activity to the total activity, but after the alien total is calculated for this month so it has no effect on countries' funding decision
 	}
 	else if (_cancelPact)
 	{
@@ -256,19 +245,21 @@ void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int average
 	_cancelPact = false;
 
 	// set the new funding and reset the activity meters
-	if (_pact)
-		_funding.push_back(0); // yes, hardcoded!
-	else
-		_funding.push_back(funding + newFunding);
-
+	_funding.push_back(_pact ? 0 : funding + newFunding);
 	_activityAlien.push_back(0);
 	_activityXcom.push_back(0);
 	if (_activityAlien.size() > 12)
+	{
 		_activityAlien.erase(_activityAlien.begin());
+	}
 	if (_activityXcom.size() > 12)
+	{
 		_activityXcom.erase(_activityXcom.begin());
+	}
 	if (_funding.size() > 12)
+	{
 		_funding.erase(_funding.begin());
+	}
 }
 
 /**

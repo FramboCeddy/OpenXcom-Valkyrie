@@ -3423,12 +3423,13 @@ void BattlescapeState::saveVoxelMap()
 {
 	std::ostringstream ss;
 	std::vector<unsigned char> image;
-	static const unsigned char pal[30]=
-	{255,255,255, 224,224,224,  128,160,255,  255,160,128, 128,255,128, 192,0,255,  255,255,255, 255,255,255,  224,192,0,  255,64,128 };
-
+	image.reserve((size_t)_save->getMapSizeX() * 16ULL * (size_t)_save->getMapSizeY() * 16ULL * 3ULL); // 3 values per xy voxel
+	static const std::array<unsigned char, 30> pal = 
+	{255,255,255,  224,224,224,  128,160,255,  255,160,128,  128,255,128,  192,0,255,  255,255,255,  255,255,255,  224,192,0,  255,64,128 };
+	
 	Tile *tile;
 
-	for (int z = 0; z < _save->getMapSizeZ()*12; ++z)
+	for (int z = 0; z < _save->getMapSizeZ()*24; ++z)
 	{
 		image.clear();
 
@@ -3436,41 +3437,51 @@ void BattlescapeState::saveVoxelMap()
 		{
 			for (int x = 0; x < _save->getMapSizeX()*16; ++x)
 			{
-				int test = _save->getTileEngine()->voxelCheck(Position(x,y,z*2),0,0) +1;
-				float dist=1;
-				if (x%16==15)
+				int test = _save->getTileEngine()->voxelCheck(Position(x,y,z),0,0) +1;
+				double dist = 1;
+				if (x % 16 == 15)
 				{
-					dist*=0.9f;
+					dist *= 0.9f;
 				}
-				if (y%16==15)
+				if (y % 16 == 15)
 				{
-					dist*=0.9f;
+					dist *= 0.9f;
 				}
 
 				if (test == V_OUTOFBOUNDS)
 				{
-					tile = _save->getTile(Position(x/16, y/16, z/12));
+					tile = _save->getTile(Position(x/16, y/16, z/24));
 					if (tile->getUnit())
 					{
-						if (tile->getUnit()->getFaction()==FACTION_NEUTRAL) test=9;
-						else
-						if (tile->getUnit()->getFaction()==FACTION_PLAYER) test=8;
+						if (tile->getUnit()->getFaction() == FACTION_NEUTRAL)
+						{
+							test = 9;
+						}
+						else if (tile->getUnit()->getFaction() == FACTION_PLAYER)
+						{
+							test = 8;
+						}
 					}
 					else
 					{
 						tile = _save->getBelowTile(tile);
 						if (tile && tile->getUnit())
 						{
-							if (tile->getUnit()->getFaction()==FACTION_NEUTRAL) test=9;
-							else
-							if (tile->getUnit()->getFaction()==FACTION_PLAYER) test=8;
+							if (tile->getUnit()->getFaction() == FACTION_NEUTRAL)
+							{
+								test = 9;
+							}
+							else if (tile->getUnit()->getFaction() == FACTION_PLAYER)
+							{
+								test = 8;
+							}
 						}
 					}
 				}
 
-				image.push_back((int)((float)pal[test*3+0]*dist));
-				image.push_back((int)((float)pal[test*3+1]*dist));
-				image.push_back((int)((float)pal[test*3+2]*dist));
+				image.push_back((unsigned char)(pal[test * 3 + 0] * dist));
+				image.push_back((unsigned char)(pal[test * 3 + 1] * dist));
+				image.push_back((unsigned char)(pal[test * 3 + 2] * dist));
 			}
 		}
 

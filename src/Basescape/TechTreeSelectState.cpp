@@ -374,7 +374,9 @@ void TechTreeSelectState::onSelectTopic(Action *)
 {
 	size_t index = _lstTopics->getSelectedRow();
 	if (index >= _availableTopics.size())
+	{
 		return;
+	}
 
 	const std::string selectedTopic = _availableTopics[index];
 

@@ -220,14 +220,7 @@ void ModInfo::load(const YAML::YamlNodeReader& reader)
 
 	_engineOk = findCompatibleEngine(supportedEngines, _requiredExtendedEngine, CrossPlatform::parseVersion(_requiredExtendedVersion));
 
-	if (_reservedSpace < 1)
-	{
-		_reservedSpace = 1;
-	}
-	else if (_reservedSpace > 100)
-	{
-		_reservedSpace = 100;
-	}
+	_reservedSpace = std::clamp(_reservedSpace, 1, 100);
 
 	if (_isMaster)
 	{

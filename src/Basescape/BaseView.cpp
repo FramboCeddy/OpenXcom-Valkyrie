@@ -493,78 +493,62 @@ void BaseView::draw()
 	{
 		for (int y = 0; y < BASE_SIZE; ++y)
 		{
-			Surface *frame = _texture->getFrame(_base->getGlobeTexture() ? _base->getGlobeTexture()->getBaseGridSprite() : 0);
-			int fx = (x * GRID_SIZE);
-			int fy = (y * GRID_SIZE);
-			frame->blitNShade(this, fx, fy);
+			const Surface *frame = _texture->getFrame(_base->getGlobeTexture() ? _base->getGlobeTexture()->getBaseGridSprite() : 0);
+			frame->blitNShade(this, x * GRID_SIZE, y * GRID_SIZE);
 		}
 	}
 
-	auto craftIt = _base->getCrafts()->begin();
-
+	// Draw facility shape
 	for (const auto* fac : *_base->getFacilities())
 	{
-		// Draw facility shape
 		int num = 0;
 		for (int y = fac->getY(); y < fac->getY() + fac->getRules()->getSizeY(); ++y)
 		{
-			for (int x = fac->getX(); x < fac->getX() + fac->getRules()->getSizeX(); ++x)
+			for (int x = fac->getX(); x < fac->getX() + fac->getRules()->getSizeX(); ++x, ++num)
 			{
-				Surface *frame;
-
 				int outline = fac->getRules()->isSmall() ? 3 : fac->getRules()->getSizeX() * fac->getRules()->getSizeY();
-				if (fac->getBuildTime() == 0)
-					frame = _texture->getFrame(fac->getRules()->getSpriteShape() + num);
-				else
-					frame = _texture->getFrame(fac->getRules()->getSpriteShape() + num + outline);
-
-				int fx = (x * GRID_SIZE);
-				int fy = (y * GRID_SIZE);
-				frame->blitNShade(this, fx, fy);
-
-				num++;
+				Surface *frame = _texture->getFrame(fac->getRules()->getSpriteShape() + (fac->getBuildTime() == 0 ? num : num + outline));
+				frame->blitNShade(this, x * GRID_SIZE, y * GRID_SIZE);
 			}
 		}
 	}
 
+	// Draw connectors
 	for (const auto* fac : *_base->getFacilities())
 	{
-		// Draw connectors
-		if (fac->isBuiltOrHadPreviousFacility() && !fac->getRules()->connectorsDisabled())
+		if (!fac->isBuiltOrHadPreviousFacility() || fac->getRules()->connectorsDisabled())
 		{
-			// Facilities to the right
-			int x = fac->getX() + fac->getRules()->getSizeX();
-			if (x < BASE_SIZE)
+			continue;
+		}
+		// Facilities to the right
+		int x = fac->getX() + fac->getRules()->getSizeX();
+		if (x < BASE_SIZE)
+		{
+			for (int subY = fac->getY(); subY < fac->getY() + fac->getRules()->getSizeY(); ++subY)
 			{
-				for (int y = fac->getY(); y < fac->getY() + fac->getRules()->getSizeY(); ++y)
+				if (_facilities[x][subY] && _facilities[x][subY]->isBuiltOrHadPreviousFacility() && !_facilities[x][subY]->getRules()->connectorsDisabled())
 				{
-					if (_facilities[x][y] != 0 && _facilities[x][y]->isBuiltOrHadPreviousFacility() && !_facilities[x][y]->getRules()->connectorsDisabled())
-					{
-						Surface *frame = _texture->getFrame(7);
-						int fx = (x * GRID_SIZE - GRID_SIZE / 2);
-						int fy = (y * GRID_SIZE);
-						frame->blitNShade(this, fx, fy);
-					}
+					Surface *frame = _texture->getFrame(7);
+					frame->blitNShade(this, x * GRID_SIZE - GRID_SIZE / 2, subY * GRID_SIZE);
 				}
 			}
+		}
 
-			// Facilities to the bottom
-			int y = fac->getY() + fac->getRules()->getSizeY();
-			if (y < BASE_SIZE)
+		// Facilities to the bottom
+		int y = fac->getY() + fac->getRules()->getSizeY();
+		if (y < BASE_SIZE)
+		{
+			for (int subX = fac->getX(); subX < fac->getX() + fac->getRules()->getSizeX(); ++subX)
 			{
-				for (int subX = fac->getX(); subX < fac->getX() + fac->getRules()->getSizeX(); ++subX)
+				if (_facilities[subX][y] && _facilities[subX][y]->isBuiltOrHadPreviousFacility() && !_facilities[subX][y]->getRules()->connectorsDisabled())
 				{
-					if (_facilities[subX][y] != 0 && _facilities[subX][y]->isBuiltOrHadPreviousFacility() && !_facilities[subX][y]->getRules()->connectorsDisabled())
-					{
-						Surface *frame = _texture->getFrame(8);
-						int fx = (subX * GRID_SIZE);
-						int fy = (y * GRID_SIZE - GRID_SIZE / 2);
-						frame->blitNShade(this, fx, fy);
-					}
+					Surface *frame = _texture->getFrame(8);
+					frame->blitNShade(this, subX * GRID_SIZE, y * GRID_SIZE - GRID_SIZE / 2);
 				}
 			}
 		}
 	}
+	auto craftIt = _base->getCrafts()->begin();
 
 	// TODO: make const in the future
 	for (auto* fac : *_base->getFacilities())
@@ -573,54 +557,53 @@ void BaseView::draw()
 		int num = 0;
 		for (int y = fac->getY(); y < fac->getY() + fac->getRules()->getSizeY(); ++y)
 		{
-			for (int x = fac->getX(); x < fac->getX() + fac->getRules()->getSizeX(); ++x)
+			for (int x = fac->getX(); x < fac->getX() + fac->getRules()->getSizeX(); ++x, ++num)
 			{
-				if (fac->getRules()->getSpriteEnabled())
+				if (!fac->getRules()->getSpriteEnabled())
 				{
-					Surface *frame = _texture->getFrame(fac->getRules()->getSpriteFacility() + num);
-					int fx = (x * GRID_SIZE);
-					int fy = (y * GRID_SIZE);
-					frame->blitNShade(this, fx, fy);
+					continue;
 				}
-
-				num++;
+				const Surface *frame = _texture->getFrame(fac->getRules()->getSpriteFacility() + num);
+				frame->blitNShade(this, x * GRID_SIZE, y * GRID_SIZE);
 			}
 		}
 
 		// Draw crafts
 		fac->setCraftForDrawing(0);
-		if (fac->getBuildTime() == 0 && fac->getRules()->getCrafts() > 0)
+		if (craftIt != _base->getCrafts()->end() && fac->getBuildTime() == 0 && fac->getRules()->getCrafts() > 0)
 		{
-			if (craftIt != _base->getCrafts()->end())
+			if ((*craftIt)->getStatus() != "STR_OUT")
 			{
-				if ((*craftIt)->getStatus() != "STR_OUT")
-				{
-					Surface *frame = _texture->getFrame((*craftIt)->getSkinSprite() + 33);
-					int fx = (fac->getX() * GRID_SIZE + (fac->getRules()->getSizeX() - 1) * GRID_SIZE / 2 + 2);
-					int fy = (fac->getY() * GRID_SIZE + (fac->getRules()->getSizeY() - 1) * GRID_SIZE / 2 - 4);
-					frame->blitNShade(this, fx, fy);
-					fac->setCraftForDrawing(*craftIt);
-				}
-				++craftIt;
+				Surface *frame = _texture->getFrame((*craftIt)->getSkinSprite() + 33);
+				int fx = (fac->getX() * GRID_SIZE + (fac->getRules()->getSizeX() - 1) * GRID_SIZE / 2 + 2);
+				int fy = (fac->getY() * GRID_SIZE + (fac->getRules()->getSizeY() - 1) * GRID_SIZE / 2 - 4);
+				frame->blitNShade(this, fx, fy);
+				fac->setCraftForDrawing(*craftIt);
 			}
+			++craftIt;
 		}
 
 		// Draw time remaining
 		if (fac->getBuildTime() > 0 || fac->getDisabled())
 		{
-			Text *text = new Text(GRID_SIZE * fac->getRules()->getSizeX(), 16, 0, 0);
+			Text* text = new Text(GRID_SIZE * fac->getRules()->getSizeX(), 16,
+									fac->getX() * GRID_SIZE, fac->getY() * GRID_SIZE + (GRID_SIZE * fac->getRules()->getSizeY() - 16) / 2);
 			text->setPalette(getPalette());
 			text->initText(_big, _small, _lang);
-			text->setX(fac->getX() * GRID_SIZE);
-			text->setY(fac->getY() * GRID_SIZE + (GRID_SIZE * fac->getRules()->getSizeY() - 16) / 2);
 			text->setBig();
 			std::ostringstream ss;
 			if (fac->getDisabled())
+			{
 				ss << "X";
+			}
 			else
+			{
 				ss << fac->getBuildTime();
+			}
 			if (fac->getIfHadPreviousFacility()) // Indicate that this facility still counts for connectivity
+			{
 				ss << "*";
+			}
 			text->setAlign(ALIGN_CENTER);
 			text->setColor(_cellColor);
 			text->setText(ss.str());
@@ -631,20 +614,18 @@ void BaseView::draw()
 		// Draw ammo indicator
 		if (fac->getBuildTime() == 0 && fac->getRules()->getAmmoMax() > 0)
 		{
-			Text* text = new Text(GRID_SIZE * fac->getRules()->getSizeX(), 9, 0, 0);
+			Text* text = new Text(GRID_SIZE * fac->getRules()->getSizeX(), 9,
+									fac->getX() * GRID_SIZE, fac->getY() * GRID_SIZE);
 			text->setPalette(getPalette());
 			text->initText(_big, _small, _lang);
-			text->setX(fac->getX() * GRID_SIZE);
-			text->setY(fac->getY() * GRID_SIZE);
 			text->setHighContrast(_highContrast);
-			if (fac->getAmmo() >= fac->getRules()->getAmmoMax())
-				text->setColor(_greenColor); // 100%
-			else if (fac->getAmmo() <= fac->getRules()->getAmmoMax() / 2)
-				text->setColor(_redColor); // 0-50%
-			else
-				text->setColor(_yellowColor); // 51-99%
+			Uint8 color = fac->getAmmo() >= fac->getRules()->getAmmoMax() ?		_greenColor :	// 100%
+						  fac->getAmmo() * 2 >= fac->getRules()->getAmmoMax() ? _yellowColor :	// 50%-99%
+																				_redColor;		// 0%-49%
+			text->setColor(color);
 			std::ostringstream ss;
 			ss << fac->getAmmo() << "/" << fac->getRules()->getAmmoMax();
+			//text->setText(tr("FACILITY_AMMO_INDICATOR").arg(fac->getAmmo()).arg(fac->getRules()->getAmmoMax()));
 			text->setText(ss.str());
 			text->blit(this->getSurface());
 			delete text;

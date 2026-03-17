@@ -4569,7 +4569,10 @@ VoxelType TileEngine::voxelCheck(Position voxel, BattleUnit *excludeUnit, bool e
 		tileBelow = _save->getBelowTile(tile);
 		_cacheTilePos = pos;
 		_cacheTile = tile;
-		_cacheTileBelow = tileBelow;
+		if (tileBelow)
+		{
+			_cacheTileBelow = tileBelow;
+		}
  	}
 
 	if (tile->isVoid() && tile->getUnit() == 0 && (!tileBelow || tileBelow->getUnit() == 0))
@@ -4589,18 +4592,21 @@ VoxelType TileEngine::voxelCheck(Position voxel, BattleUnit *excludeUnit, bool e
 	for (int i = V_FLOOR; i <= V_OBJECT; ++i)
 	{
 		TilePart tp = (TilePart)i;
-		MapData *mp = tile->getMapData(tp);
-		if (((tp == O_WESTWALL) || (tp == O_NORTHWALL)) && tile->isUfoDoorOpen(tp))
-			continue;
-		if (mp != 0)
+		if ((tp == O_WESTWALL || tp == O_NORTHWALL) && tile->isUfoDoorOpen(tp))
 		{
-			int x = 15 - voxel.x%16;
-			int y = voxel.y%16;
-			int idx = (mp->getLoftID((voxel.z%24)/2)*16) + y;
-			if (_voxelData->at(idx) & (1 << x))
-			{
-				return (VoxelType)i;
-			}
+			continue;
+		}
+		MapData *mp = tile->getMapData(tp);
+		if (!mp)
+		{
+			continue;
+		}
+		int x = 15 - voxel.x % 16;
+		int y = voxel.y % 16;
+		int idx = (mp->getLoftID((voxel.z % 24) / 2) * 16) + y;
+		if (_voxelData->at(idx) & (1 << x))
+		{
+			return (VoxelType)i;
 		}
 	}
 
@@ -4608,9 +4614,8 @@ VoxelType TileEngine::voxelCheck(Position voxel, BattleUnit *excludeUnit, bool e
 	{
 		BattleUnit *unit = tile->getOverlappingUnit(_save);
 
-		if (unit != 0 && !unit->isOut() && unit != excludeUnit && (!excludeAllBut || unit == excludeAllBut) && (!onlyVisible || unit->getVisible() ) )
+		if (unit && !unit->isOut() && unit != excludeUnit && (!excludeAllBut || unit == excludeAllBut) && (!onlyVisible || unit->getVisible()))
 		{
-			Position tilepos;
 			Position unitpos = unit->getPosition();
 			int terrainHeight = 0;
 			for (int x = 0; x < unit->getArmor()->getSize(); ++x)
@@ -4625,14 +4630,14 @@ VoxelType TileEngine::voxelCheck(Position voxel, BattleUnit *excludeUnit, bool e
 				}
 			}
 			int tz = unitpos.z*24 + unit->getFloatHeight() - terrainHeight; //bottom most voxel, terrain heights are negative, so we subtract.
-			if ((voxel.z > tz) && (voxel.z <= tz + unit->getHeight()) )
+			if ((voxel.z >= tz) && (voxel.z < tz + unit->getHeight()) )
 			{
 				int x = 15 - voxel.x%16;
 				int y = voxel.y%16;
 				int part = 0;
 				if (unit->isBigUnit())
 				{
-					tilepos = tile->getPosition();
+					Position tilepos = tile->getPosition();
 					const static int parts[] = {1,0,3,2}; // Change order 0,1,2,3 -> 1,0,3,2  (read commit description)
 					part = parts[tilepos.x - unitpos.x + (tilepos.y - unitpos.y)*2];
 				}
