@@ -2919,30 +2919,25 @@ int TileEngine::hitTile(Tile* tile, int damage, const RuleDamageType* type)
 {
 	if (damage >= type->SmokeThreshold)
 	{
-		// smoke from explosions always stay 6 to 14 turns - power of a smoke grenade is 60
 		if (tile->getSmoke() < _save->getBattleGame()->getMod()->getTooMuchSmokeThreshold() && tile->getTerrainLevel() > -24)
 		{
 			tile->setFire(0);
-			if (damage >= type->SmokeThreshold * 2)
-				tile->setSmoke(RNG::generate(7, 15)); // for SmokeThreshold == 0
-			else
-				tile->setSmoke(RNG::generate(7, 15) * (damage - type->SmokeThreshold) / type->SmokeThreshold);
+			const auto& [min, max] = _save->getBattleGame()->getMod()->SMOKE_RANGE;
+			int smoke = max == min ? max : RNG::generate(min, max);
+			smoke = (damage < type->SmokeThreshold * 2) ? smoke * (damage - type->SmokeThreshold) / type->SmokeThreshold : smoke; // scale linearly between 100% and 200% smokeTreshold
+			tile->setSmoke(smoke);
 			return 1;
 		}
 	}
 	else if (damage >= type->FireThreshold)
 	{
-		if (!tile->isVoid())
+		if (!tile->isVoid() && tile->getFire() == 0 && (tile->getMapData(O_FLOOR) || tile->getMapData(O_OBJECT)))
 		{
-			if (tile->getFire() == 0 && (tile->getMapData(O_FLOOR) || tile->getMapData(O_OBJECT)))
-			{
-				if (damage >= type->FireThreshold * 2)
-					tile->setFire(tile->getFuel() + 1); // for FireThreshold == 0
-				else
-					tile->setFire(tile->getFuel() * (damage - type->FireThreshold) / type->FireThreshold + 1);
-				tile->setSmoke(std::max(1, std::min(15 - (tile->getFlammability() / 10), 12)));
-				return 2;
-			}
+			int fire = tile->getFuel();
+			fire = damage < type->FireThreshold * 2 ? fire * (damage - type->FireThreshold) / type->FireThreshold : fire; // scale linearly between 100% and 200% fireThreshold
+			++fire;
+			tile->setSmoke(std::clamp(15 - (tile->getFlammability() / 10), 1, 12));
+			return 2;
 		}
 	}
 	return 0;

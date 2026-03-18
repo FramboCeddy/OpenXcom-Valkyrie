@@ -181,6 +181,7 @@ int Mod::GRAPHS_CURSOR;
 int Mod::DAMAGE_RANGE;
 int Mod::EXPLOSIVE_DAMAGE_RANGE;
 int Mod::FIRE_DAMAGE_RANGE[2];
+int Mod::SMOKE_RANGE[2];
 int Mod::RESEARCH_RANGE;
 std::string Mod::DEBRIEF_MUSIC_GOOD;
 std::string Mod::DEBRIEF_MUSIC_BAD;
@@ -253,6 +254,8 @@ void Mod::resetGlobalStatics()
 	EXPLOSIVE_DAMAGE_RANGE = 50;
 	FIRE_DAMAGE_RANGE[0] = 5;
 	FIRE_DAMAGE_RANGE[1] = 10;
+	SMOKE_RANGE[0] = 7;
+	SMOKE_RANGE[1] = 15;
 	RESEARCH_RANGE = 50;
 	DEBRIEF_MUSIC_GOOD = "GMMARS";
 	DEBRIEF_MUSIC_BAD = "GMMARS";
@@ -2698,15 +2701,32 @@ void Mod::loadConstants(const YAML::YamlNodeReader &reader)
 	reader.tryRead("damageRange", DAMAGE_RANGE);
 	reader.tryRead("explosiveDamageRange", EXPLOSIVE_DAMAGE_RANGE);
 	if (const auto& arrayReader = reader["fireDamageRange"])
+	{
 		for (size_t j = 0; j < std::size(FIRE_DAMAGE_RANGE); j++)
+		{
 			arrayReader[j].tryReadVal(FIRE_DAMAGE_RANGE[j]);
+		}
+	}
+	if (const auto& arrayReader = reader["smokeRange"])
+	{
+		for (size_t j = 0; j < std::size(SMOKE_RANGE); j++)
+		{
+			arrayReader[j].tryReadVal(SMOKE_RANGE[j]);
+			SMOKE_RANGE[j] = std::clamp(SMOKE_RANGE[j], 1, 15); // capped between 1 and 15 density
+		}
+		SMOKE_RANGE[1] = std::max(SMOKE_RANGE[0], SMOKE_RANGE[1]); // force the max value to be at least as big as min value
+	}
 	reader.tryRead("researchRange", RESEARCH_RANGE);
 	RESEARCH_RANGE = std::clamp(RESEARCH_RANGE, 0, 100); // Force research range in [0, 100]
 	reader.tryRead("goodDebriefingMusic", DEBRIEF_MUSIC_GOOD);
 	reader.tryRead("badDebriefingMusic", DEBRIEF_MUSIC_BAD);
 	if (const auto& arrayReader = reader["extendedPediaFacilityParams"])
+	{
 		for (size_t j = 0; j < std::size(PEDIA_FACILITY_RENDER_PARAMETERS); j++)
+		{
 			arrayReader[j].tryReadVal(PEDIA_FACILITY_RENDER_PARAMETERS[j]);
+		}
+	}
 	reader.tryRead("extendedItemReloadCost", EXTENDED_ITEM_RELOAD_COST);
 	reader.tryRead("extendedInventorySlotSorting", EXTENDED_INVENTORY_SLOT_SORTING);
 	reader.tryRead("extendedRunningCost", EXTENDED_RUNNING_COST);

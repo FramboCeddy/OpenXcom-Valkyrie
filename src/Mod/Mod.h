@@ -433,6 +433,7 @@ public:
 	static int DAMAGE_RANGE;
 	static int EXPLOSIVE_DAMAGE_RANGE;
 	static int FIRE_DAMAGE_RANGE[2];
+	static int SMOKE_RANGE[2];
 	static int RESEARCH_RANGE;
 	static std::string DEBRIEF_MUSIC_GOOD;
 	static std::string DEBRIEF_MUSIC_BAD;
