@@ -110,6 +110,8 @@ public:
 	void removeLastRow();
 	/// Sets the columns in the text list.
 	void setColumns(int cols, ...);
+	/// Gets the amount of columns in the text list.
+	size_t getColumnAmount() const { return _columns.size(); };
 	/// Sets the palette of the text list.
 	void setPalette(const SDL_Color *colors, int firstcolor = 0, int ncolors = 256) override;
 	/// Initializes the resources for the text list.

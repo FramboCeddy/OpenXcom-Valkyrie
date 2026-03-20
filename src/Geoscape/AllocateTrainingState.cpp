@@ -58,9 +58,10 @@ AllocateTrainingState::AllocateTrainingState(Base *base) : _sel(0), _base(base),
 	_txtTraining = new Text(48, 20, 270, 32);
 	_btnOk = new TextButton(148, 16, 164, 176);
 	_lstSoldiers = new TextList(290, 112, 8, 52);
-	_txtTu = new Text(18, 10, 120, 40);
-	_txtStamina = new Text(18, 10, 138, 40);
-	_txtHealth = new Text(18, 10, 156, 40);
+	_txtTu = new Text(18, 10, 102, 40);
+	_txtStamina = new Text(18, 10, 120, 40);
+	_txtHealth = new Text(18, 10, 138, 40);
+	_txtReactions = new Text(18, 10, 156, 40);
 	_txtFiring = new Text(18, 10, 174, 40);
 	_txtThrowing = new Text(18, 10, 192, 40);
 	_txtMelee = new Text(18, 10, 210, 40);
@@ -81,6 +82,7 @@ AllocateTrainingState::AllocateTrainingState(Base *base) : _sel(0), _base(base),
 	add(_txtTu, "text", "allocateMartial");
 	add(_txtStamina, "text", "allocateMartial");
 	add(_txtHealth, "text", "allocateMartial");
+	add(_txtReactions, "text", "allocateMartial");
 	add(_txtFiring, "text", "allocateMartial");
 	add(_txtThrowing, "text", "allocateMartial");
 	add(_txtMelee, "text", "allocateMartial");
@@ -122,6 +124,7 @@ AllocateTrainingState::AllocateTrainingState(Base *base) : _sel(0), _base(base),
 	_txtTu->setText(tr("STR_TIME_UNITS_ABBREVIATION"));
 	_txtStamina->setText(tr("STR_STAMINA_ABBREVIATION"));
 	_txtHealth->setText(tr("STR_HEALTH_ABBREVIATION"));
+	_txtReactions->setText(tr("STR_REACTIONS_ABBREVIATION"));
 	_txtFiring->setText(tr("STR_FIRING_ACCURACY_ABBREVIATION"));
 	_txtThrowing->setText(tr("STR_THROWING_ACCURACY_ABBREVIATION"));
 	_txtMelee->setText(tr("STR_MELEE_ACCURACY_ABBREVIATION"));
@@ -130,6 +133,7 @@ AllocateTrainingState::AllocateTrainingState(Base *base) : _sel(0), _base(base),
 
 	// populate sort options
 	std::vector<std::string> sortOptions;
+	sortOptions.reserve(21);
 	sortOptions.push_back(tr("STR_ORIGINAL_ORDER"));
 	_sortFunctors.push_back(NULL);
 	_sortFunctorsPlus.push_back(NULL);
@@ -184,7 +188,7 @@ AllocateTrainingState::AllocateTrainingState(Base *base) : _sel(0), _base(base),
 	_cbxSortBy->setText(tr("STR_SORT_BY"));
 
 	_lstSoldiers->setArrowColumn(238, ARROW_VERTICAL);
-	_lstSoldiers->setColumns(9, 110, 18, 18, 18, 18, 18, 18, 42, 40);
+	_lstSoldiers->setColumns(10, 92, 18, 18, 18, 18, 18, 18, 18, 42, 40);
 	_lstSoldiers->setSelectable(true);
 	_lstSoldiers->setBackground(_window);
 	_lstSoldiers->setMargin(2);
@@ -317,12 +321,14 @@ void AllocateTrainingState::initList(size_t scrl)
 	{
 		const UnitStats* stats = _btnPlus->getPressed() ? soldier->getStatsWithSoldierBonusesOnly() : soldier->getCurrentStats();
 
-		std::ostringstream tu;
+		std::ostringstream tu; // NOTE: would it be possible to do a color flip here when the soldier's stats are greater than the training stat caps?
 		tu << stats->tu;
 		std::ostringstream stamina;
 		stamina << stats->stamina;
 		std::ostringstream health;
 		health << stats->health;
+		std::ostringstream reactions;
+		reactions << stats->reactions;
 		std::ostringstream firing;
 		firing << stats->firing;
 		std::ostringstream throwing;
@@ -339,21 +345,32 @@ void AllocateTrainingState::initList(size_t scrl)
 
 		std::string status;
 		if (isDone)
+		{
 			status = tr("STR_NO_DONE");
+		}
 		else if (isQueued)
+		{
 			status = tr("STR_NO_QUEUED");
+		}
 		else if (isWounded)
+		{
 			status = tr("STR_NO_WOUNDED");
+		}
 		else if (isTraining)
+		{
 			status = tr("STR_YES");
+		}
 		else
+		{
 			status = tr("STR_NO");
+		}
 
-		_lstSoldiers->addRow(9,
+		_lstSoldiers->addRow(10,
 			soldier->getName(true).c_str(),
 			tu.str().c_str(),
 			stamina.str().c_str(),
 			health.str().c_str(),
+			reactions.str().c_str(),
 			firing.str().c_str(),
 			throwing.str().c_str(),
 			melee.str().c_str(),
@@ -363,7 +380,9 @@ void AllocateTrainingState::initList(size_t scrl)
 		row++;
 	}
 	if (scrl)
+	{
 		_lstSoldiers->scrollTo(scrl);
+	}
 	_lstSoldiers->draw();
 }
 
@@ -490,30 +509,32 @@ void AllocateTrainingState::lstSoldiersClick(Action *action)
 		auto* soldier = _base->getSoldiers()->at(_sel);
 
 		// can't put fully trained soldiers back into training
-		if (soldier->isFullyTrained()) return;
+		if (soldier->isFullyTrained())
+		{
+			return;
+		}
 
 		// wounded soldiers can be queued/dequeued
 		if (soldier->isWounded())
 		{
 			if (soldier->getReturnToTrainingWhenHealed())
 			{
-				_lstSoldiers->setCellText(_sel, 8, tr("STR_NO_WOUNDED").c_str());
+				_lstSoldiers->setCellText(_sel, _lstSoldiers->getColumnAmount() - 1, tr("STR_NO_WOUNDED").c_str());
 				soldier->setReturnToTrainingWhenHealed(false);
 			}
 			else
 			{
-				_lstSoldiers->setCellText(_sel, 8, tr("STR_NO_QUEUED").c_str());
+				_lstSoldiers->setCellText(_sel, _lstSoldiers->getColumnAmount() - 1, tr("STR_NO_QUEUED").c_str());
 				soldier->setReturnToTrainingWhenHealed(true);
 			}
 			return;
 		}
-
 		// healthy soldiers can be assigned/deassigned
-		if (!soldier->isInTraining())
+		else if (!soldier->isInTraining())
 		{
 			if (_base->getUsedTraining() < _base->getAvailableTraining())
 			{
-				_lstSoldiers->setCellText(_sel, 8, tr("STR_YES").c_str());
+				_lstSoldiers->setCellText(_sel, _lstSoldiers->getColumnAmount() - 1, tr("STR_YES").c_str());
 				_lstSoldiers->setRowColor(_sel, _lstSoldiers->getSecondaryColor());
 				_space--;
 				_txtRemaining->setText(tr("STR_REMAINING_TRAINING_FACILITY_CAPACITY").arg(_space));
@@ -523,7 +544,7 @@ void AllocateTrainingState::lstSoldiersClick(Action *action)
 		}
 		else
 		{
-			_lstSoldiers->setCellText(_sel, 8, tr("STR_NO").c_str());
+			_lstSoldiers->setCellText(_sel, _lstSoldiers->getColumnAmount() - 1, tr("STR_NO").c_str());
 			_lstSoldiers->setRowColor(_sel, _lstSoldiers->getColor());
 			_space++;
 			_txtRemaining->setText(tr("STR_REMAINING_TRAINING_FACILITY_CAPACITY").arg(_space));
@@ -582,13 +603,19 @@ void AllocateTrainingState::btnDeassignAllSoldiersClick(Action* action)
 
 		std::string status;
 		if (soldier->isFullyTrained())
+		{
 			status = tr("STR_NO_DONE");
+		}
 		else if (soldier->isWounded())
+		{
 			status = tr("STR_NO_WOUNDED");
+		}
 		else
+		{
 			status = tr("STR_NO");
+		}
 
-		_lstSoldiers->setCellText(row, 8, tr(status).c_str());
+		_lstSoldiers->setCellText(row, _lstSoldiers->getColumnAmount() - 1, tr(status).c_str());
 		_lstSoldiers->setRowColor(row, _lstSoldiers->getColor());
 		row++;
 	}
@@ -608,20 +635,23 @@ void AllocateTrainingState::btnAssignAllSoldiersClick(Action* action)
 		if (soldier->isFullyTrained())
 		{
 			// can't put fully trained soldiers back into training
+			++row;
+			continue;
 		}
-		else if (soldier->isWounded())
+
+		if (soldier->isWounded())
 		{
 			// wounded soldiers can be queued
 			if (!soldier->getReturnToTrainingWhenHealed())
 			{
-				_lstSoldiers->setCellText(row, 8, tr("STR_NO_QUEUED").c_str());
+				_lstSoldiers->setCellText(row, _lstSoldiers->getColumnAmount() - 1, tr("STR_NO_QUEUED").c_str());
 				soldier->setReturnToTrainingWhenHealed(true);
 			}
 		}
 		else if (_space > 0 && !soldier->isInTraining())
 		{
 			// healthy soldiers can be assigned
-			_lstSoldiers->setCellText(row, 8, tr("STR_YES").c_str());
+			_lstSoldiers->setCellText(row, _lstSoldiers->getColumnAmount() - 1, tr("STR_YES").c_str());
 			_lstSoldiers->setRowColor(row, _lstSoldiers->getSecondaryColor());
 			_space--;
 			soldier->setTraining(true);
