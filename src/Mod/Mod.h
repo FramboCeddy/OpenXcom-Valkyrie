@@ -326,6 +326,8 @@ private:
 	ModData* _modCurrent;
 	const SDL_Color *_statePalette;
 
+	std::vector<int> _councilPoints;
+
 	std::vector<std::string> _psiRequirements; // it's a cache for psiStrengthEval
 	std::vector<const Armor*> _armorsForSoldiersCache;
 	std::vector<const RuleItem*> _armorStorageItemsCache;
@@ -1005,7 +1007,12 @@ public:
 	int getTURecoveryWakeUpNewTurn() const { return _tuRecoveryWakeUpNewTurn; }
 	/// Gets whether or not to load base defense terrain from globe texture
 	int getBaseDefenseMapFromLocation() const { return _baseDefenseMapFromLocation; }
+	/// Gets whether the funding countries should ignore points given by the council for funding decision
 	bool getCountriesIgnoreCouncilPoints() const;
+	/// Gets the council points for the given month
+	int getCouncilPointsForMonth(size_t month) const;
+
+
 
 	/// Return mod what created given rule object.
 	template<typename T>

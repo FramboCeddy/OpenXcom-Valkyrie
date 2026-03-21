@@ -21,6 +21,8 @@ turnAIUseGrenade: 3
 turnAIUseBlaster: 3
 defeatScore: -900
 defeatFunds: -1000000
+councilPoints: [0, 400]
+countriesIgnoreCouncilPoints: false
 constants:
   damageRange: 100
   explosiveDamageRange: 50

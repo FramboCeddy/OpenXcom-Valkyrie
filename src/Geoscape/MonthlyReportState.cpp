@@ -16,31 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "MonthlyReportState.h"
-#include <climits>
-#include <sstream>
+#include "../Battlescape/CommendationState.h"
 #include "../Engine/Game.h"
-#include "../Mod/Mod.h"
+#include "../Engine/InteractiveSurface.h"
 #include "../Engine/LocalizedText.h"
+#include "../Engine/Options.h"
+#include "../Engine/State.h"
+#include "../Engine/Unicode.h"
+#include "../Interface/Text.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
-#include "../Interface/Text.h"
-#include "../Savegame/SavedGame.h"
-#include "../Savegame/Base.h"
-#include "../Savegame/GameTime.h"
-#include "PsiTrainingState.h"
-#include "../Savegame/Region.h"
-#include "../Savegame/Country.h"
-#include "../Mod/RuleCountry.h"
-#include "Globe.h"
-#include "../Engine/Options.h"
-#include "../Engine/Unicode.h"
 #include "../Menu/CutsceneState.h"
-#include "../Battlescape/CommendationState.h"
-#include "../Savegame/SoldierDiary.h"
+#include "../Menu/OptionsBaseState.h"
 #include "../Menu/SaveGameState.h"
+#include "../Mod/Mod.h"
+#include "../Mod/RuleAlienMission.h"
+#include "../Mod/RuleCountry.h"
 #include "../Mod/RuleInterface.h"
 #include "../Mod/RuleVideo.h"
+#include "../Savegame/Base.h"
+#include "../Savegame/Country.h"
+#include "../Savegame/GameTime.h"
+#include "../Savegame/Region.h"
+#include "../Savegame/SavedGame.h"
+#include "../Savegame/SoldierDiary.h"
+#include "Globe.h"
+#include "MonthlyReportState.h"
+#include "PsiTrainingState.h"
+#include <climits>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace OpenXcom
 {
@@ -205,36 +211,32 @@ MonthlyReportState::MonthlyReportState(Globe *globe) : _gameOver(0), _ratingTota
 	_txtDesc->setScrollable(true);
 
 	// calculate satisfaction
-	std::ostringstream ss5;
-	std::string satisFactionString = tr("STR_COUNCIL_IS_DISSATISFIED");
-	bool resetWarning = true;
+	std::string satisFactionString = "STR_COUNCIL_IS_DISSATISFIED";
 	if (_ratingTotal > difficulty_threshold)
 	{
-		satisFactionString = tr("STR_COUNCIL_IS_GENERALLY_SATISFIED");
+		satisFactionString = "STR_COUNCIL_IS_GENERALLY_SATISFIED";
 	}
 	if (_ratingTotal > 500)
 	{
-		satisFactionString = tr("STR_COUNCIL_IS_VERY_PLEASED");
+		satisFactionString = "STR_COUNCIL_IS_VERY_PLEASED";
 	}
+
+	std::ostringstream ss5;
 	if (_lastMonthsRating <= difficulty_threshold && _ratingTotal <= difficulty_threshold)
 	{
-		satisFactionString = tr("STR_YOU_HAVE_NOT_SUCCEEDED");
+		ss5 << tr("STR_YOU_HAVE_NOT_SUCCEEDED");
 		_pactList.erase(_pactList.begin(), _pactList.end());
 		_cancelPactList.erase(_cancelPactList.begin(), _cancelPactList.end());
 		_happyList.erase(_happyList.begin(), _happyList.end());
 		_sadList.erase(_sadList.begin(), _sadList.end());
 		_gameOver = 1;
 	}
-
-	ss5 << satisFactionString;
-
-	if (!_gameOver)
+	else
 	{
 		if (_game->getSavedGame()->getFunds() <= _game->getMod()->getDefeatFunds())
 		{
 			if (_game->getSavedGame()->getWarned())
 			{
-				ss5.str("");
 				ss5 << tr("STR_YOU_HAVE_NOT_SUCCEEDED");
 				_pactList.erase(_pactList.begin(), _pactList.end());
 				_cancelPactList.erase(_cancelPactList.begin(), _cancelPactList.end());
@@ -244,15 +246,15 @@ MonthlyReportState::MonthlyReportState(Globe *globe) : _gameOver(0), _ratingTota
 			}
 			else
 			{
-				ss5 << "\n\n" << tr("STR_COUNCIL_REDUCE_DEBTS");
+				ss5 << tr(satisFactionString) << "\n\n" << tr("STR_COUNCIL_REDUCE_DEBTS");
 				_game->getSavedGame()->setWarned(true);
-				resetWarning = false;
 			}
 		}
-	}
-	if (resetWarning && _game->getSavedGame()->getWarned())
-	{
-		_game->getSavedGame()->setWarned(false);
+		else
+		{
+			ss5 << tr(satisFactionString);
+			_game->getSavedGame()->setWarned(false);
+		}
 	}
 
 	ss5 << countryList(_happyList, "STR_COUNTRY_IS_PARTICULARLY_PLEASED", "STR_COUNTRIES_ARE_PARTICULARLY_HAPPY");
@@ -317,14 +319,16 @@ void MonthlyReportState::btnOkClick(Action *)
 			_game->pushState(new CommendationState(_soldiersMedalled));
 		}
 
-		bool psi = false;
-		for (auto* xbase : *_game->getSavedGame()->getBases())
+		if (!Options::anytimePsiTraining)
 		{
-			psi = psi || xbase->getAvailablePsiLabs();
-		}
-		if (psi && !Options::anytimePsiTraining)
-		{
-			_game->pushState(new PsiTrainingState);
+			for (auto* xbase : *_game->getSavedGame()->getBases())
+			{
+				if (xbase->getAvailablePsiLabs() > 0)
+				{
+					_game->pushState(new PsiTrainingState);
+					break;
+				}
+			}
 		}
 		// Autosave
 		if (_game->getSavedGame()->isIronman())
@@ -342,11 +346,7 @@ void MonthlyReportState::btnOkClick(Action *)
 		{
 			_game->popState(); // in case the cutscene is not marked as "game over" (by accident or not) let's return to the geoscape
 
-			std::string cutsceneId;
-			if (_gameOver == 1)
-				cutsceneId = _game->getMod()->getLoseRatingCutscene();
-			else
-				cutsceneId = _game->getMod()->getLoseMoneyCutscene();
+			std::string cutsceneId = (_gameOver == 1) ? _game->getMod()->getLoseRatingCutscene() : _game->getMod()->getLoseMoneyCutscene();
 
 			const RuleVideo *videoRule = _game->getMod()->getVideo(cutsceneId, true);
 			if (videoRule->getLoseGame())
@@ -411,23 +411,11 @@ void MonthlyReportState::calculateChanges()
 		alienTotal += region->getActivityAlien().at(monthOffset);
 	}
 
-	// apply council points after calculating our total, so it does not affect council decisions
-	if (_game->getMod()->getCountriesIgnoreCouncilPoints())
-	{
-		xcomTotal = _game->getSavedGame()->getResearchScores().at(monthOffset) + xcomSubTotal;
-		if (_game->getSavedGame()->getMonthsPassed() > 1) // the council is more lenient after the first month
-		{
-			_game->getSavedGame()->getResearchScores().at(monthOffset) += 400;
-		}
-	}
-	else // apply council points before calculating our total, so it affects council decisions
-	{
-		if (_game->getSavedGame()->getMonthsPassed() > 1)
-		{
-			_game->getSavedGame()->getResearchScores().at(monthOffset) += 400;
-		}
-		xcomTotal = _game->getSavedGame()->getResearchScores().at(monthOffset) + xcomSubTotal;
-	}
+	xcomTotal = _game->getSavedGame()->getResearchScores().at(monthOffset) + xcomSubTotal;
+	// subtract our council leniency if countries have to ignore it, because we already gained the points at the beginning of the month
+	int xcomCountryTotal = _game->getMod()->getCountriesIgnoreCouncilPoints() ?
+							xcomTotal - _game->getMod()->getCouncilPointsForMonth(monthOffset) :
+							xcomTotal;
 
 	if (_game->getSavedGame()->getResearchScores().size() > 2)
 	{
@@ -442,7 +430,7 @@ void MonthlyReportState::calculateChanges()
 	{
 		pactScore = infiltration->getPoints();
 	}
-	int averageFunding = _game->getSavedGame()->getCountryFunding() / _game->getSavedGame()->getCountries()->size() / 1000 * 1000;
+	int averageFunding = _game->getSavedGame()->getCountryFunding() / (int)_game->getSavedGame()->getCountries()->size() / 1000 * 1000;
 	for (auto* country : *_game->getSavedGame()->getCountries())
 	{
 		// check pact status before and after, because scripting can arbitrarily form/break pacts
@@ -450,7 +438,7 @@ void MonthlyReportState::calculateChanges()
 
 		// determine satisfaction level, sign pacts, adjust funding
 		// and update activity meters,
-		country->newMonth(xcomTotal, alienTotal, pactScore, averageFunding, _game->getSavedGame());
+		country->newMonth(xcomCountryTotal, alienTotal, pactScore, averageFunding, _game->getSavedGame());
 		// and after they've made their decisions, calculate the difference, and add
 		// them to the appropriate lists.
 		_fundingDiff += country->getFunding().back() - country->getFunding().at(country->getFunding().size()-2);

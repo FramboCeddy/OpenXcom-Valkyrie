@@ -2891,20 +2891,22 @@ void GeoscapeState::time1Month()
 				continue;
 			}
 
-				for (auto* soldier : *xbase->getSoldiers())
+			for (auto* soldier : *xbase->getSoldiers())
+			{
+				if (soldier->isInPsiTraining())
 				{
-					if (soldier->isInPsiTraining())
-					{
-						soldier->trainPsi();
-						soldier->calcStatString(_game->getMod()->getStatStrings(), psiStrengthEval);
-					}
+					soldier->trainPsi();
+					soldier->calcStatString(_game->getMod()->getStatStrings(), psiStrengthEval);
 				}
 			}
 		}
+	}
 
 	// Handle funding
 	timerReset();
+	auto councilPoints = _game->getMod()->getCouncilPointsForMonth(_game->getSavedGame()->getMonthsPassed());
 	_game->getSavedGame()->monthlyFunding();
+	_game->getSavedGame()->addResearchScore(councilPoints); // gain council leniency at beginning of the month
 	popup(new MonthlyReportState(_globe));
 
 	// Handle Xcom Operatives discovering bases

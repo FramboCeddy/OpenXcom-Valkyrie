@@ -3368,6 +3368,7 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	reader.tryRead("flagByKills", _flagByKills);
 	reader.tryRead("defeatScore", _defeatScore);
 	reader.tryRead("defeatFunds", _defeatFunds);
+	reader.tryRead("councilPoints", _councilPoints);
 	reader.tryRead("countriesIgnoreCouncilPoints", _countriesIgnoreCouncilPoints);
 	reader.tryRead("difficultyDemigod", _difficultyDemigod);
 
@@ -3825,6 +3826,7 @@ SavedGame *Mod::newSave(GameDifficulty diff) const
 {
 	SavedGame *save = new SavedGame();
 	save->setDifficulty(diff);
+	save->addResearchScore(getCouncilPointsForMonth(0));
 
 	// Add countries
 	for (const auto& countryName : _countriesIndex)
@@ -6528,6 +6530,15 @@ bool Mod::isDemigod() const
 bool Mod::getCountriesIgnoreCouncilPoints() const
 {
 	return _countriesIgnoreCouncilPoints;
+}
+
+int Mod::getCouncilPointsForMonth(size_t month) const
+{
+	if (month >= _councilPoints.size())
+	{
+		return _councilPoints.back(); // return last value
+	}
+	return _councilPoints[month];
 }
 
 ////////////////////////////////////////////////////////////
