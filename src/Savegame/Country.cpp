@@ -186,7 +186,7 @@ void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int average
 					good - bad <= 30 ? Satisfaction::SATISFIED :	// satisfied
 									   Satisfaction::HAPPY;			// happy
 
-	int newFunding;
+	int newFunding = 0;
 	switch (_satisfaction)
 	{
 	case Satisfaction::UNHAPPY:
@@ -199,7 +199,6 @@ void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int average
 		newFunding = - std::clamp(newFunding, 1000, funding); // decrease at least by 1000, but not more than current funding
 		break;
 	case Satisfaction::SATISFIED:
-		newFunding = 0;
 		break;
 	case Satisfaction::HAPPY:
 		if (RNG::generate(0, good) <= bad)
