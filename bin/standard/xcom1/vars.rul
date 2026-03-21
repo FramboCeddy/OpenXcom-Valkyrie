@@ -16,8 +16,6 @@ timePersonnel: 72
 initialFunding: 6000
 alienFuel: [STR_ELERIUM_115, 50]
 fontName: Font.dat
-smokeRange: [7, 15]
-researchRange: 50
 
 missionRatings:
   500: STR_RATING_EXCELLENT

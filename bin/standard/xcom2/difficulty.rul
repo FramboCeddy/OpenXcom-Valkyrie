@@ -22,6 +22,8 @@ turnAIUseBlaster: 2
 defeatScore: -900
 defeatFunds: -1000000
 constants:
-  - damageRange: 50
-  - explosiveDamageRange: 50
-  - fireDamageRange: [5, 10]
+  damageRange: 50
+  explosiveDamageRange: 50
+  fireDamageRange: [5, 10]
+  smokeRange: [7, 15]
+  researchRange: 50

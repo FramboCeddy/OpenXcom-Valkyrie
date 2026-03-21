@@ -25,4 +25,5 @@ constants:
   damageRange: 100
   explosiveDamageRange: 50
   fireDamageRange: [5, 10]
+  smokeRange: [7, 15]
   researchRange: 50
