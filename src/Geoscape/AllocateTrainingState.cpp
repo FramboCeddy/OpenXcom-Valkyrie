@@ -39,6 +39,8 @@
 #include "../Basescape/SoldierSortUtil.h"
 #include <algorithm>
 #include "../Engine/Unicode.h"
+#include "../Mod/RuleSoldier.h"
+#include <string>
 
 namespace OpenXcom
 {
@@ -315,29 +317,10 @@ void AllocateTrainingState::init()
  */
 void AllocateTrainingState::initList(size_t scrl)
 {
-	int row = 0;
+	size_t row = 0;
 	_lstSoldiers->clearList();
 	for (auto* soldier : *_base->getSoldiers())
-	{
-		const UnitStats* stats = _btnPlus->getPressed() ? soldier->getStatsWithSoldierBonusesOnly() : soldier->getCurrentStats();
-
-		std::ostringstream tu; // NOTE: would it be possible to do a color flip here when the soldier's stats are greater than the training stat caps?
-		tu << stats->tu;
-		std::ostringstream stamina;
-		stamina << stats->stamina;
-		std::ostringstream health;
-		health << stats->health;
-		std::ostringstream reactions;
-		reactions << stats->reactions;
-		std::ostringstream firing;
-		firing << stats->firing;
-		std::ostringstream throwing;
-		throwing << stats->throwing;
-		std::ostringstream melee;
-		melee << stats->melee;
-		std::ostringstream strength;
-		strength << stats->strength;
-
+	{	
 		bool isDone = soldier->isFullyTrained();
 		bool isWounded = soldier->isWounded();
 		bool isTraining = soldier->isInTraining();
@@ -346,44 +329,77 @@ void AllocateTrainingState::initList(size_t scrl)
 		std::string status;
 		if (isDone)
 		{
-			status = tr("STR_NO_DONE");
+			status = "STR_NO_DONE";
 		}
 		else if (isQueued)
 		{
-			status = tr("STR_NO_QUEUED");
+			status = "STR_NO_QUEUED";
 		}
 		else if (isWounded)
 		{
-			status = tr("STR_NO_WOUNDED");
+			status = "STR_NO_WOUNDED";
 		}
 		else if (isTraining)
 		{
-			status = tr("STR_YES");
+			status = "STR_YES";
 		}
 		else
 		{
-			status = tr("STR_NO");
+			status = "STR_NO";
 		}
+
+		const UnitStats* stats = _btnPlus->getPressed() ? soldier->getStatsWithSoldierBonusesOnly() : soldier->getCurrentStats();
 
 		_lstSoldiers->addRow(10,
 			soldier->getName(true).c_str(),
-			tu.str().c_str(),
-			stamina.str().c_str(),
-			health.str().c_str(),
-			reactions.str().c_str(),
-			firing.str().c_str(),
-			throwing.str().c_str(),
-			melee.str().c_str(),
-			strength.str().c_str(),
-			status.c_str());
-		_lstSoldiers->setRowColor(row, isTraining ? _lstSoldiers->getSecondaryColor() : _lstSoldiers->getColor());
-		row++;
+			std::to_string(stats->tu).c_str(),
+			std::to_string(stats->stamina).c_str(),
+			std::to_string(stats->health).c_str(),
+			std::to_string(stats->reactions).c_str(),
+			std::to_string(stats->firing).c_str(),
+			std::to_string(stats->throwing).c_str(),
+			std::to_string(stats->melee).c_str(),
+			std::to_string(stats->strength).c_str(),
+			tr(status).c_str());
+
+		if (isTraining)
+		{
+			ColourTrainingStats(row);
+		}
+		else
+		{
+			_lstSoldiers->setRowColor(row, _lstSoldiers->getColor());
+		}
+		++row;
 	}
 	if (scrl)
 	{
 		_lstSoldiers->scrollTo(scrl);
 	}
 	_lstSoldiers->draw();
+}
+
+/**
+ * Sets the colors of the columns depending on the stat being eligible for training improvement
+ * @param row Row of the soldier in the textList
+ */
+void AllocateTrainingState::ColourTrainingStats(size_t row)
+{
+	const Soldier* soldier = _base->getSoldiers()->at(row);
+	const UnitStats* stats = _btnPlus->getPressed() ? soldier->getStatsWithSoldierBonusesOnly() : soldier->getCurrentStats();
+	const UnitStats trainingCaps = soldier->getRules()->getTrainingStatCaps();
+	// set name
+	_lstSoldiers->setCellColor(row, 0, _lstSoldiers->getSecondaryColor());
+	// set the training stats to gold colour only if they are training
+	for (size_t col = 0; col < stats->physStats.size(); ++col)
+	{
+		auto& currentStat = stats->*(stats->physStats[col]);
+		auto& trainingStatCap = trainingCaps.*(trainingCaps.physStats[col]);
+		auto color = currentStat >= trainingStatCap ? 241 : _lstSoldiers->getSecondaryColor(); // 241 is a red-ish hue
+		_lstSoldiers->setCellColor(row, col + 1, color);
+	}
+	// set status
+	_lstSoldiers->setCellColor(row, _lstSoldiers->getColumnAmount() - 1, _lstSoldiers->getSecondaryColor());
 }
 
 /**
@@ -527,15 +543,14 @@ void AllocateTrainingState::lstSoldiersClick(Action *action)
 				_lstSoldiers->setCellText(_sel, _lstSoldiers->getColumnAmount() - 1, tr("STR_NO_QUEUED").c_str());
 				soldier->setReturnToTrainingWhenHealed(true);
 			}
-			return;
 		}
 		// healthy soldiers can be assigned/deassigned
 		else if (!soldier->isInTraining())
 		{
 			if (_base->getUsedTraining() < _base->getAvailableTraining())
 			{
+				ColourTrainingStats(_sel);
 				_lstSoldiers->setCellText(_sel, _lstSoldiers->getColumnAmount() - 1, tr("STR_YES").c_str());
-				_lstSoldiers->setRowColor(_sel, _lstSoldiers->getSecondaryColor());
 				_space--;
 				_txtRemaining->setText(tr("STR_REMAINING_TRAINING_FACILITY_CAPACITY").arg(_space));
 				soldier->setTraining(true);
@@ -566,11 +581,12 @@ void AllocateTrainingState::lstSoldiersClick(Action *action)
 void AllocateTrainingState::lstSoldiersMousePress(Action *action)
 {
 	if (Options::changeValueByMouseWheel == 0)
+	{
 		return;
+	}
 	unsigned int row = _lstSoldiers->getSelectedRow();
 	size_t numSoldiers = _base->getSoldiers()->size();
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP &&
-		row > 0)
+	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP && row > 0)
 	{
 		if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
 			action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
@@ -651,8 +667,8 @@ void AllocateTrainingState::btnAssignAllSoldiersClick(Action* action)
 		else if (_space > 0 && !soldier->isInTraining())
 		{
 			// healthy soldiers can be assigned
+			ColourTrainingStats(row);
 			_lstSoldiers->setCellText(row, _lstSoldiers->getColumnAmount() - 1, tr("STR_YES").c_str());
-			_lstSoldiers->setRowColor(row, _lstSoldiers->getSecondaryColor());
 			_space--;
 			soldier->setTraining(true);
 			soldier->setReturnToTrainingWhenHealed(false);

@@ -58,7 +58,10 @@ private:
 
 	///initializes the display list
 	void initList(size_t scrl);
-public:
+	/// Colour the stat columns that are eligible for improvement
+	void ColourTrainingStats(size_t row);
+
+  public:
 	/// Creates the Psi Training state.
 	AllocateTrainingState(Base *base);
 	/// Cleans up the Psi Training state.

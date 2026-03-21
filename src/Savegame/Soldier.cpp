@@ -1555,26 +1555,18 @@ void Soldier::trainPhys(int customTrainingFactor)
 	{
 		return;
 	}
-	UnitStats trainingCaps = _rules->getTrainingStatCaps();
-
-	auto PhysTraining = [&](Sint16 UnitStats::* p)
+	const UnitStats trainingCaps = _rules->getTrainingStatCaps();
+	for (auto& stat : _currentStats.physStats)
+	{
+		auto& currentStat = _currentStats.*stat;
+		auto& trainingStatCap = trainingCaps.*stat;
+		if (currentStat < trainingStatCap &&										// Not reached training stat caps
+			RNG::generate(0, trainingStatCap) > currentStat &&						// Got a good roll
+			(customTrainingFactor >= 100 || RNG::percent(customTrainingFactor)))	// Not slowed down by training factor
 		{
-			// Don't train these stats
-			if ((_currentStats.*p) == (_currentStats.psiSkill) ||
-				(_currentStats.*p) == (_currentStats.psiStrength) ||
-				(_currentStats.*p) == (_currentStats.mana) || 
-				(_currentStats.*p) == (_currentStats.bravery))
-			{
-				return;
-			}
-			if (_currentStats.*p < trainingCaps.*p &&									// Not reached training stat caps
-				RNG::generate(0, trainingCaps.*p) > _currentStats.*p &&					// Got a good roll
-				(customTrainingFactor >= 100 || RNG::percent(customTrainingFactor)))	// Not slowed down by training factor
-			{
-				(_currentStats.*p)++;
-			}
-		};
-	_currentStats.fieldLoop(PhysTraining);
+			currentStat++;
+		}
+	}
 }
 
 /**
