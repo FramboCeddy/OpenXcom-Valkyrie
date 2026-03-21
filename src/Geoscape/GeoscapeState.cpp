@@ -2886,8 +2886,11 @@ void GeoscapeState::time1Month()
 		bool psiStrengthEval = (Options::psiStrengthEval && _game->getSavedGame()->isResearched(_game->getMod()->getPsiRequirements()));
 		for (auto* xbase : *_game->getSavedGame()->getBases())
 		{
-			if (xbase->getAvailablePsiLabs() > 0)
+			if (xbase->getAvailablePsiLabs() <= 0)
 			{
+				continue;
+			}
+
 				for (auto* soldier : *xbase->getSoldiers())
 				{
 					if (soldier->isInPsiTraining())
@@ -2898,7 +2901,6 @@ void GeoscapeState::time1Month()
 				}
 			}
 		}
-	}
 
 	// Handle funding
 	timerReset();

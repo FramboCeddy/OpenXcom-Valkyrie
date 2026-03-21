@@ -49,7 +49,7 @@ public:
 	/// Saves the time to YAML.
 	void save(YAML::YamlNodeWriter writer) const;
 	/// Checks if it is the last day of the month.
-	bool isLastDayOfMonth();
+	bool isLastDayOfMonth() const;
 	/// Advances the time by 5 seconds.
 	TimeTrigger advance();
 	/// Gets the ingame second.

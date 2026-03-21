@@ -16,9 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "GameTime.h"
 #include "../Engine/Language.h"
+#include "../Engine/Yaml.h"
+#include "GameTime.h"
+#include <array>
 #include <iomanip>
+#include <sstream>
+#include <string>
 
 namespace OpenXcom
 {
@@ -76,12 +80,14 @@ void GameTime::save(YAML::YamlNodeWriter writer) const
 	writer.write("year", _year);
 }
 
-bool GameTime::isLastDayOfMonth()
+bool GameTime::isLastDayOfMonth() const
 {
-	int monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	std::array<int, 12> monthDays = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	// Leap year
 	if ((_year % 4 == 0) && !(_year % 100 == 0 && _year % 400 != 0))
+	{
 		monthDays[1]++;
+	}
 	return _day == monthDays[_month - 1];
 }
 
@@ -94,10 +100,12 @@ bool GameTime::isLastDayOfMonth()
 TimeTrigger GameTime::advance()
 {
 	TimeTrigger trigger = TIME_5SEC;
-	int monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	std::array<int, 12> monthDays = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	// Leap year
 	if ((_year % 4 == 0) && !(_year % 100 == 0 && _year % 400 != 0))
+	{
 		monthDays[1]++;
+	}
 
 	_second += 5;
 
@@ -189,7 +197,7 @@ int GameTime::getWeekday() const
  */
 std::string GameTime::getWeekdayString() const
 {
-	std::string weekdays[] = {"STR_SUNDAY", "STR_MONDAY", "STR_TUESDAY", "STR_WEDNESDAY", "STR_THURSDAY", "STR_FRIDAY", "STR_SATURDAY"};
+	const std::array<const std::string, 7> weekdays = {"STR_SUNDAY", "STR_MONDAY", "STR_TUESDAY", "STR_WEDNESDAY", "STR_THURSDAY", "STR_FRIDAY", "STR_SATURDAY"};
 	return weekdays[_weekday - 1];
 }
 
@@ -248,7 +256,7 @@ int GameTime::getMonth() const
  */
 std::string GameTime::getMonthString() const
 {
-	std::string months[] = {"STR_JAN", "STR_FEB", "STR_MAR", "STR_APR", "STR_MAY", "STR_JUN", "STR_JUL", "STR_AUG", "STR_SEP", "STR_OCT", "STR_NOV", "STR_DEC"};
+	const std::array<const std::string, 12> months = {"STR_JAN", "STR_FEB", "STR_MAR", "STR_APR", "STR_MAY", "STR_JUN", "STR_JUL", "STR_AUG", "STR_SEP", "STR_OCT", "STR_NOV", "STR_DEC"};
 	return months[_month - 1];
 }
 

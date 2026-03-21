@@ -64,7 +64,7 @@ PsiTrainingState::PsiTrainingState()
 	int buttons = 0;
 	for (auto* xbase : *_game->getSavedGame()->getBases())
 	{
-		if (xbase->getAvailablePsiLabs())
+		if (xbase->getAvailablePsiLabs() > 0)
 		{
 			TextButton *btnBase = new TextButton(160, 14, 80, 40 + 16 * buttons);
 			btnBase->onMouseClick((ActionHandler)&PsiTrainingState::btnBaseXClick);

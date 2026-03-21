@@ -617,18 +617,14 @@ void AllocateTrainingState::btnDeassignAllSoldiersClick(Action* action)
 		soldier->setTraining(false);
 		soldier->setReturnToTrainingWhenHealed(false);
 
-		std::string status;
+		std::string status = "STR_NO";
 		if (soldier->isFullyTrained())
 		{
-			status = tr("STR_NO_DONE");
+			status = "STR_NO_DONE";
 		}
 		else if (soldier->isWounded())
 		{
-			status = tr("STR_NO_WOUNDED");
-		}
-		else
-		{
-			status = tr("STR_NO");
+			status = "STR_NO_WOUNDED";
 		}
 
 		_lstSoldiers->setCellText(row, _lstSoldiers->getColumnAmount() - 1, tr(status).c_str());

@@ -1128,15 +1128,25 @@ void SavedGame::monthlyFunding()
 	_researchScores.push_back(0);
 
 	if (_incomes.size() > 12)
+	{
 		_incomes.erase(_incomes.begin());
+	}
 	if (_expenditures.size() > 12)
+	{
 		_expenditures.erase(_expenditures.begin());
+	}
 	if (_researchScores.size() > 12)
+	{
 		_researchScores.erase(_researchScores.begin());
+	}
 	if (_funds.size() > 12)
+	{
 		_funds.erase(_funds.begin());
+	}
 	if (_maintenance.size() > 12)
+	{
 		_maintenance.erase(_maintenance.begin());
+	}
 }
 
 /**
