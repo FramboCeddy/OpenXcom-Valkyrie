@@ -414,6 +414,7 @@ private:
 	bool _damageTypeSet, _meleeTypeSet;
 	RuleItemAction _confAimed, _confAuto, _confSnap, _confMelee;
 	int _accuracyUse, _accuracyMind, _accuracyPanic, _accuracyThrow, _accuracyCloseQuarters;
+	int _missileDrift;
 	int _noLOSAccuracyPenalty;
 	int _explodeInventory;
 	RuleItemUseCostRule _costUse, _costMind, _costPanic, _costThrow, _costPrime, _costUnprime;
@@ -596,6 +597,8 @@ public:
 	/// Checks if the item can be placed into a given inventory section.
 	bool canBePlacedIntoInventorySection(const RuleInventory* inventorySection) const;
 
+	/// Gets the missile drift in decimals for launch actions
+	int getMissileDrift() const { return _missileDrift; }
 	/// Gets if the item is a launcher.
 	int getWaypoints() const;
 	/// Gets the item's bullet sprite reference.

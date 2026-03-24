@@ -13,3 +13,5 @@ en-US:
   STR_HIDE_SPOILERS: "Hide spoilers"
   STR_RECOVERY_POINTS_FOR_AMMO: "Recovery Points for Ammo"
   STR_RECOVERY_POINTS_FOR_AMMO_DESC: "Gain the recovery points for ammo that is currently loaded inside of weapons you recover."
+  STR_ACCURACY_FOR_FIRST_WAYPOINT: "Firing Accuracy For First Waypoint"
+  STR_ACCURACY_FOR_FIRST_WAYPOINT_DESC: "Use the weapon's firing accuracy to determine how accurate your shot to the first launch waypoint will be."

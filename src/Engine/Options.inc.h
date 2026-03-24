@@ -193,3 +193,4 @@ OPT bool showDefeatScore;
 OPT bool defenseValueMean;
 OPT bool techTreeCensorCost;
 OPT bool recoveryPointsForAmmo;
+OPT bool accuracyForFirstWaypoint;

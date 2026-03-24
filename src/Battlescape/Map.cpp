@@ -1268,7 +1268,7 @@ void Map::drawTerrain(Surface *surface)
 							int distanceSq = action->actor->distance3dToPositionSq(Position(itX, itY, itZ));
 							int distance = (int)std::ceil(std::sqrt(distanceSq));
 
-							if (_cursorType == CT_AIM || _cursorType == CT_THROW)
+							if (_cursorType == CT_AIM || _cursorType == CT_THROW) // TODO: add launch accuracy here
 							{
 								int accuracy = BattleUnit::getFiringAccuracy(attack, _game->getMod());
 

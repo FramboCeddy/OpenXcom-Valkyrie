@@ -19,7 +19,6 @@
 #include "Projectile.h"
 #include "TileEngine.h"
 #include "Map.h"
-#include "Camera.h"
 #include "Particle.h"
 #include "Pathfinding.h"
 #include "../Mod/Mod.h"
@@ -32,6 +31,7 @@
 #include "../Engine/RNG.h"
 #include "../Engine/Options.h"
 #include "../fmath.h"
+#include <algorithm>
 
 namespace OpenXcom
 {
@@ -45,7 +45,7 @@ namespace OpenXcom
  * @param targetVoxel Position the projectile is targeting.
  * @param ammo the ammo that produced this projectile, where applicable.
  */
-Projectile::Projectile(Mod *mod, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel, BattleItem *ammo) : _mod(mod), _save(save), _action(action), _ammo(ammo), _origin(origin), _targetVoxel(targetVoxel), _position(0), _distance(0.0f), _bulletSprite(-1), _reversed(false), _vaporColor(-1), _vaporDensity(-1), _vaporProbability(5)
+Projectile::Projectile(Mod* mod, SavedBattleGame* save, BattleAction action, Position origin, Position targetVoxel, BattleItem* ammo) : _mod(mod), _save(save), _action(action), _ammo(ammo), _origin(origin), _targetVoxel(targetVoxel), _position(0), _distance(0.0f), _bulletSprite(-1), _reversed(false), _vaporColor(-1), _vaporDensity(-1), _vaporProbability(5), _distanceMax(0)
 {
 	// this is the number of pixels the sprite will move between frames
 	_speed = Options::battleFireSpeed;
@@ -173,15 +173,19 @@ int Projectile::calculateTrajectory(double accuracy, const Position& originVoxel
 	_trajectory.clear();
 
 	bool extendLine = true;
-	// even guided missiles drift, but how much is based on
-	// the shooter's faction, rather than accuracy.
+
+	// guided missile drift
 	if (_action.type == BA_LAUNCH)
 	{
-		if (_action.actor->getFaction() == FACTION_PLAYER)
+		// Only use missile drift starting from the first waypoint, Uses normal weapon accuracy firing to the 1st waypoint
+		if (_action.actor->getFaction() == FACTION_PLAYER &&
+			(!Options::accuracyForFirstWaypoint || _save->getTileEngine()->getOriginVoxel(_action, _action.actor->getTile()) != originVoxel))
 		{
-			accuracy = 0.60;
+			auto* ammo =  _action.weapon->getAmmoForAction(_action.type);
+			auto missileDrift = ammo ? ammo->getRules()->getMissileDrift() : _action.weapon->getRules()->getMissileDrift();
+			accuracy = 1.1 - (missileDrift / 100.0); // 50 missile drift gives vanilla 0.6
 		}
-		else
+		else if (_action.actor->getFaction() != FACTION_PLAYER)
 		{
 			accuracy = 0.55;
 		}
@@ -386,8 +390,8 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	}
 
 	int deviation = RNG::generate(0, 100) - (accuracy * 100); // accuracy of 110 or greater will become 0 (no spread)
-	deviation += deviation >= 0 ? 50 : 10; // add extra spread to "miss" cloud
-	deviation = std::max(0, zShift * deviation / 200); // range ratio
+	deviation += (deviation >= 0) ? 50 : 10;                  // add extra spread to "miss" cloud
+	deviation = std::max(0, zShift * deviation / 200);		  // range ratio
 
 	if (deviation) // deviation 0 is exact shot to original target voxel
 	{
@@ -578,7 +582,7 @@ bool Projectile::isReversed() const
 void Projectile::addVaporCloud()
 {
 	RNG::RandomState rng = RNG::globalRandomState().subSequence();
-	if (rng.percent(_vaporProbability) == false)
+	if (!rng.percent(_vaporProbability))
 	{
 		return;
 	}

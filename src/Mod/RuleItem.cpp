@@ -184,7 +184,7 @@ RuleItem::RuleItem(const std::string &type, int listOrder) :
 	_vaporColorSurface(-1), _vaporDensitySurface(0), _vaporProbabilitySurface(15),
 	_kneelBonus(-1), _oneHandedPenalty(-1),
 	_monthlySalary(0), _monthlyMaintenance(0),
-	_sprayWaypoints(0)
+	_sprayWaypoints(0), _missileDrift(50)
 {
 	_accuracyMulti.setFiring();
 	_meleeMulti.setMelee();
@@ -501,6 +501,7 @@ void RuleItem::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript&
 	reader.tryRead("accuracyThrow", _accuracyThrow);
 	reader.tryRead("accuracyCloseQuarters", _accuracyCloseQuarters);
 	reader.tryRead("noLOSAccuracyPenalty", _noLOSAccuracyPenalty);
+	reader.tryRead("missileDrift", _missileDrift);
 	if (reader["isExplodingInHands"])
 	{
 		// FIXME: backwards-compatibility only, remove in 2026
@@ -1111,11 +1112,15 @@ bool RuleItem::canBePlacedIntoInventorySection(const RuleInventory* inventorySec
 {
 	// backwards-compatibility
 	if (_supportedInventorySections.empty())
+	{
 		return true;
+	}
 
 	// always possible to put an item on the ground
 	if (inventorySection->getType() == INV_GROUND)
+	{
 		return true;
+	}
 
 	// otherwise check allowed inventory sections
 	return Collections::sortVectorHave(_supportedInventorySections, inventorySection);
@@ -1988,14 +1993,7 @@ int RuleItem::getExplosionRadius(BattleActionAttack::ReadOnly attack) const
 			radius += 1;
 		}
 		// cap the formula to 11
-		if (radius > 11)
-		{
-			radius = 11;
-		}
-		if (radius <= 0)
-		{
-			radius = 1;
-		}
+		radius = std::clamp(radius, 1, 11);
 	}
 	else
 	{
@@ -2104,7 +2102,9 @@ int RuleItem::getTurretType() const
 int RuleItem::getAIUseDelay(const Mod *mod) const
 {
 	if (mod == 0 || _aiUseDelay >= 0)
+	{
 		return _aiUseDelay;
+	}
 
 	switch (getBattleType())
 	{
@@ -2677,10 +2677,7 @@ int RuleItem::getSpecialType() const
  */
 int RuleItem::getVaporColor(int depth) const
 {
-	if (depth == 0)
-		return _vaporColorSurface;
-
-	return _vaporColor;
+	return depth == 0 ? _vaporColorSurface : _vaporColor;
 }
 
 /**
@@ -2690,10 +2687,7 @@ int RuleItem::getVaporColor(int depth) const
  */
 int RuleItem::getVaporDensity(int depth) const
 {
-	if (depth == 0)
-		return _vaporDensitySurface;
-
-	return _vaporDensity;
+	return depth == 0 ? _vaporDensitySurface : _vaporDensity;
 }
 
 /**
@@ -2703,10 +2697,7 @@ int RuleItem::getVaporDensity(int depth) const
  */
 int RuleItem::getVaporProbability(int depth) const
 {
-	if (depth == 0)
-		return _vaporProbabilitySurface;
-
-	return _vaporProbability;
+	return depth == 0 ? _vaporProbabilitySurface : _vaporProbability;
 }
 
 /**
