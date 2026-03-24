@@ -1837,22 +1837,25 @@ void DogfightState::update()
 void DogfightState::fireWeapon(int i)
 {
 	CraftWeapon *w1 = _craft->getWeapons()->at(i);
-	if (w1->setAmmo(w1->getAmmo() - 1))
+	if (w1->getAmmo() == 0)
 	{
-		_weaponFireCountdown[i] = _weaponFireInterval[i];
-
-		std::ostringstream ss;
-		ss << w1->getAmmo();
-		_txtAmmo[i]->setText(ss.str());
-
-		CraftWeaponProjectile *p = w1->fire();
-		p->setDirection(D_UP);
-		p->setHorizontalPosition((i % 2 ? HP_RIGHT : HP_LEFT) * (1 + 2 * (i / 2)));
-		_projectiles.push_back(p);
-
-		_game->getMod()->getSound("GEO.CAT", w1->getRules()->getSound())->play();
-		_firedAtLeastOnce = true;
+		return;
 	}
+
+	w1->setAmmo(w1->getAmmo() - 1);
+	_weaponFireCountdown[i] = _weaponFireInterval[i];
+
+	std::ostringstream ss;
+	ss << w1->getAmmo();
+	_txtAmmo[i]->setText(ss.str());
+
+	CraftWeaponProjectile *p = w1->fire();
+	p->setDirection(D_UP);
+	p->setHorizontalPosition((i % 2 ? HP_RIGHT : HP_LEFT) * (1 + 2 * (i / 2)));
+	_projectiles.push_back(p);
+
+	_game->getMod()->getSound("GEO.CAT", w1->getRules()->getSound())->play();
+	_firedAtLeastOnce = true;
 }
 
 /**

@@ -892,8 +892,7 @@ void GeoscapeState::timeAdvance()
 
 	for (int i = 0; i < timeSpan && !_pause; ++i)
 	{
-		TimeTrigger trigger;
-		trigger = _game->getSavedGame()->getTime()->advance();
+		TimeTrigger trigger = _game->getSavedGame()->getTime()->advance();
 		switch (trigger)
 		{
 		case TIME_1MONTH:
@@ -1942,44 +1941,45 @@ void GeoscapeState::time30Minutes()
 	{
 		for (auto* xcraft : *xbase->getCrafts())
 		{
-			if (xcraft->getStatus() == "STR_REFUELLING")
+			if (xcraft->getStatus() != "STR_REFUELLING")
 			{
-				std::string item = xcraft->refuel();
+				continue;
+			}
+			std::string item = xcraft->refuel();
 
-				if (item.empty())
+			if (item.empty())
+			{
+				// notification
+				if (xcraft->getStatus() == "STR_READY" && xcraft->getRules()->notifyWhenRefueled())
 				{
-					// notification
-					if (xcraft->getStatus() == "STR_READY" && xcraft->getRules()->notifyWhenRefueled())
-					{
-						std::string msg = tr("STR_CRAFT_IS_READY").arg(xcraft->getName(_game->getLanguage())).arg(xbase->getName());
-						popup(new CraftErrorState(this, msg));
-					}
-					// auto-patrol
-					if (xcraft->getStatus() == "STR_READY" && xcraft->getRules()->canAutoPatrol())
-					{
-						if (xcraft->getIsAutoPatrolling())
-						{
-							Waypoint *w = new Waypoint();
-							w->setLongitude(xcraft->getLongitudeAuto());
-							w->setLatitude(xcraft->getLatitudeAuto());
-							if (w != 0 && w->getId() == 0)
-							{
-								w->setId(_game->getSavedGame()->getId("STR_WAY_POINT"));
-								_game->getSavedGame()->getWaypoints()->push_back(w);
-							}
-							xcraft->setDestination(w);
-							xcraft->setStatus("STR_OUT");
-						}
-					}
-				}
-				else
-				{
-					std::string msg = tr("STR_NOT_ENOUGH_ITEM_TO_REFUEL_CRAFT_AT_BASE")
-										.arg(tr(item))
-										.arg(xcraft->getName(_game->getLanguage()))
-										.arg(xbase->getName());
+					std::string msg = tr("STR_CRAFT_IS_READY").arg(xcraft->getName(_game->getLanguage())).arg(xbase->getName());
 					popup(new CraftErrorState(this, msg));
 				}
+				// auto-patrol
+				if (xcraft->getStatus() == "STR_READY" && xcraft->getRules()->canAutoPatrol())
+				{
+					if (xcraft->getIsAutoPatrolling())
+					{
+						Waypoint *w = new Waypoint();
+						w->setLongitude(xcraft->getLongitudeAuto());
+						w->setLatitude(xcraft->getLatitudeAuto());
+						if (w != 0 && w->getId() == 0)
+						{
+							w->setId(_game->getSavedGame()->getId("STR_WAY_POINT"));
+							_game->getSavedGame()->getWaypoints()->push_back(w);
+						}
+						xcraft->setDestination(w);
+						xcraft->setStatus("STR_OUT");
+					}
+				}
+			}
+			else
+			{
+				std::string msg = tr("STR_NOT_ENOUGH_ITEM_TO_REFUEL_CRAFT_AT_BASE")
+									.arg(tr(item))
+									.arg(xcraft->getName(_game->getLanguage()))
+									.arg(xbase->getName());
+				popup(new CraftErrorState(this, msg));
 			}
 		}
 	}
@@ -2145,9 +2145,10 @@ void GeoscapeState::ufoDetection(Ufo* ufo, const std::vector<Craft*>* activeCraf
  */
 void GeoscapeState::time1Hour()
 {
-	// Handle craft maintenance
+	bool window = false;
 	for (auto* xbase : *_game->getSavedGame()->getBases())
 	{
+		// Handle craft maintenance
 		for (auto* xcraft : *xbase->getCrafts())
 		{
 			if (xcraft->getStatus() == "STR_REPAIRS")
@@ -2172,11 +2173,7 @@ void GeoscapeState::time1Hour()
 				xcraft->setShield(xcraft->getShield() + xcraft->getRules()->getShieldRechargeAtBase());
 			}
 		}
-	}
-
-	// Handle base defenses maintenance
-	for (auto* xbase : *_game->getSavedGame()->getBases())
-	{
+		// Handle base defenses maintenance
 		for (auto* facility : *xbase->getFacilities())
 		{
 			auto* ammo = facility->rearm();
@@ -2189,12 +2186,7 @@ void GeoscapeState::time1Hour()
 				popup(new CraftErrorState(this, msg));
 			}
 		}
-	}
-
-	// Handle transfers
-	bool window = false;
-	for (auto* xbase : *_game->getSavedGame()->getBases())
-	{
+		// Handle transfers
 		for (auto* transfer : *xbase->getTransfers())
 		{
 			transfer->advance(xbase);

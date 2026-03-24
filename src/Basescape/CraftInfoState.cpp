@@ -228,14 +228,14 @@ void CraftInfoState::init()
 	SurfaceSet *texture = _game->getMod()->getSurfaceSet("BASEBITS.PCK");
 	texture->getFrame(_craft->getSkinSprite() + 33)->blitNShade(_sprite, 0, 0);
 
-	std::ostringstream firlsLine;
-	firlsLine << tr("STR_DAMAGE_UC_").arg(Unicode::formatPercentage(_craft->getDamagePercentage()));
+	std::ostringstream firstLine;
+	firstLine << tr("STR_DAMAGE_UC_").arg(Unicode::formatPercentage(_craft->getDamagePercentage()));
 	if (_craft->getStatus() == "STR_REPAIRS" && _craft->getDamage() > 0)
 	{
 		int damageHours = (int)ceil((double)_craft->getDamage() / _craft->getRules()->getRepairRate());
-		firlsLine << formatTime(damageHours);
+		firstLine << formatTime(damageHours);
 	}
-	_txtDamage->setText(firlsLine.str());
+	_txtDamage->setText(firstLine.str());
 
 	std::ostringstream secondLine;
 	secondLine << tr("STR_FUEL").arg(Unicode::formatPercentage(_craft->getFuelPercentage()));
@@ -410,7 +410,7 @@ void CraftInfoState::init()
 		CraftWeapon *w1 = _craft->getWeapons()->at(i);
 
 		_weapon[i]->clear();
-		if (w1 != 0)
+		if (w1)
 		{
 			Surface *frame = texture->getFrame(w1->getRules()->getSprite() + 48);
 			frame->blitNShade(_weapon[i], 0, 0);

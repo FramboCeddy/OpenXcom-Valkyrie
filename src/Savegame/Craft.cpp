@@ -1132,33 +1132,36 @@ bool Craft::isTakingOff() const
  */
 void Craft::checkup()
 {
-	int available = 0, full = 0;
+	bool needsRearming = false;
 	for (auto* cw : _weapons)
 	{
-		if (cw == 0)
+		if (!cw)
+		{
 			continue;
-		available++;
+		}
 		if (cw->getAmmo() >= cw->getRules()->getAmmoMax() || cw->isDisabled())
 		{
-			full++;
+			continue;
 		}
-		else
-		{
-			cw->setRearming(true);
-		}
+		cw->setRearming(true);
+		needsRearming = true;
 	}
 
-	if (_damage > 0)
+	if (_damage > 0 && !Options::craftRepairsLast)
 	{
 		_status = "STR_REPAIRS";
 	}
-	else if (available != full)
+	else if (needsRearming)
 	{
 		_status = "STR_REARMING";
 	}
 	else if (_fuel < _stats.fuelMax)
 	{
 		_status = "STR_REFUELLING";
+	}
+	else if (_damage > 0 && Options::craftRepairsLast)
+	{
+		_status = "STR_REPAIRS";
 	}
 	else
 	{
@@ -1287,7 +1290,7 @@ void Craft::repair()
 	setDamage(_damage - _rules->getRepairRate());
 	if (_damage <= 0)
 	{
-		_status = "STR_REARMING";
+		_status = Options::craftRepairsLast ? "STR_READY" : "STR_REARMING";
 	}
 }
 
@@ -1302,7 +1305,7 @@ std::string Craft::refuel()
 	if (_fuel < _stats.fuelMax)
 	{
 		const auto* item = _rules->getRefuelItem();
-		if (item == nullptr)
+		if (!item)
 		{
 			setFuel(_fuel + _rules->getRefuelRate());
 		}
@@ -1319,7 +1322,7 @@ std::string Craft::refuel()
 				fuel = item->getType();
 				if (_fuel > 0)
 				{
-					_status = "STR_READY";
+					_status = Options::craftRepairsLast ? "STR_REPAIRS" : "STR_READY";
 				}
 				else
 				{
@@ -1330,7 +1333,7 @@ std::string Craft::refuel()
 	}
 	if (_fuel >= _stats.fuelMax)
 	{
-		_status = "STR_READY";
+		_status = Options::craftRepairsLast ? "STR_REPAIRS" : "STR_READY";
 		for (const auto* cw : _weapons)
 		{
 			if (cw && cw->isRearming())
@@ -1360,33 +1363,34 @@ const RuleItem* Craft::rearm()
 			break;
 		}
 		CraftWeapon* cw = (*iter);
-		if (cw != 0 && cw->isRearming())
+		if (!cw || !cw->isRearming())
 		{
-			auto* clip = cw->getRules()->getClipItem();
-			int available = _base->getStorageItems()->getItem(clip);
-			if (clip == nullptr)
-			{
-				cw->rearm(0, 0);
-			}
-			else if (available > 0)
-			{
-				int used = cw->rearm(available, clip->getClipSize());
+			continue;
+		}
+		const RuleItem* clip = cw->getRules()->getClipItem();
+		int available = _base->getStorageItems()->getItem(clip);
+		if (!clip)
+		{
+			cw->rearm(0, 0);
+		}
+		else if (available > 0)
+		{
+			int used = cw->rearm(available, clip->getClipSize());
 
-				if (used == available && cw->isRearming())
-				{
-					ammo = clip;
-					cw->setRearming(false);
-				}
-
-				_base->getStorageItems()->removeItem(clip, used);
-			}
-			else
+			if (used == available && cw->isRearming())
 			{
 				ammo = clip;
 				cw->setRearming(false);
 			}
-			break;
+
+			_base->getStorageItems()->removeItem(clip, used);
 		}
+		else
+		{
+			ammo = clip;
+			cw->setRearming(false);
+		}
+		break; // this causes us to only reload 1 weapon at a time
 	}
 	return ammo;
 }
@@ -1407,7 +1411,9 @@ bool Craft::isInBattlescape() const
 void Craft::setInBattlescape(bool inbattle)
 {
 	if (inbattle)
+	{
 		setSpeed(0);
+	}
 	_inBattlescape = inbattle;
 }
 
@@ -1580,7 +1586,9 @@ bool Craft::areBannedArmorsOnboard()
 bool Craft::arePilotsOnboard(const Mod* mod)
 {
 	if (_rules->getPilots() == 0)
+	{
 		return true;
+	}
 
 	// refresh the list of pilots (must be performed here, list may be out-of-date!)
 	const std::vector<Soldier*> pilots = getPilotList(true, mod);
@@ -1630,7 +1638,9 @@ const std::vector<Soldier*> Craft::getPilotList(bool autoAdd, const Mod* mod)
 
 	// 1. no pilots needed
 	if (_rules->getPilots() == 0)
+	{
 		return result;
+	}
 
 	{
 		// 2. just enough pilots or pilot candidates onboard (assign them all automatically)
@@ -1709,7 +1719,9 @@ const std::vector<Soldier*> Craft::getPilotList(bool autoAdd, const Mod* mod)
 int Craft::getPilotAccuracyBonus(const std::vector<Soldier*> &pilots, const Mod *mod) const
 {
 	if (pilots.empty())
+	{
 		return 0;
+	}
 
 	int firingAccuracy = 0;
 	for (const auto* soldier : pilots)
@@ -1728,7 +1740,9 @@ int Craft::getPilotAccuracyBonus(const std::vector<Soldier*> &pilots, const Mod 
 int Craft::getPilotDodgeBonus(const std::vector<Soldier*> &pilots, const Mod *mod) const
 {
 	if (pilots.empty())
+	{
 		return 0;
+	}
 
 	int reactions = 0;
 	for (const auto* soldier : pilots)
@@ -1747,7 +1761,9 @@ int Craft::getPilotDodgeBonus(const std::vector<Soldier*> &pilots, const Mod *mo
 int Craft::getPilotApproachSpeedModifier(const std::vector<Soldier*> &pilots, const Mod *mod) const
 {
 	if (pilots.empty())
+	{
 		return 2; // vanilla
+	}
 
 	int bravery = 0;
 	for (const auto* soldier : pilots)
@@ -1847,7 +1863,7 @@ void Craft::unload()
 	// Remove weapons
 	for (auto*& cw : _weapons)
 	{
-		if (cw != 0)
+		if (cw)
 		{
 			_base->getStorageItems()->addItem(cw->getRules()->getLauncherItem());
 			_base->getStorageItems()->addItem(cw->getRules()->getClipItem(), cw->getClipsLoaded());
@@ -1896,16 +1912,15 @@ void Craft::reuseItem(const RuleItem* item)
 	// We only want to interrupt processes that are lower in the hierarchy.
 	// (And we don't want to interrupt any out-of-base status.)
 
-	// The only states we are willing to interrupt are "ready" and "refuelling"
-	if (_status != "STR_READY" && _status != "STR_REFUELLING")
+	// The only states we are willing to interrupt are "ready" and "refuelling" and repairing if repairing happens last
+	if (_status != "STR_READY" && _status != "STR_REFUELLING" && !(_status == "STR_REPAIRS" && Options::craftRepairsLast))
 	{
 		return;
 	}
-
 	// Check if it's ammo to reload the craft
 	for (auto* cw : _weapons)
 	{
-		if (cw != 0 && item == cw->getRules()->getClipItem() && cw->getAmmo() < cw->getRules()->getAmmoMax() && !cw->isDisabled())
+		if (cw && item == cw->getRules()->getClipItem() && cw->getAmmo() < cw->getRules()->getAmmoMax() && !cw->isDisabled())
 		{
 			cw->setRearming(true);
 			_status = "STR_REARMING";
@@ -1913,12 +1928,16 @@ void Craft::reuseItem(const RuleItem* item)
 	}
 
 	// Only consider refuelling if everything else is complete
-	if (_status != "STR_READY")
+	if (_status != "STR_READY" && !(_status == "STR_REPAIRS" && Options::craftRepairsLast))
+	{
 		return;
+	}
 
 	// Check if it's fuel to refuel the craft
 	if (item == _rules->getRefuelItem() && _fuel < _stats.fuelMax)
+	{
 		_status = "STR_REFUELLING";
+	}
 }
 
 /**

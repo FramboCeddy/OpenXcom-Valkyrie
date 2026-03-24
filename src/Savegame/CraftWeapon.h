@@ -52,7 +52,7 @@ public:
 	/// Gets the craft weapon's ammo.
 	int getAmmo() const;
 	/// Sets the craft weapon's ammo.
-	bool setAmmo(int ammo);
+	void setAmmo(int ammo);
 	/// Gets the craft weapon's rearming status.
 	bool isRearming() const;
 	/// Sets the craft weapon's rearming status

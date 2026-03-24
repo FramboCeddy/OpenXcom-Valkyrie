@@ -24,6 +24,7 @@
 #include "Unit.h"
 #include "RuleBaseFacilityFunctions.h"
 #include "ModScript.h"
+#include "../Engine/Script.h"
 
 namespace OpenXcom
 {
@@ -35,6 +36,7 @@ class RuleItem;
 class Mod;
 class ModScript;
 class ScriptParserBase;
+class RuleSoldierBonus;
 
 /**
  * Battle statistic of craft type and bonus from craft weapons.

@@ -18,10 +18,8 @@
  */
 #include <cmath>
 #include <algorithm>
-#include <cmath>
 #include "CraftWeapon.h"
 #include "../Mod/RuleCraftWeapon.h"
-#include "../Mod/Mod.h"
 #include "../Mod/RuleItem.h"
 #include "CraftWeaponProjectile.h"
 #include "../Engine/RNG.h"
@@ -67,9 +65,13 @@ void CraftWeapon::save(YAML::YamlNodeWriter writer) const
 	writer.write("type", _rules->getType());
 	writer.write("ammo", _ammo);
 	if (_rearming)
+	{
 		writer.write("rearming", _rearming);
+	}
 	if (_disabled)
+	{
 		writer.write("disabled", _disabled);
+	}
 }
 
 /**
@@ -95,19 +97,9 @@ int CraftWeapon::getAmmo() const
  * @param ammo Weapon ammo.
  * @return If the weapon ran out of ammo.
  */
-bool CraftWeapon::setAmmo(int ammo)
+void CraftWeapon::setAmmo(int ammo)
 {
-	_ammo = ammo;
-	if (_ammo < 0)
-	{
-		_ammo = 0;
-		return false;
-	}
-	if (_ammo > _rules->getAmmoMax())
-	{
-		_ammo = _rules->getAmmoMax();
-	}
-	return true;
+	_ammo = std::clamp(ammo, 0, _rules->getAmmoMax());
 }
 
 /**
@@ -116,10 +108,7 @@ bool CraftWeapon::setAmmo(int ammo)
  */
 bool CraftWeapon::isRearming() const
 {
-	if (_disabled)
-		return false;
-
-	return _rearming;
+	return _disabled ? false : _rearming;
 }
 
 /**
