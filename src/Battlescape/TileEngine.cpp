@@ -2923,8 +2923,12 @@ int TileEngine::hitTile(Tile* tile, int damage, const RuleDamageType* type)
 		{
 			tile->setFire(0);
 			const auto& [min, max] = _save->getBattleGame()->getMod()->SMOKE_RANGE;
-			int smoke = max == min ? max : RNG::generate(min, max);
-			smoke = (damage < type->SmokeThreshold * 2) ? smoke * (damage - type->SmokeThreshold) / type->SmokeThreshold : smoke; // scale linearly between 100% and 200% smokeTreshold
+			int smoke = (max == min) ? max : RNG::generate(min, max);
+			if (damage < type->SmokeThreshold * 2)
+			{
+				// scale linearly between 100% and 200% smokeTreshold
+				smoke = smoke * (damage - type->SmokeThreshold) / type->SmokeThreshold;
+			}
 			tile->setSmoke(smoke);
 			return 1;
 		}
@@ -2934,8 +2938,12 @@ int TileEngine::hitTile(Tile* tile, int damage, const RuleDamageType* type)
 		if (!tile->isVoid() && tile->getFire() == 0 && (tile->getMapData(O_FLOOR) || tile->getMapData(O_OBJECT)))
 		{
 			int fire = tile->getFuel();
-			fire = damage < type->FireThreshold * 2 ? fire * (damage - type->FireThreshold) / type->FireThreshold : fire; // scale linearly between 100% and 200% fireThreshold
-			++fire;
+			if (damage < type->FireThreshold * 2)
+			{
+				// scale linearly between 100% and 200% fireThreshold
+				fire = fire * (damage - type->FireThreshold) / type->FireThreshold;
+			}
+			tile->setFire(fire + 1);
 			tile->setSmoke(std::clamp(15 - (tile->getFlammability() / 10), 1, 12));
 			return 2;
 		}
