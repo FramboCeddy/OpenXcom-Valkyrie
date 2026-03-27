@@ -16,41 +16,50 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Base.h"
-#include "../fmath.h"
-#include <stack>
-#include <algorithm>
-#include <functional>
-#include "BaseFacility.h"
-#include "../Mod/RuleBaseFacility.h"
-#include "Craft.h"
-#include "SavedGame.h"
-#include "../Mod/RuleCraft.h"
-#include "../Mod/Mod.h"
-#include "ItemContainer.h"
-#include "Soldier.h"
-#include "../Engine/Language.h"
-#include "../Mod/RuleItem.h"
-#include "../Mod/Armor.h"
-#include "../Mod/RuleManufacture.h"
-#include "../Mod/RuleResearch.h"
-#include "Transfer.h"
-#include "ResearchProject.h"
-#include "Production.h"
-#include "Vehicle.h"
-#include "Target.h"
-#include "Ufo.h"
-#include "../Engine/RNG.h"
-#include "../Engine/Options.h"
-#include "../Mod/RuleSoldier.h"
-#include "../Engine/Logger.h"
 #include "../Engine/Collections.h"
-#include "WeightedOptions.h"
-#include "AlienMission.h"
-#include "Country.h"
+#include "../Engine/Language.h"
+#include "../Engine/Logger.h"
+#include "../Engine/Options.h"
+#include "../Engine/RNG.h"
+#include "../Engine/Script.h"
+#include "../Engine/Yaml.h"
+#include "../fmath.h"
+#include "../Mod/Armor.h"
+#include "../Mod/Mod.h"
+#include "../Mod/ModScript.h"
+#include "../Mod/RuleAlienMission.h"
+#include "../Mod/RuleBaseFacility.h"
+#include "../Mod/RuleBaseFacilityFunctions.h"
 #include "../Mod/RuleCountry.h"
-#include "Region.h"
+#include "../Mod/RuleCraft.h"
+#include "../Mod/RuleItem.h"
+#include "../Mod/RuleManufacture.h"
 #include "../Mod/RuleRegion.h"
+#include "../Mod/RuleResearch.h"
+#include "../Mod/RuleSoldier.h"
+#include "AlienMission.h"
+#include "Base.h"
+#include "BaseFacility.h"
+#include "Country.h"
+#include "Craft.h"
+#include "ItemContainer.h"
+#include "Production.h"
+#include "Region.h"
+#include "ResearchProject.h"
+#include "SavedGame.h"
+#include "Soldier.h"
+#include "Target.h"
+#include "Transfer.h"
+#include "Ufo.h"
+#include "Vehicle.h"
+#include "WeightedOptions.h"
+#include <algorithm>
+#include <iterator>
+#include <list>
+#include <stack>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace OpenXcom
 {
@@ -416,9 +425,7 @@ std::string Base::getName(Language *) const
 int Base::getMarker() const
 {
 	// Cheap hack to hide bases when they haven't been placed yet
-	if (AreSame(_lon, 0.0) && AreSame(_lat, 0.0))
-		return -1;
-	return 0;
+	return AreSame(_lon, 0.0) && AreSame(_lat, 0.0) ? -1 : 0;
 }
 
 /**
@@ -508,29 +515,34 @@ UfoDetection Base::detect(const Ufo *target, const SavedGame *save, bool already
 		{
 			continue;
 		}
-		if (fac->getRules()->getRadarRange() >= distance)
-		{
-			int radarChance = fac->getRules()->getRadarChance();
-			if (fac->getRules()->isHyperwave())
-			{
-				if (radarChance == 100 || RNG::percent(radarChance))
-				{
-					hyperwave = true;
-				}
-				hyperwave_chance += radarChance;
-			}
-			else
-			{
-				radar_chance += radarChance;
-			}
-		}
+
+		int radarRange = fac->getRules()->getRadarRange();
+
 		if (fac->getRules()->isHyperwave())
 		{
-			hyperwave_max_range = std::max(hyperwave_max_range, fac->getRules()->getRadarRange());
+			hyperwave_max_range = std::max(hyperwave_max_range, radarRange);
 		}
 		else
 		{
-			radar_max_range = std::max(radar_max_range, fac->getRules()->getRadarRange());
+			radar_max_range = std::max(radar_max_range, radarRange);
+		}
+		if (radarRange < distance)
+		{
+			continue;
+		}
+
+		int radarChance = fac->getRules()->getRadarChance();
+		if (fac->getRules()->isHyperwave())
+		{
+			if (radarChance == 100 || RNG::percent(radarChance))
+			{
+				hyperwave = true;
+			}
+			hyperwave_chance += radarChance;
+		}
+		else
+		{
+			radar_chance += radarChance;
 		}
 	}
 
@@ -1560,25 +1572,29 @@ bool Base::getRetaliationTarget() const
 /**
  * Calculate the detection chance of this base.
  * Big bases without mind shields are easier to detect.
- * @param difficulty The savegame difficulty.
  * @return The detection chance.
  */
-size_t Base::getDetectionChance() const
+int Base::getDetectionChance() const
 {
-	size_t mindShields = 0;
-	size_t completedFacilities = 0;
+	int mindShieldsPower = 1;
+	int completedFacilities = 0;
 	for (const auto* fac : _facilities)
 	{
-		if (fac->getBuildTime() == 0)
+		if (fac->getBuildTime() != 0)
 		{
-			completedFacilities += fac->getRules()->getSizeX() * fac->getRules()->getSizeY();
-			if (fac->getRules()->isMindShield() && !fac->getDisabled())
-			{
-				mindShields += fac->getRules()->getMindShieldPower();
-			}
+			continue;
+		}
+
+		completedFacilities += fac->getRules()->getSizeX() * fac->getRules()->getSizeY();
+		if (fac->getRules()->isMindShield() && !fac->getDisabled())
+		{
+			mindShieldsPower += fac->getRules()->getMindShieldPower();
 		}
 	}
-	return ((completedFacilities / 6 + 15) / (mindShields + 1));
+	const auto& [empty, full] = _mod->BASE_DETECTION_CHANCE;
+	double baseFullness = completedFacilities / double(BASE_SIZE * BASE_SIZE);
+	// linear interpolate between empty and full
+	return (empty * (1 - baseFullness) + full * baseFullness) / mindShieldsPower;
 }
 
 int Base::getGravShields() const

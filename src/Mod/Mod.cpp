@@ -183,6 +183,7 @@ int Mod::EXPLOSIVE_DAMAGE_RANGE;
 int Mod::FIRE_DAMAGE_RANGE[2];
 int Mod::SMOKE_RANGE[2];
 int Mod::RESEARCH_RANGE;
+int Mod::BASE_DETECTION_CHANCE[2] = {15, 21};
 std::string Mod::DEBRIEF_MUSIC_GOOD;
 std::string Mod::DEBRIEF_MUSIC_BAD;
 int Mod::DIFFICULTY_COEFFICIENT[5];
@@ -257,6 +258,8 @@ void Mod::resetGlobalStatics()
 	SMOKE_RANGE[0] = 7;
 	SMOKE_RANGE[1] = 15;
 	RESEARCH_RANGE = 50;
+	BASE_DETECTION_CHANCE[0] = 15;
+	BASE_DETECTION_CHANCE[1] = 21;
 	DEBRIEF_MUSIC_GOOD = "GMMARS";
 	DEBRIEF_MUSIC_BAD = "GMMARS";
 
@@ -459,7 +462,7 @@ Mod::Mod() :
 	_baseDefenseMapFromLocation(0), _disableUnderwaterSounds(false), _enableUnitResponseSounds(false), _pediaReplaceCraftFuelWithRangeType(-1),
 	_facilityListOrder(0), _craftListOrder(0), _itemCategoryListOrder(0), _itemListOrder(0), _armorListOrder(0), _alienRaceListOrder(0),
 	_researchListOrder(0),  _manufactureListOrder(0), _soldierBonusListOrder(0), _transformationListOrder(0), _ufopaediaListOrder(0), _invListOrder(0), _soldierListOrder(0),
-	_modCurrent(0), _statePalette(0), _councilPoints({0, 400})
+	_modCurrent(0), _statePalette(0)
 {
 	_muteMusic = new Music();
 	_muteSound = new Sound();
@@ -2714,10 +2717,12 @@ void Mod::loadConstants(const YAML::YamlNodeReader &reader)
 			arrayReader[j].tryReadVal(SMOKE_RANGE[j]);
 			SMOKE_RANGE[j] = std::clamp(SMOKE_RANGE[j], 1, 15); // capped between 1 and 15 density
 		}
-		SMOKE_RANGE[1] = std::max(SMOKE_RANGE[0], SMOKE_RANGE[1]); // force the max value to be at least as big as min value
+		// force the max value to be at least as big as min value
+		SMOKE_RANGE[1] = std::max(SMOKE_RANGE[0], SMOKE_RANGE[1]); 
 	}
 	reader.tryRead("researchRange", RESEARCH_RANGE);
 	RESEARCH_RANGE = std::clamp(RESEARCH_RANGE, 0, 100); // Force research range in [0, 100]
+
 	reader.tryRead("goodDebriefingMusic", DEBRIEF_MUSIC_GOOD);
 	reader.tryRead("badDebriefingMusic", DEBRIEF_MUSIC_BAD);
 	if (const auto& arrayReader = reader["extendedPediaFacilityParams"])
@@ -3598,6 +3603,15 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 		lighting.tryRead("maxStatic", _maxStaticLightDistance);
 		lighting.tryRead("maxDynamic", _maxDynamicLightDistance);
 		lighting.tryRead("enhanced", _enhancedLighting);
+	}
+	if (const auto& arrayReader = reader["baseDetectionChance"])
+	{
+		for (size_t j = 0; j < std::size(BASE_DETECTION_CHANCE); j++)
+		{
+			arrayReader[j].tryReadVal(BASE_DETECTION_CHANCE[j]);
+		}
+		// force the max value to be at least as big as min value
+		BASE_DETECTION_CHANCE[1] = std::max(BASE_DETECTION_CHANCE[0], BASE_DETECTION_CHANCE[1]);
 	}
 }
 

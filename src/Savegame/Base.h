@@ -297,7 +297,7 @@ public:
 	/// Is this a fake underwater base?
 	bool isFakeUnderwater() const { return _fakeUnderwater; }
 	/// Get the detection chance for this base.
-	size_t getDetectionChance() const;
+	int getDetectionChance() const;
 	/// Gets how many Grav Shields the base has
 	int getGravShields() const;
 	/// Setup base defenses.

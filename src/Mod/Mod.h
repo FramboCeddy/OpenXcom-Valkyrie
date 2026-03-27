@@ -21,7 +21,6 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
-#include <bitset>
 #include <array>
 #include <SDL.h>
 #include "../Engine/Yaml.h"
@@ -33,7 +32,6 @@
 #include "RuleDamageType.h"
 #include "RuleAlienMission.h"
 #include "RuleBaseFacilityFunctions.h"
-#include "RuleItem.h"
 
 namespace OpenXcom
 {
@@ -326,7 +324,7 @@ private:
 	ModData* _modCurrent;
 	const SDL_Color *_statePalette;
 
-	std::vector<int> _councilPoints;
+	std::vector<int> _councilPoints = {0, 400};
 
 	std::vector<std::string> _psiRequirements; // it's a cache for psiStrengthEval
 	std::vector<const Armor*> _armorsForSoldiersCache;
@@ -437,6 +435,8 @@ public:
 	static int FIRE_DAMAGE_RANGE[2];
 	static int SMOKE_RANGE[2];
 	static int RESEARCH_RANGE;
+	static int BASE_DETECTION_CHANCE[2];
+
 	static std::string DEBRIEF_MUSIC_GOOD;
 	static std::string DEBRIEF_MUSIC_BAD;
 	static int DIFFICULTY_COEFFICIENT[5];
