@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <assert.h>
 #include "ProductionCompleteState.h"
 #include "../Engine/Game.h"
 #include "../Mod/Mod.h"
@@ -33,6 +32,7 @@
 #include "../Savegame/Base.h"
 #include "../Savegame/ItemContainer.h"
 #include "../Savegame/SavedGame.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {

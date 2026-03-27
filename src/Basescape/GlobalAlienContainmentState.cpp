@@ -35,6 +35,7 @@
 #include "../Savegame/ItemContainer.h"
 #include "../Savegame/ResearchProject.h"
 #include "../Savegame/SavedGame.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {

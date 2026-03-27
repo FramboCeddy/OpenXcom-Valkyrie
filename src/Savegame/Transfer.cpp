@@ -24,6 +24,7 @@
 #include "../Engine/Language.h"
 #include "../Mod/Mod.h"
 #include "../Engine/Logger.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {

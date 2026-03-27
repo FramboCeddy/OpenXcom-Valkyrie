@@ -29,6 +29,8 @@
 #include "../Savegame/Base.h"
 #include "../Basescape/ManufactureState.h"
 #include "../Basescape/PurchaseState.h"
+#include "../Mod/RuleItem.h"
+#include <algorithm>
 
 namespace OpenXcom
 {
