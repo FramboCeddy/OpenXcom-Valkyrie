@@ -17,7 +17,6 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include "RuleSoldier.h"
 #include "RuleSkill.h"
 #include "Mod.h"
@@ -29,6 +28,14 @@
 #include "../Engine/FileMap.h"
 #include "../Engine/ScriptBind.h"
 #include "../Engine/Unicode.h"
+#include "../Engine/Exception.h"
+#include "../Engine/Logger.h"
+#include "../Engine/Script.h"
+#include "../Engine/Yaml.h"
+#include "Unit.h"
+#include <c4/std/string_fwd.hpp>
+#include <algorithm>
+#include <vector>
 
 namespace OpenXcom
 {
@@ -120,6 +127,10 @@ void RuleSoldier::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScri
 	reader.tryRead("transferTime", _transferTime);
 	reader.tryRead("moraleLossWhenKilled", _moraleLossWhenKilled);
 	reader.tryRead("showTypeInInventory", _showTypeInInventory);
+	reader.tryRead("healthAccuracyReduction", _healthAccuracyReduction);
+	_healthAccuracyReduction = std::max(_healthAccuracyReduction, 0); // positive values only
+	reader.tryRead("woundAccuracyReduction", _woundAccuracyReduction);
+	_woundAccuracyReduction = std::max(_woundAccuracyReduction, 0); // positive values only
 
 	mod->loadSoundOffset(_type, _deathSoundMale, reader["deathMale"], "BATTLE.CAT");
 	mod->loadSoundOffset(_type, _deathSoundFemale, reader["deathFemale"], "BATTLE.CAT");

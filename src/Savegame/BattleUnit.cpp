@@ -2540,7 +2540,7 @@ int BattleUnit::getFiringAccuracy(BattleActionAttack::ReadOnly attack, const Mod
 
 /**
  * To calculate firing accuracy. Takes health and fatal wounds into account.
- * Formula = accuracyStat * woundsPenalty(% health) * critWoundsPenalty (-10%/wound)
+ * Formula = accuracyStat * healthPenalty * critWoundsPenalty
  * @param item the item we are shooting right now.
  * @return modifier
  */

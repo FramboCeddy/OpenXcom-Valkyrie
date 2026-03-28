@@ -17,11 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <string>
 #include "../Engine/Yaml.h"
 #include "Unit.h"
 #include "RuleBaseFacilityFunctions.h"
 #include "../Engine/Script.h"
+#include <string>
+#include <vector>
 
 namespace OpenXcom
 {
@@ -99,7 +100,7 @@ private:
 	std::vector<std::string> _skillNames;
 	std::vector<const RuleSkill*> _skills;
 	ScriptValues<RuleSoldier> _scriptValues;
-	int _healthAccuracyReduction = 75;
+	int _healthAccuracyReduction = 25;
 	int _woundAccuracyReduction = 10;
 
 	void addSoldierNamePool(const std::string &namFile);
