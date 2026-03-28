@@ -123,9 +123,7 @@ void Country::setFunding(int funding)
  */
 Country::Satisfaction Country::getSatisfaction() const
 {
-	if (_pact)
-		return Satisfaction::ALIEN_PACT;
-	return _satisfaction;
+	return _pact ? Satisfaction::ALIEN_PACT : _satisfaction;
 }
 
 /**
@@ -173,7 +171,6 @@ std::vector<int> &Country::getActivityAlien()
  * @param pactScore the penalty for signing a pact
  * @param averageFunding current average funding across all countries (including withdrawn countries)
  */
-
 void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int averageFunding, const SavedGame* save)
 {
 	const int good = (xcomTotal / 10) + _activityXcom.back();
@@ -291,19 +288,9 @@ bool Country::getCancelPact() const
  */
 void Country::setCancelPact()
 {
-	if (_pact)
-	{
-		// cancel an existing signed pact
-		_cancelPact = true;
+	_cancelPact = _pact; // true for cancelling an existing pact, false for preventing a not-yet-signed pact
 		_newPact = false;
 	}
-	else
-	{
-		// prevent a not-yet-signed pact
-		_cancelPact = false;
-		_newPact = false;
-	}
-}
 
 /**
  * no setter for this one, as it gets set automatically
@@ -326,7 +313,7 @@ void Country::setPact()
 /**
  * can be (re)infiltrated?
  */
-bool Country::canBeInfiltrated()
+bool Country::canBeInfiltrated() const
 {
 	if (!_pact && !_newPact)
 	{

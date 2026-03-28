@@ -89,7 +89,7 @@ public:
 	/// sign a pact immediately
 	void setPact();
 	/// can be (re)infiltrated?
-	bool canBeInfiltrated();
+	bool canBeInfiltrated() const;
 
 private:
 	int getCurrentFunding() const { return _funding.back(); }
