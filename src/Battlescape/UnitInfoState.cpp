@@ -560,7 +560,7 @@ void UnitInfoState::init()
 	_barReactions->setValue(_unit->getBaseStats()->reactions);
 
 	// more info: http://ufopaedia.org/index.php?title=Accuracy_formula#Stat_Screen_Accuracy
-	int healthModifier = 75 + ((25 * _unit->getHealth()) / _unit->getBaseStats()->health);
+	int healthModifier = _unit->getHealthModifier();
 
 	ss.str("");
 	ss << (int)((_unit->getBaseStats()->firing * healthModifier) / 100);

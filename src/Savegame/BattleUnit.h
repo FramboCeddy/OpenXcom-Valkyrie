@@ -25,6 +25,7 @@
 #include "../Mod/RuleItem.h"
 #include "Soldier.h"
 #include "BattleItem.h"
+#include <algorithm>
 
 namespace OpenXcom
 {
@@ -88,74 +89,87 @@ class BattleUnit
 private:
 	static const int SPEC_WEAPON_MAX = 4;
 
-	UnitFaction _faction, _originalFaction;
-	UnitFaction _killedBy;
-	UnitFaction _spawnUnitFaction = FACTION_HOSTILE;
-	int _id;
-	Position _pos;
-	Tile *_tile;
-	Position _lastPos;
-	int _direction, _toDirection;
-	int _directionTurret, _toDirectionTurret;
-	int _verticalDirection;
-	Position _destination;
-	UnitStatus _status;
-	bool _wantsToSurrender, _isSurrendering;
-	int _walkPhase, _fallPhase;
 	std::vector<BattleUnit *> _visibleUnits, _unitsSpottedThisTurn;
 	std::vector<Tile *> _visibleTiles;
 	std::unordered_set<Tile *> _visibleTilesLookup;
+	std::vector<BattleItem*> _inventory;
+	std::vector<int> _meleeAttackedBy;
+	std::string _activeHand;
+	std::string _preferredHandForReactions;
+	std::string _murdererWeapon, _murdererWeaponAmmo;
+	Tile *_tile;
+	BattleItem* _specWeapon[SPEC_WEAPON_MAX];
+	AIModule *_currentAIState;
+	BattleUnit* _charging;
+	BattleUnit* _previousOwner = nullptr;
+	BattleUnitStatistics* _statistics;
+	const Unit* _spawnUnit = nullptr;
+
+	UnitFaction _faction, _originalFaction;
+	UnitFaction _killedBy;
+	UnitFaction _spawnUnitFaction = FACTION_HOSTILE;
+	UnitStatus _status;
+	UnitBodyPart _fatalShotBodyPart;
+	int _id;
+	int _direction, _toDirection;
+	int _directionTurret, _toDirectionTurret;
+	int _verticalDirection;
+	int _walkPhase, _fallPhase;
 	int _tu, _energy, _health, _morale, _stunlevel, _mana;
-	bool _kneeled, _floating, _dontReselect, _aiMedikitUsed;
-	bool _haveNoFloorBelow = false;
 	int _currentArmor[SIDE_MAX], _maxArmor[SIDE_MAX];
 	int _fatalWounds[BODYPART_MAX];
 	int _fire;
-	std::vector<BattleItem*> _inventory;
-	BattleItem* _specWeapon[SPEC_WEAPON_MAX];
-	AIModule *_currentAIState;
-	bool _visible;
-	UnitStats _exp, _expTmp;
 	int _motionPoints;
 	int _scannedTurn;
 	int _customMarker;
 	int _kills;
 	int _faceDirection; // used only during strafing moves
-	std::vector<int> _meleeAttackedBy;
-	bool _hitByFire, _hitByAnything, _alreadyExploded;
 	int _fireMaxHit;
 	int _smokeMaxHit;
 	int _moraleRestored;
 	int _notificationShown;
-	BattleUnit *_charging;
+	int _murdererId;	// used to credit the murderer with the kills that this unit got by blowing up on death
+	int _mindControllerID;	// used to credit the mind controller with the kills of the mind controllee
+	Position _pos;
+	Position _lastPos;
+	Position _destination;
+	UnitStats _exp, _expTmp;
+	bool _wantsToSurrender, _isSurrendering;
+	bool _kneeled, _floating, _dontReselect, _aiMedikitUsed;
+	bool _haveNoFloorBelow = false;
+	bool _visible;
+	bool _hitByFire, _hitByAnything, _alreadyExploded;
 
 	Uint8 _turnsSinceSpotted[FACTION_MAX] = { 255, 255, 255 };
 	Uint8 _turnsLeftSpottedForSnipers[FACTION_MAX] = { 0, 0, 0 };
 	Uint8 _turnsSinceStunned = 255;
 
-	BattleUnit* _previousOwner = nullptr;
-	const Unit *_spawnUnit = nullptr;
-	std::string _activeHand;
-	std::string _preferredHandForReactions;
 	bool _reactionsDisabledForLeftHand = false;
 	bool _reactionsDisabledForRightHand = false;
-	BattleUnitStatistics* _statistics;
-	int _murdererId;	// used to credit the murderer with the kills that this unit got by blowing up on death
-	int _mindControllerID;	// used to credit the mind controller with the kills of the mind controllee
 	UnitSide _fatalShotSide;
-	UnitBodyPart _fatalShotBodyPart;
-	std::string _murdererWeapon, _murdererWeaponAmmo;
 
 	// static data
+	std::vector<int> _deathSound, _aggroSound;
+	std::vector<int> _selectUnitSound, _startMovingSound, _selectWeaponSound, _annoyedSound;
+	std::vector<int> _loftempsSet;
+	std::vector<std::pair<Uint8, Uint8> > _recolor;
+	Armor *_armor;
+	Soldier *_geoscapeSoldier;
+	Unit *_unitRules;
 	std::string _type;
 	std::string _rank;
 	std::string _race;
 	std::string _name;
-	UnitStats _stats;
+	ScriptValues<BattleUnit> _scriptValues;
+	MovementType _movementType;
+	MovementType _originalMovementType;
+	ArmorMoveCost _moveCostBase = { 0, 0 };
+	ArmorMoveCost _moveCostBaseFly = { 0, 0 };
+	ArmorMoveCost _moveCostBaseClimb = { 0, 0 };
+	ArmorMoveCost _moveCostBaseNormal = { 0, 0 };
+	SpecialAbility _specab;
 	int _standHeight, _kneelHeight, _floatHeight;
 	int _lastReloadSound;
-	std::vector<int> _deathSound, _aggroSound;
-	std::vector<int> _selectUnitSound, _startMovingSound, _selectWeaponSound, _annoyedSound;
 	int _value, _moveSound;
 	int _intelligence, _aggression;
 	int _maxViewDistanceAtDark, _maxViewDistanceAtDay;
@@ -163,34 +177,22 @@ private:
 	int _psiVision = 0;
 	int _visibilityThroughSmoke = 0;
 	int _visibilityThroughFire = 100;
-	SpecialAbility _specab;
-	Armor *_armor;
-	SoldierGender _gender;
-	Soldier *_geoscapeSoldier;
-	std::vector<int> _loftempsSet;
-	Unit *_unitRules;
 	int _rankInt;
 	int _rankIntUnified = 0;
 	int _turretType;
 	int _breathFrame;
+	UnitStats _stats;
+	SoldierGender _gender;
 	bool _breathing;
 	bool _hidingForTurn, _floorAbove, _respawn, _alreadyRespawned;
 	bool _isLeeroyJenkins;	// always charges enemy, never retreats.
 	bool _summonedPlayerUnit, _resummonedFakeCivilian;
 	bool _pickUpWeaponsMoreActively;
 	bool _disableIndicators;
-	MovementType _movementType;
-	MovementType _originalMovementType;
-	ArmorMoveCost _moveCostBase = { 0, 0 };
-	ArmorMoveCost _moveCostBaseFly = { 0, 0 };
-	ArmorMoveCost _moveCostBaseClimb = { 0, 0 };
-	ArmorMoveCost _moveCostBaseNormal = { 0, 0 };
-	std::vector<std::pair<Uint8, Uint8> > _recolor;
 	bool _capturable;
 	bool _vip;
 	bool _bannedInNextStage;
 	bool _skillMenuCheck;
-	ScriptValues<BattleUnit> _scriptValues;
 
 	/// Calculate stat improvement.
 	int improveStat(int exp) const;
@@ -220,6 +222,7 @@ public:
 	static const int MAX_SOLDIER_ID = 1000000;
 	static const int BUBBLES_FIRST_FRAME = 3;
 	static const int BUBBLES_LAST_FRAME = BUBBLES_FIRST_FRAME + 15;
+	Position lastCover;
 
 	/// Name of class used in script.
 	static constexpr const char *ScriptName = "BattleUnit";
@@ -383,10 +386,7 @@ public:
 	/// Add unit to visible tiles.
 	bool addToVisibleTiles(Tile *tile);
 	/// Has this unit marked this tile as within its view?
-	bool hasVisibleTile(Tile *tile) const
-	{
-		return _visibleTilesLookup.find(tile) != _visibleTilesLookup.end(); //find?
-	}
+	bool hasVisibleTile(Tile* tile) const { return _visibleTilesLookup.find(tile) != _visibleTilesLookup.end(); } // find?
 	/// Get the list of visible tiles.
 	const std::vector<Tile*> *getVisibleTiles();
 	/// Clear visible tiles.
@@ -397,6 +397,8 @@ public:
 	static int getFiringAccuracy(BattleActionAttack::ReadOnly attack, const Mod *mod);
 	/// Calculate accuracy modifier.
 	int getAccuracyModifier(const BattleItem *item = 0) const;
+	/// get's the modifier for firing/melee/throwing from health reduction.
+	int getHealthModifier() const;
 	/// Get the current reaction score.
 	double getReactionScore() const;
 	/// Prepare for a new turn.
@@ -717,7 +719,6 @@ public:
 	UnitFaction getOriginalFaction() const;
 	/// Get alien/HWP unit.
 	Unit *getUnitRules() const { return _unitRules; }
-	Position lastCover;
 	/// get the vector of units we've seen this turn.
 	std::vector<BattleUnit *> &getUnitsSpottedThisTurn();
 	/// get the vector of units we've seen this turn.

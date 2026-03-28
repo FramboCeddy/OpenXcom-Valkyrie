@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 #include "../Engine/Yaml.h"
-#include <SDL_types.h>
 #include "../Engine/RNG.h"
 #include "../Savegame/WeightedOptions.h"
 #include <array>
@@ -463,9 +462,9 @@ struct StatAdjustment
 
 	UnitStats statGrowth;
 	UnitStats statGrowthAbs;
-	int growthMultiplier;
 	double aimMultiplier;
 	double armorMultiplier;
+	int growthMultiplier;
 	int armorMultiplierAbs;
 };
 
@@ -482,36 +481,38 @@ private:
 	const RuleItem* _civilianRecoveryItemType = nullptr;
 	YAML::YamlString _spawnedSoldier;
 	std::string _race;
-	int _showFullNameInAlienInventory;
 	std::string _rank;
 	UnitStats _stats;
 	std::string _armorName;
 	const Armor* _armor;
-	int _standHeight, _kneelHeight, _floatHeight;
 	std::vector<int> _deathSound, _panicSound, _berserkSound, _aggroSound;
 	std::vector<int> _selectUnitSound, _startMovingSound, _selectWeaponSound, _annoyedSound;
-	int _value, _moraleLossWhenKilled, _moveSound;
-	int _intelligence, _aggression, _spotter, _sniper, _energyRecovery;
-	SpecialAbility _specab;
 	const RuleItem* _liveAlien = nullptr;
 	const Unit *_spawnUnit = nullptr;
 	std::string _spawnUnitName;
-	bool _livingWeapon;
 	std::string _meleeWeapon, _psiWeapon;
 	std::vector<std::vector<std::string> > _builtInWeaponsNames;
 	std::vector<std::vector<const RuleItem*> > _builtInWeapons;
 	std::vector<WeightedOptions*> _weightedBuiltInWeapons;
+	SpecialAbility _specab;
+	int _showFullNameInAlienInventory;
+	int _standHeight, _kneelHeight, _floatHeight;
+	int _value, _moraleLossWhenKilled, _moveSound;
+	int _intelligence, _aggression, _spotter, _sniper, _energyRecovery;
+	int _pickUpWeaponsMoreActively;
+	int _berserkChance;
+	int _healthAccuracyReduction = 25;
+	int _woundAccuracyReduction = 10;
+	Sint8 _avoidsFire;
+	bool _livingWeapon;
 	bool _capturable;
 	bool _canSurrender, _autoSurrender;
 	bool _isLeeroyJenkins;
 	bool _waitIfOutsideWeaponRange;
-	int _pickUpWeaponsMoreActively;
-	Sint8 _avoidsFire;
 	bool _vip;
 	bool _cosmetic, _ignoredByAI;
 	bool _canPanic;
 	bool _canBeMindControlled;
-	int _berserkChance;
 
 public:
 	/// Creates a blank unit ruleset.
@@ -558,7 +559,7 @@ public:
 	/// Gets the value - for score calculation.
 	int getValue() const;
 	/// Percentage modifier for morale loss when this unit is killed.
-	int getMoraleLossWhenKilled() { return _moraleLossWhenKilled; };
+	int getMoraleLossWhenKilled() const { return _moraleLossWhenKilled; };
 	/// Gets the death sound id.
 	const std::vector<int> &getDeathSounds() const;
 	/// Gets the unit's panic sounds.
@@ -611,7 +612,7 @@ public:
 	bool autoSurrender() const;
 	bool isLeeroyJenkins() const { return _isLeeroyJenkins; };
 	/// Should the unit get "stuck" trying to fire from outside of weapon range? Vanilla bug, that may serve as "feature" in rare cases.
-	bool waitIfOutsideWeaponRange() { return _waitIfOutsideWeaponRange; };
+	bool waitIfOutsideWeaponRange() const { return _waitIfOutsideWeaponRange; };
 	/// Should the unit try to pick up weapons more actively?
 	int getPickUpWeaponsMoreActively() const { return _pickUpWeaponsMoreActively; }
 	/// Is the unit afraid to pathfind through fire?
@@ -630,6 +631,11 @@ public:
 	bool canBeMindControlled() const { return _canBeMindControlled; }
 	/// Gets the probability of unit berserking when panicked.
 	int getBerserkChance() const { return _berserkChance; }
+	/// Gets the amount of accuracy loss for losing health.
+	int getHealthAccuracyReduction() const { return _healthAccuracyReduction; }
+	/// Gets the amount of accuracy loss for having wounds.
+	int getWoundAccuracyReduction() const { return _woundAccuracyReduction; }
+
 
 	/// Name of class used in script.
 	static constexpr const char *ScriptName = "RuleUnit";

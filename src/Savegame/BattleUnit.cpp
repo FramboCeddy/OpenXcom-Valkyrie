@@ -2485,32 +2485,32 @@ int BattleUnit::getFiringAccuracy(BattleActionAttack::ReadOnly attack, const Mod
 	int result = 0;
 	bool kneeled = attack.attacker->_kneeled;
 
-	if (actionType == BA_SNAPSHOT)
+	switch (actionType)
 	{
+	case BA_SNAPSHOT:
 		result = item->getRules()->getAccuracyMultiplier(attack) * item->getRules()->getAccuracySnap() / 100;
-	}
-	else if (actionType == BA_AIMEDSHOT || actionType == BA_LAUNCH)
-	{
+		break;
+	case BA_AIMEDSHOT:
+	case BA_LAUNCH:
 		result = item->getRules()->getAccuracyMultiplier(attack) * item->getRules()->getAccuracyAimed() / 100;
-	}
-	else if (actionType == BA_AUTOSHOT)
-	{
+		break;
+	case BA_AUTOSHOT:
 		result = item->getRules()->getAccuracyMultiplier(attack) * item->getRules()->getAccuracyAuto() / 100;
-	}
-	else if (actionType == BA_HIT)
-	{
+		break;
+	case BA_HIT:
 		kneeled = false;
 		result = item->getRules()->getMeleeMultiplier(attack) * item->getRules()->getAccuracyMelee() / 100;
-	}
-	else if (actionType == BA_THROW)
-	{
+		break;
+	case BA_THROW:
 		kneeled = false;
 		result = item->getRules()->getThrowMultiplier(attack) * item->getRules()->getAccuracyThrow() / 100;
-	}
-	else if (actionType == BA_CQB)
-	{
+		break;
+	case BA_CQB:
 		kneeled = false;
 		result = item->getRules()->getCloseQuartersMultiplier(attack) * item->getRules()->getAccuracyCloseQuarters(mod) / 100;
+		break;
+	default:
+		break;
 	}
 
 	if (kneeled)
@@ -2571,7 +2571,26 @@ int BattleUnit::getAccuracyModifier(const BattleItem *item) const
 			}
 		}
 	}
-	return std::max(10, 25 * _health / getBaseStats()->health + 75 + -10 * wounds);
+	// Apparently soldiers have rules in a different place from aliens/civs/HWP
+	auto woundMultiplier = getGeoscapeSoldier() ?
+							getGeoscapeSoldier()->getRules()->getWoundAccuracyReduction() :
+							getUnitRules()->getWoundAccuracyReduction();
+	return std::max(10, getHealthModifier() - woundMultiplier * wounds);
+}
+
+/*
+* Gives the modifier to firing/throwing/melee stats based on health lost.
+* #return modifier
+*/
+int BattleUnit::getHealthModifier() const
+{
+	double healthPercent = (double)_health / (double)getBaseStats()->health;
+	// Apparently soldiers have rules in a different place from aliens/civs/HWP
+	int healthModifier = getGeoscapeSoldier() ?
+							getGeoscapeSoldier()->getRules()->getHealthAccuracyReduction() :
+							getUnitRules()->getHealthAccuracyReduction();
+	// linear interpolation but do not go below 10% stats
+	return std::max(10, (int)(100 - healthModifier * (1 - healthPercent)));
 }
 
 /**
@@ -2624,7 +2643,9 @@ int BattleUnit::getFatalWounds() const
 {
 	int sum = 0;
 	for (int i = 0; i < BODYPART_MAX; ++i)
+	{
 		sum += _fatalWounds[i];
+	}
 	return sum;
 }
 
@@ -2949,7 +2970,9 @@ bool BattleUnit::reselectAllowed() const
 void BattleUnit::setFire(int fire)
 {
 	if (_specab != SPECAB_BURNFLOOR && _specab != SPECAB_BURN_AND_EXPLODE)
+	{
 		_fire = fire;
+	}
 }
 
 /**
@@ -4305,7 +4328,9 @@ void BattleUnit::stimulant(int energy, int stun, int mana)
 {
 	_energy += energy;
 	if (_energy > getBaseStats()->stamina)
+	{
 		_energy = getBaseStats()->stamina;
+	}
 	healStun(stun);
 	setValueMax(_mana, mana, 0, getBaseStats()->mana);
 }
