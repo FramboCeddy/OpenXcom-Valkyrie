@@ -586,6 +586,7 @@ void createAdvancedOptionsVALK()
 	_info.push_back(OptionInfo(OPTION_VALK, "visualSmokeDensity", &visualSmokeDensity, false, "STR_VISUAL_SMOKE_DENSITY", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "euclidDistanceAccuracy", &euclidDistanceAccuracy, false, "STR_EUCLID_DISTANCE_ACCURACY", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "accuracyForFirstWaypoint", &accuracyForFirstWaypoint, false, "STR_ACCURACY_FOR_FIRST_WAYPOINT", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "forceStatCaps", &forceStatCaps, false, "STR_FORCE_STAT_CAPS", "STR_BATTLESCAPE"));
 }
 
 void createControlsVALK()

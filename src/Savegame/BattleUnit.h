@@ -524,7 +524,7 @@ public:
 	/// Adds one to the melee exp counter.
 	void addMeleeExp();
 	/// Did the unit gain any experience yet?
-	bool hasGainedAnyExperience();
+	bool hasGainedAnyExperience() const;
 	/// Updates the stats of a Geoscape soldier.
 	void updateGeoscapeStats(Soldier *soldier) const;
 	/// Check if unit eligible for squaddie promotion.

@@ -195,3 +195,4 @@ OPT bool techTreeCensorCost;
 OPT bool recoveryPointsForAmmo;
 OPT bool accuracyForFirstWaypoint;
 OPT bool craftRepairsLast;
+OPT bool forceStatCaps;

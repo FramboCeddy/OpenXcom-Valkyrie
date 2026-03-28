@@ -16,22 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <sstream>
+#include <new>
 #include "TrainingState.h"
 #include "../Engine/Game.h"
-#include "../Engine/Screen.h"
 #include "../Engine/Action.h"
-#include "../Engine/Language.h"
 #include "../Engine/Palette.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/Base.h"
-#include "GeoscapeState.h"
 #include "AllocateTrainingState.h"
 #include "../Engine/Options.h"
-#include "../Mod/Mod.h"
 
 namespace OpenXcom
 {

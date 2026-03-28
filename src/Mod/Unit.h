@@ -84,6 +84,7 @@ struct UnitStats
 	constexpr static int OverkillMultipler = 4;
 
 	Type tu, stamina, health, bravery, reactions, firing, throwing, strength, psiStrength, psiSkill, melee, mana;
+	// stats eligible for physical training
 	constexpr static std::array<Ptr, 8> physStats =
 		{
 			&UnitStats::tu,
@@ -94,7 +95,28 @@ struct UnitStats
 			&UnitStats::throwing,
 			&UnitStats::melee,
 			&UnitStats::strength,
-	};
+		};
+	// stats considered to be primary stats for battlefield exp
+	constexpr static std::array<Ptr, 8> primaryStats =
+		{
+			&UnitStats::bravery,
+			&UnitStats::reactions,
+			&UnitStats::firing,
+			&UnitStats::throwing,
+			&UnitStats::psiStrength,
+			&UnitStats::psiSkill,
+			&UnitStats::melee,
+			&UnitStats::mana,
+		};
+	// stats considered to be secondary stats for battlefield exp
+	constexpr static std::array<Ptr, 5> secondaryStats =
+		{
+			&UnitStats::tu,
+			&UnitStats::stamina,
+			&UnitStats::health,
+			&UnitStats::strength,
+			&UnitStats::mana,
+		};
 	UnitStats() : tu(0), stamina(0), health(0), bravery(0), reactions(0), firing(0), throwing(0), strength(0), psiStrength(0), psiSkill(0), melee(0), mana(0) {};
 	UnitStats(int tu_, int stamina_, int health_, int bravery_, int reactions_, int firing_, int throwing_, int strength_, int psiStrength_, int psiSkill_, int melee_, int mana_) : tu(tu_), stamina(stamina_), health(health_), bravery(bravery_), reactions(reactions_), firing(firing_), throwing(throwing_), strength(strength_), psiStrength(psiStrength_), psiSkill(psiSkill_), melee(melee_), mana(mana_) {};
 	UnitStats& operator+=(const UnitStats& stats) { tu += stats.tu; stamina += stats.stamina; health += stats.health; bravery += stats.bravery; reactions += stats.reactions; firing += stats.firing; throwing += stats.throwing; strength += stats.strength; psiStrength += stats.psiStrength; psiSkill += stats.psiSkill; melee += stats.melee; mana += stats.mana; return *this; }

@@ -391,12 +391,14 @@ void AllocateTrainingState::ColourTrainingStats(size_t row)
 	// set name
 	_lstSoldiers->setCellColor(row, 0, _lstSoldiers->getSecondaryColor());
 	// set the training stats to gold colour only if they are training
-	for (size_t col = 0; col < stats->physStats.size(); ++col)
+	size_t col = 1;
+	for (auto& statPtr : stats->physStats)
 	{
-		auto& currentStat = stats->*(stats->physStats[col]);
-		auto& trainingStatCap = trainingCaps.*(trainingCaps.physStats[col]);
+		auto& currentStat = stats->*statPtr;
+		auto& trainingStatCap = trainingCaps.*statPtr;
 		auto color = currentStat >= trainingStatCap ? 241 : _lstSoldiers->getSecondaryColor(); // 241 is a red-ish hue
-		_lstSoldiers->setCellColor(row, col + 1, color);
+		_lstSoldiers->setCellColor(row, col, color);
+		++col;
 	}
 	// set status
 	_lstSoldiers->setCellColor(row, _lstSoldiers->getColumnAmount() - 1, _lstSoldiers->getSecondaryColor());

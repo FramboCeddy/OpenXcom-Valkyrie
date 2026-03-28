@@ -4023,14 +4023,20 @@ void BattleUnit::addMeleeExp()
 /**
  * Did the unit gain any experience yet?
  */
-bool BattleUnit::hasGainedAnyExperience()
+bool BattleUnit::hasGainedAnyExperience() const
 {
-	if (!Mod::EXTENDED_EXPERIENCE_AWARD_SYSTEM)
+	for (UnitStats::Type UnitStats::* statPtr : _exp.primaryStats)
 	{
-		// vanilla compatibility (throwing doesn't count)
-		return _exp.bravery || _exp.reactions || _exp.firing || _exp.psiSkill || _exp.psiStrength || _exp.melee || _exp.mana;
+		if (!Mod::EXTENDED_EXPERIENCE_AWARD_SYSTEM && &(_exp.*statPtr) == &_exp.throwing)
+		{
+			continue; // vanilla compatibility (throwing doesn't count)
+		}
+		if (_exp.*statPtr > 0)
+		{
+			return true;
+		}
 	}
-	return _exp.bravery || _exp.reactions || _exp.firing || _exp.psiSkill || _exp.psiStrength || _exp.melee || _exp.throwing || _exp.mana;
+	return false;
 }
 
 void BattleUnit::updateGeoscapeStats(Soldier *soldier) const
@@ -4048,59 +4054,45 @@ void BattleUnit::updateGeoscapeStats(Soldier *soldier) const
  */
 bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, SavedBattleGame *battle, StatAdjustment &statsDiff)
 {
-	Soldier *s = geoscape->getSoldier(_id);
-	if (s == 0)
+	Soldier *soldier = geoscape->getSoldier(_id);
+	if (!soldier)
 	{
 		return false;
 	}
 
-	updateGeoscapeStats(s);
+	updateGeoscapeStats(soldier);
 
-	UnitStats *stats = s->getCurrentStatsEditable();
+	UnitStats *stats = soldier->getCurrentStatsEditable();
 	StatAdjustment statsOld = { };
 	statsOld.statGrowth = (*stats);
-	statsDiff.statGrowth = -(*stats);        // subtract old stat
-	const UnitStats caps = s->getRules()->getStatCaps();
-	int manaLossOriginal = _stats.mana - _mana;
-	int healthLossOriginal = _stats.health - _health;
-	int manaLoss = mod->getReplenishManaAfterMission() ? 0 : manaLossOriginal;
-	int healthLoss = mod->getReplenishHealthAfterMission() ? 0 : healthLossOriginal;
+	statsDiff.statGrowth = -(*stats); // subtract old stat
+	const UnitStats caps = soldier->getRules()->getStatCaps();
 
-	auto recovery = (int)RNG::generate((healthLossOriginal*0.5),(healthLossOriginal*1.5));
+	for (auto& statPtr : stats->primaryStats)
+	{
+		auto& currentStat = stats->*statPtr;
+		const auto& expStat = _exp.*statPtr;
+		const auto& statCap = caps.*statPtr;
 
-	if (_exp.bravery && stats->bravery < caps.bravery)
-	{
-		if (_exp.bravery > RNG::generate(0,10)) stats->bravery += 10;
-	}
-	if (_exp.reactions && stats->reactions < caps.reactions)
-	{
-		stats->reactions += improveStat(_exp.reactions);
-	}
-	if (_exp.firing && stats->firing < caps.firing)
-	{
-		stats->firing += improveStat(_exp.firing);
-	}
-	if (_exp.melee && stats->melee < caps.melee)
-	{
-		stats->melee += improveStat(_exp.melee);
-	}
-	if (_exp.throwing && stats->throwing < caps.throwing)
-	{
-		stats->throwing += improveStat(_exp.throwing);
-	}
-	if (_exp.psiSkill && stats->psiSkill < caps.psiSkill)
-	{
-		stats->psiSkill += improveStat(_exp.psiSkill);
-	}
-	if (_exp.psiStrength && stats->psiStrength < caps.psiStrength)
-	{
-		stats->psiStrength += improveStat(_exp.psiStrength);
-	}
-	if (mod->isManaTrainingPrimary())
-	{
-		if (_exp.mana && stats->mana < caps.mana)
+		if (!expStat || currentStat >= statCap) // no exp or already at statCap
 		{
-			stats->mana += improveStat(_exp.mana);
+			continue;
+		}
+		if (&currentStat == &stats->bravery && expStat > RNG::generate(0, 10))
+		{
+			currentStat += 10; // special bravery handle
+		}
+		else if (mod->isManaTrainingPrimary() && &currentStat == &stats->mana)
+		{
+			currentStat += improveStat(expStat);
+		}
+		else
+		{
+			currentStat += improveStat(expStat);
+		}
+		if (Options::forceStatCaps)
+		{
+			currentStat = std::min(currentStat, statCap);
 		}
 	}
 
@@ -4108,34 +4100,51 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 	if (hasGainedAnyExperience())
 	{
 		hasImproved = true;
-		if (s->getRank() == RANK_ROOKIE)
-			s->promoteRank();
-		int v;
-		v = caps.tu - stats->tu;
-		if (v > 0) stats->tu += RNG::generate(0, v/10 + 2);
-		v = caps.health - stats->health;
-		if (v > 0) stats->health += RNG::generate(0, v/10 + 2);
-		if (mod->isManaTrainingSecondary())
+		if (soldier->getRank() == RANK_ROOKIE)
 		{
-			v = caps.mana - stats->mana;
-			if (v > 0) stats->mana += RNG::generate(0, v/10 + 2);
+			soldier->promoteRank();
 		}
-		v = caps.strength - stats->strength;
-		if (v > 0) stats->strength += RNG::generate(0, v/10 + 2);
-		v = caps.stamina - stats->stamina;
-		if (v > 0) stats->stamina += RNG::generate(0, v/15 + 2);
+
+		for (auto& statPtr : stats->secondaryStats)
+		{
+			auto& currentStat = stats->*statPtr;
+			const auto& statCap = caps.*statPtr;
+			if (currentStat >= statCap)
+			{
+				continue;
+			}
+			if (&(stats->*statPtr) == &stats->stamina)
+			{
+				// stamina has special treatment
+				currentStat += RNG::generate(0, (statCap - currentStat) / 15 + 2);
+			}
+			else if (mod->isManaTrainingSecondary() && &(stats->*statPtr) == &stats->mana)
+			{
+				currentStat += RNG::generate(0, (statCap - currentStat) / 10 + 2);
+			}
+			else
+			{
+				currentStat += RNG::generate(0, (statCap - currentStat) / 10 + 2);
+			}
+			if (Options::forceStatCaps)
+			{
+				currentStat = std::min(currentStat, statCap);
+			}
+		}
 	}
 
 	statsDiff.statGrowth += *stats; // add new stat
 
-	if (_armor->getInstantWoundRecovery())
-	{
-		recovery = 0;
-	}
+	int manaLossOriginal = _stats.mana - _mana;
+	int healthLossOriginal = _stats.health - _health;
+	int manaLoss = mod->getReplenishManaAfterMission() ? 0 : manaLossOriginal;
+	int healthLoss = mod->getReplenishHealthAfterMission() ? 0 : healthLossOriginal;
+
+	int recovery = _armor->getInstantWoundRecovery() ? 0 : (int)RNG::generate((healthLossOriginal * 0.5), (healthLossOriginal * 1.5));
 
 	{
 		ModScript::ReturnFromMissionUnit::Output arg { };
-		ModScript::ReturnFromMissionUnit::Worker work{ this, battle, s, &statsDiff, &statsOld };
+		ModScript::ReturnFromMissionUnit::Worker work{ this, battle, soldier, &statsDiff, &statsOld };
 
 		auto ref = std::tie(recovery, manaLossOriginal, healthLossOriginal, manaLoss, healthLoss);
 
@@ -4149,22 +4158,20 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 	//after mod execution this value could change
 	statsDiff.statGrowth = *stats - statsOld.statGrowth;
 
-	s->setWoundRecovery(recovery);
-	s->setManaMissing(manaLoss);
-	s->setHealthMissing(healthLoss);
+	soldier->setWoundRecovery(recovery);
+	soldier->setManaMissing(manaLoss);
+	soldier->setHealthMissing(healthLoss);
 
-	if (s->isWounded())
+	if (soldier->isWounded())
 	{
 		// remove from craft
 		//s->setCraft(nullptr); // Note to self: we need to do this much later (as late as possible), so that we can correctly remove the items too (without side effects)
 
 		// remove from training, but remember to return to training when healed
+		if (soldier->isInTraining())
 		{
-			if (s->isInTraining())
-			{
-				s->setReturnToTrainingWhenHealed(true);
-			}
-			s->setTraining(false);
+			soldier->setReturnToTrainingWhenHealed(true);
+			soldier->setTraining(false);
 		}
 	}
 
@@ -4205,20 +4212,11 @@ int BattleUnit::getMiniMapSpriteIndex() const
 	switch (getFaction())
 	{
 	case FACTION_HOSTILE:
-		if (isSmallUnit())
-			return 3;
-		else
-			return 24;
+		return isSmallUnit() ? 3 : 24;
 	case FACTION_NEUTRAL:
-		if (isSmallUnit())
-			return 6;
-		else
-			return 12;
+		return isSmallUnit() ? 6 : 12;
 	default:
-		if (isSmallUnit())
-			return 0;
-		else
-			return 12;
+		return isSmallUnit() ? 0 : 12;
 	}
 }
 
@@ -5372,7 +5370,7 @@ void BattleUnit::setSpecialWeapon(SavedBattleGame *save, bool updateFromSave)
 			//TODO: move this check to load of ruleset
 			if ((item->getBattleType() == BT_FIREARM || item->getBattleType() == BT_MELEE) && !item->getClipSize())
 			{
-				throw Exception("Weapon " + item->getType() + " is used as a special built-in weapon on unit " + getUnitRules()->getType() + " but doesn't have it's own ammo - give it a clipSize!");
+				throw Exception("Weapon " + item->getType() + " is used as a special built-in weapon on unit " + getUnitRules()->getType() + " but doesn't have it'soldier own ammo - give it a clipSize!");
 			}
 
 			// we already have an item of this type, skip it
