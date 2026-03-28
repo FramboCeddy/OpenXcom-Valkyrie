@@ -1105,7 +1105,7 @@ int Base::getDefenseValue() const
 
 		if (fac->getRules()->isGravShield())
 		{
-			++gravShieldPower;
+			gravShieldPower += fac->getRules()->getGravShieldPower();
 		}
 	}
 	return total * gravShieldPower;
@@ -1604,7 +1604,7 @@ int Base::getGravShields() const
 	{
 		if (fac->getBuildTime() == 0 && fac->getRules()->isGravShield())
 		{
-			++total;
+			total += fac->getRules()->getGravShieldPower();
 		}
 	}
 	return total;

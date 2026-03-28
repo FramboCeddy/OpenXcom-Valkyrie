@@ -19,3 +19,8 @@ en-US:
   STR_CRAFT_REPAIRS_LAST_DESC: "Changes the order of craft maintenance from repair>rearm>refuel to rearm>refuel>repair."
   STR_FORCE_STAT_CAPS: "Force Stat Caps"
   STR_FORCE_STAT_CAPS_DESC: "Forces the experience gained from a mission to not overlevel a soldier's stats."
+  
+
+
+  # Stats For Nerds values:
+  gravPower: "Grav shield power"

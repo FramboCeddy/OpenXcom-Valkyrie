@@ -16,15 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <algorithm>
-#include "RuleBaseFacility.h"
-#include "Mod.h"
-#include "MapScript.h"
 #include "../Battlescape/Position.h"
 #include "../Battlescape/TileEngine.h"
-#include "../Engine/Exception.h"
 #include "../Engine/Collections.h"
+#include "../Engine/Exception.h"
+#include "../Engine/Yaml.h"
 #include "../Savegame/Base.h"
+#include "MapScript.h"
+#include "Mod.h"
+#include "RuleBaseFacility.h"
+#include <algorithm>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 
 namespace OpenXcom
@@ -91,6 +96,7 @@ void RuleBaseFacility::load(const YAML::YamlNodeReader& node, Mod *mod)
 	reader.tryRead("mind", _mind);
 	reader.tryRead("grav", _grav);
 	reader.tryRead("mindPower", _mindPower);
+	reader.tryRead("gravPower", _gravPower);
 	if (reader["size"])
 	{
 		// backwards-compatibility
@@ -400,13 +406,20 @@ int RuleBaseFacility::getMindShieldPower() const
 }
 
 /**
- * Checks if this facility has a grav shield,
- * which doubles base defense's fire ratio.
- * @return True if it has a grav shield.
+ * Checks if this facility is a grav shield,
+ * @return True if it is a grav shield.
  */
 bool RuleBaseFacility::isGravShield() const
 {
 	return _grav;
+}
+/**
+ * @brief Gets the grav shield power.
+ * @return Grav shield power
+ */
+int RuleBaseFacility::getGravShieldPower() const
+{
+	return _gravPower;
 }
 
 /**

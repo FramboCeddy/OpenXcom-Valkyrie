@@ -3217,6 +3217,7 @@ void StatsForNerdsState::initFacilityList()
 	addBoolean(ss, facilityRule->isMindShield(), "mind");
 	addInteger(ss, facilityRule->getMindShieldPower(), "mindPower", 1);
 	addBoolean(ss, facilityRule->isGravShield(), "grav");
+	addInteger(ss, facilityRule->getGravShieldPower(), "gravPower", 1);
 
 	addInteger(ss, facilityRule->getStorage(), "storage");
 	addInteger(ss, facilityRule->getPersonnel(), "personnel");

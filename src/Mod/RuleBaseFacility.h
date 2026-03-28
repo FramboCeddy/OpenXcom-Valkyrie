@@ -17,12 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "RuleBaseFacilityFunctions.h"
 #include <string>
 #include <vector>
 #include <map>
-#include <bitset>
-#include "../Engine/Yaml.h"
-#include "RuleBaseFacilityFunctions.h"
+#include <utility>
 
 namespace OpenXcom
 {
@@ -33,6 +32,10 @@ class Position;
 class RuleItem;
 struct VerticalLevel;
 enum BasePlacementErrors : int;
+namespace YAML
+{
+class YamlNodeReader;
+}
 
 /**
  * Represents a specific type of base facility.
@@ -43,52 +46,54 @@ enum BasePlacementErrors : int;
 class RuleBaseFacility
 {
 private:
+	std::vector<std::string> _leavesBehindOnSellNames;
+	std::vector<std::string> _buildOverFacilitiesNames;
+	std::vector<VerticalLevel> _verticalLevels;
+	std::vector<std::string> _requires;
+	std::vector<const RuleBaseFacility*> _leavesBehindOnSell;
+	std::vector<const RuleBaseFacility*> _buildOverFacilities;
+	std::vector<Position> _storageTiles;
+	std::map<std::string, std::pair<int, int> > _buildCostItems;
 	std::string _ufopediaType;
 	std::string _type;
-	std::vector<std::string> _requires;
+	std::string _ammoItemName;
+	std::string _mapName;
+	std::string _destroyedFacilityName;
 	RuleBaseFacilityFunctions _requiresBaseFunc = 0;
 	RuleBaseFacilityFunctions _provideBaseFunc = 0;
 	RuleBaseFacilityFunctions _forbiddenBaseFunc = 0;
+	const RuleItem* _ammoItem = nullptr;
+	const RuleBaseFacility* _destroyedFacility;
+
+	float _sickBayAbsoluteBonus, _sickBayRelativeBonus;
 	int _spriteShape, _spriteFacility;
-	bool _connectorsDisabled;
 	int _missileAttraction;
 	int _fakeUnderwater;
-	bool _lift, _hyper, _mind, _grav;
-	int _mindPower;
 	int _sizeX, _sizeY;
 	int _buildCost, _refundValue, _buildTime, _monthlyCost;
-	std::map<std::string, std::pair<int, int> > _buildCostItems;
 	int _storage, _personnel, _aliens, _crafts, _labs, _workshops, _psiLabs;
-	bool _spriteEnabled;
 	int _sightRange, _sightChance;
 	int _radarRange, _radarChance, _defense, _hitRatio, _fireSound, _hitSound, _placeSound;
 	int _ammoMax, _rearmRate;
 	int _ammoNeeded;
-	bool _unifiedDamageFormula;
 	int _shieldDamageModifier;
-	const RuleItem* _ammoItem = nullptr;
-	std::string _ammoItemName;
-	std::string _mapName;
 	int _listOrder, _trainingRooms;
 	int _maxAllowedPerBase;
 	int _manaRecoveryPerDay = 0;
 	int _healthRecoveryPerDay = 0;
-	float _sickBayAbsoluteBonus, _sickBayRelativeBonus;
 	int _prisonType;
 	int _rightClickActionType;
-	std::vector<VerticalLevel> _verticalLevels;
-	std::vector<const RuleBaseFacility*> _leavesBehindOnSell;
 	int _removalTime;
+	int _mindPower;
+	int _gravPower = 1;
+
+	bool _connectorsDisabled;
+	bool _lift, _hyper, _mind, _grav;
+	bool _spriteEnabled;
+	bool _unifiedDamageFormula;
 	bool _canBeBuiltOver;
 	bool _upgradeOnly;
-	std::vector<const RuleBaseFacility*> _buildOverFacilities;
-	std::vector<Position> _storageTiles;
-	std::string _destroyedFacilityName;
-	const RuleBaseFacility* _destroyedFacility;
 
-
-	std::vector<std::string> _leavesBehindOnSellNames;
-	std::vector<std::string> _buildOverFacilitiesNames;
 
 public:
 	/// Creates a blank facility ruleset.
@@ -143,6 +148,8 @@ public:
 	int getMindShieldPower() const;
 	/// Gets if the facility is a grav shield.
 	bool isGravShield() const;
+	/// Gets the grav shield power.
+	int getGravShieldPower() const;
 	/// Gets the facility's construction cost.
 	int getBuildCost() const;
 	/// Gets the facility's refund value.
