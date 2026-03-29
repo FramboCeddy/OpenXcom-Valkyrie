@@ -434,25 +434,27 @@ void InventoryState::init()
 	_soldier->clear();
 	_btnRank->clear();
 
-	if (Options::oxceInventoryShowUnitSlot)
+	// Only show slots on geoscape soldiers
+	if (Options::oxceInventoryShowUnitSlot && unit->getGeoscapeSoldier())
 	{
 		int unitSlot = 1;
 		int totalSlots = 99;
 		for (auto* tmpUnit : *_battleGame->getUnits())
 		{
-			if (tmpUnit == unit)
+			if (tmpUnit != unit)
 			{
-				if (!_noCraft && _battleGame->getMissionType() != "STR_BASE_DEFENSE")
-				{
-					auto* tmpCraft = unit->getGeoscapeSoldier() ? unit->getGeoscapeSoldier()->getCraft() : nullptr;
-					if (tmpCraft)
-					{
-						totalSlots = tmpCraft->getMaxUnitsClamped();
-					}
-				}
-				break;
+				unitSlot += tmpUnit->getArmor()->getTotalSize();
+				continue;
 			}
-			unitSlot += tmpUnit->getArmor()->getTotalSize();
+			if (!_noCraft && _battleGame->getMissionType() != "STR_BASE_DEFENSE")
+			{
+				auto* tmpCraft = unit->getGeoscapeSoldier() ? unit->getGeoscapeSoldier()->getCraft() : nullptr;
+				if (tmpCraft)
+				{
+					totalSlots = tmpCraft->getMaxUnitsClamped();
+				}
+			}
+			break;
 		}
 		_txtPosition->setText(tr("STR_SLOT").arg(unitSlot).arg(totalSlots));
 	}
