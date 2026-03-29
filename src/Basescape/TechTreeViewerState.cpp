@@ -148,7 +148,7 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 	_btnOk->onKeyboardPress((ActionHandler)&TechTreeViewerState::btnBackClick, SDLK_BACKSPACE);
 
 	_btnShow->setText(tr("STR_SHOW_ALL"));
-	_btnShow->onMouseClick((ActionHandler)&TechTreeViewerState::btnShowAllClick); // TODO make it do something else
+	_btnShow->onMouseClick((ActionHandler)&TechTreeViewerState::btnShowAllClick);
 	_showAll = false;
 
 	if (Options::oxceDisableTechTreeViewer)
@@ -774,7 +774,7 @@ void TechTreeViewerState::initLists()
 		}
 		if (!Mod::isEmptyRuleName(rule->getSpawnedItem())) // TODO censor: spawned items need special censor rules? (like checking if you have the item in your stores)
 		{
-			std::string name = tr(rule->getSpawnedItem());
+			std::string name = _showAll ? tr(rule->getSpawnedItem()) : tr("STR_CENSORED");
 			name.insert(0, "  ");
 			if (rule->getSpawnedItemCount() > 1)
 			{
@@ -789,7 +789,7 @@ void TechTreeViewerState::initLists()
 		}
 		for (auto& sil : rule->getSpawnedItemList())
 		{
-			std::string name = tr(sil);
+			std::string name = _showAll ? tr(sil) : tr("STR_CENSORED");
 			name.insert(0, "  ");
 			_lstRight->addRow(1, name.c_str());
 			_lstRight->setRowColor(row, _white);
@@ -807,7 +807,7 @@ void TechTreeViewerState::initLists()
 			_rightFlags.push_back(TTV_NONE);
 			++row;
 
-			std::string name = tr(rule->getSpawnedEvent());
+			std::string name = _showAll ? tr(rule->getSpawnedEvent()) : tr("STR_CENSORED");
 			name.insert(0, "  ");
 			_lstRight->addRow(1, name.c_str());
 			_lstRight->setRowColor(row, _white);
@@ -928,7 +928,7 @@ void TechTreeViewerState::initLists()
 
 			for (const auto& transformationType : requiredByTransformations)
 			{
-				std::string name = tr(transformationType);
+				std::string name = _showAll ? tr(transformationType) : tr("STR_CENSORED");
 				name.insert(0, "  ");
 				_lstRight->addRow(1, name.c_str());
 				_lstRight->setRowColor(row, _white);

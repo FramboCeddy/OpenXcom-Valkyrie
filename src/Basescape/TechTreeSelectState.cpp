@@ -232,6 +232,13 @@ void TechTreeSelectState::initLists()
 				continue;
 			}
 		}
+		else if (searchString == "MARCOPOLO")
+		{
+			if (!_parent->isDiscoveredResearch(res))
+			{
+				continue;
+			}
+		}
 		else if (projectName.find(searchString) == std::string::npos)
 		{
 			continue;
@@ -253,6 +260,13 @@ void TechTreeSelectState::initLists()
 		if (searchString == "SHAZAM")
 		{
 			if (_parent->isDiscoveredManufacture(manuf))
+			{
+				continue;
+			}
+		}
+		else if (searchString == "MARCOPOLO")
+		{
+			if (!_parent->isDiscoveredManufacture(manuf))
 			{
 				continue;
 			}
@@ -282,6 +296,13 @@ void TechTreeSelectState::initLists()
 		if (searchString == "SHAZAM")
 		{
 			if (_parent->isDiscoveredFacility(facType))
+			{
+				continue;
+			}
+		}
+		else if (searchString == "MARCOPOLO")
+		{
+			if (!_parent->isDiscoveredFacility(facType))
 			{
 				continue;
 			}
@@ -320,6 +341,13 @@ void TechTreeSelectState::initLists()
 				continue;
 			}
 		}
+		else if (searchString == "MARCOPOLO")
+		{
+			if (!_parent->isProtectedAndDiscoveredItem(itemType))
+			{
+				continue;
+			}
+		}
 		else if (itemName.find(searchString) == std::string::npos)
 		{
 			continue;
@@ -345,6 +373,13 @@ void TechTreeSelectState::initLists()
 		if (searchString == "SHAZAM")
 		{
 			if (_parent->isDiscoveredCraft(craftType))
+			{
+				continue;
+			}
+		}
+		else if (searchString == "MARCOPOLO")
+		{
+			if (!_parent->isDiscoveredCraft(craftType))
 			{
 				continue;
 			}
