@@ -58,7 +58,7 @@ Ufo::Ufo(const RuleUfo *rules, int uniqueId, int hunterKillerPercentage, int hun
 	_trajectoryPoint(0), _detected(false), _hyperDetected(false), _processedIntercept(false),
 	_shootingAt(0), _hitFrame(0), _fireCountdown(0), _escapeCountdown(0), _stats(), _shield(-1), _shieldRechargeHandle(0),
 	_tractorBeamSlowdown(0), _isHunterKiller(false), _isEscort(false), _huntMode(0), _huntBehavior(0),
-	_isHunting(false), _isEscorting(false), _softlockShotCounter(0), _origWaypoint(0), _explodeChance(75)
+	_isHunting(false), _isEscorting(false), _softlockShotCounter(0), _origWaypoint(0)
 {
 	_stats = rules->getStats();
 	if (uniqueId != 0)
@@ -123,8 +123,6 @@ void Ufo::load(const YAML::YamlNodeReader& node, const ScriptGlobal *shared, con
 	reader.tryRead("hyperDetected", _hyperDetected);
 	reader.tryRead("secondsRemaining", _secondsRemaining);
 	reader.tryRead("inBattlescape", _inBattlescape);
-	reader.tryRead("explodeChance", _explodeChance);
-	_explodeChance = std::clamp(_explodeChance, 0, 100);
 	_dest = new Waypoint();
 	_dest->setLongitude(reader["dest"]["lon"].readVal(_lon));
 	_dest->setLatitude(reader["dest"]["lat"].readVal(_lat));

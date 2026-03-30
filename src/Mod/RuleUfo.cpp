@@ -20,6 +20,7 @@
 #include "RuleTerrain.h"
 #include "Mod.h"
 #include "../Engine/ScriptBind.h"
+#include <algorithm>
 
 namespace OpenXcom
 {
@@ -111,6 +112,8 @@ void RuleUfo::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript &
 	reader.tryRead("noAlert", _noAlert);
 	reader.tryRead("splashdownSurvivalChance", _splashdownSurvivalChance);
 	reader.tryRead("fakeWaterLandingChance", _fakeWaterLandingChance);
+	reader.tryRead("explodeChance", _explodeChance);
+	_explodeChance = std::clamp(_explodeChance, 0, 100);
 
 	_stats.load(reader);
 

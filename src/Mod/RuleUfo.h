@@ -85,6 +85,7 @@ private:
 	int _alertSound;
 	int _huntAlertSound;
 	int _hitSound;
+	int _explodeChance{75};
 	RuleTerrain *_battlescapeTerrainData;
 	RuleUfoStats _stats;
 	std::map<std::string, RuleUfoStats> _statsRaceBonus;
@@ -179,6 +180,8 @@ public:
 	int getSplashdownSurvivalChance() const { return _splashdownSurvivalChance; }
 	/// Gets the chance for deciding to land on fake water texture.
 	int getFakeWaterLandingChance() const { return _fakeWaterLandingChance; }
+	/// Gets the chance for a power source to explode when crashed.
+	int getExplodeChance() const { return _explodeChance; }
 	/// Gets script.
 	template<typename Script>
 	const typename Script::Container &getScript() const { return _ufoScripts.get<Script>(); }

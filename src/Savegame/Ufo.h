@@ -65,29 +65,28 @@ private:
 	std::string _direction, _altitude;
 	enum UfoStatus _status;
 	size_t _secondsRemaining;
-	bool _inBattlescape;
 	CraftId _shotDownByCraftId;
 	AlienMission *_mission;
 	const UfoTrajectory *_trajectory;
 	size_t _trajectoryPoint;
-	bool _detected, _hyperDetected, _processedIntercept;
 	int _shootingAt, _hitFrame, _fireCountdown, _escapeCountdown;
 	RuleUfoStats _stats;
-	/// Calculates a new speed vector to the destination.
-	void calculateSpeed() override;
 	int _shield, _shieldRechargeHandle;
 	int _tractorBeamSlowdown;
-	bool _isHunterKiller, _isEscort;
 	int _huntMode, _huntBehavior;
-	bool _isHunting, _isEscorting;
 	int _softlockShotCounter;
 	Waypoint *_origWaypoint;
 	ScriptValues<Ufo> _scriptValues;
-	int _explodeChance;
+	bool _inBattlescape;
+	bool _detected, _hyperDetected, _processedIntercept;
+	bool _isHunterKiller, _isEscort;
+	bool _isHunting, _isEscorting;
 
 	using MovingTarget::load;
 	using MovingTarget::save;
 
+	/// Calculates a new speed vector to the destination.
+	void calculateSpeed() override;
 	void backupOriginalDestination();
 public:
 	/// Creates a UFO of the specified type.
@@ -255,8 +254,5 @@ public:
 	void increaseSoftlockShotCounter() { _softlockShotCounter++; }
 	/// Checks if a target is inside the UFO's radar range.
 	bool insideRadarRange(Target *target) const;
-	/// Gets the chance for each power source to blow up when the UFO is shot down.
-	int getExplodeChance() const { return _explodeChance; }
 	};
-
 }
