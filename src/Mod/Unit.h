@@ -501,8 +501,9 @@ private:
 	int _intelligence, _aggression, _spotter, _sniper, _energyRecovery;
 	int _pickUpWeaponsMoreActively;
 	int _berserkChance;
-	int _healthAccuracyReduction = 25;
-	int _woundAccuracyReduction = 10;
+	int _healthAccuracyReduction{25};
+	int _woundAccuracyReduction{10};
+	int _moraleGainOnPanic{15};
 	Sint8 _avoidsFire;
 	bool _livingWeapon;
 	bool _capturable;
@@ -635,7 +636,8 @@ public:
 	int getHealthAccuracyReduction() const { return _healthAccuracyReduction; }
 	/// Gets the amount of accuracy loss for having wounds.
 	int getWoundAccuracyReduction() const { return _woundAccuracyReduction; }
-
+	/// Gets the amount of morale to gain back on panic/beserk.
+	int getMoraleGainOnPanic() const { return _moraleGainOnPanic; }
 
 	/// Name of class used in script.
 	static constexpr const char *ScriptName = "RuleUnit";

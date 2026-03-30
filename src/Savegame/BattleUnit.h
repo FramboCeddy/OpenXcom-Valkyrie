@@ -892,6 +892,8 @@ public:
 	ArmorMoveCost getMoveCostBaseClimb() const { return _moveCostBaseClimb; }
 	/// Multiplier of normal move cost.
 	ArmorMoveCost getMoveCostBaseNormal() const { return _moveCostBaseNormal; }
+	/// Gets the amount of morale to gain back on panic/berserk
+	int getMoraleGainOnPanic() const;
 };
 
 } //namespace OpenXcom

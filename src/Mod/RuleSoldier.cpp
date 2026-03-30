@@ -131,6 +131,7 @@ void RuleSoldier::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScri
 	_healthAccuracyReduction = std::max(_healthAccuracyReduction, 0); // positive values only
 	reader.tryRead("woundAccuracyReduction", _woundAccuracyReduction);
 	_woundAccuracyReduction = std::max(_woundAccuracyReduction, 0); // positive values only
+	reader.tryRead("moraleGainOnPanic", _moraleGainOnPanic);
 
 	mod->loadSoundOffset(_type, _deathSoundMale, reader["deathMale"], "BATTLE.CAT");
 	mod->loadSoundOffset(_type, _deathSoundFemale, reader["deathFemale"], "BATTLE.CAT");

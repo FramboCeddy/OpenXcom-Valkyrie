@@ -140,7 +140,7 @@ void UnitPanicBState::think()
 		}
 		// reset the unit's time units when all panicking is done
 		_unit->clearTimeUnits();
-		_unit->moraleChange(+15);
+		_unit->moraleChange(_unit->getMoraleGainOnPanic());
 	}
 	_parent->popState();
 	_parent->setupCursor();

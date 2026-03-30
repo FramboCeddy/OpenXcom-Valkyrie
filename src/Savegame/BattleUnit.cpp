@@ -5785,6 +5785,11 @@ void BattleUnit::disableIndicators()
 	_disableIndicators = true;
 }
 
+int BattleUnit::getMoraleGainOnPanic() const
+{
+	return getGeoscapeSoldier() ? getGeoscapeSoldier()->getRules()->getMoraleGainOnPanic() : getUnitRules()->getMoraleGainOnPanic();
+}
+
 
 ////////////////////////////////////////////////////////////
 //					Script binding

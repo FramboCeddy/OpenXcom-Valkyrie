@@ -75,7 +75,6 @@ private:
 	const Armor* _armor;
 	std::string _specWeaponName;
 	const RuleItem* _specWeapon;
-	int _monthlyBuyLimit;
 	std::string _monthlyBuyLimitMessage;
 	int _costBuy, _costSalary, _costSalarySquaddie, _costSalarySergeant, _costSalaryCaptain, _costSalaryColonel, _costSalaryCommander;
 	int _standHeight, _kneelHeight, _floatHeight;
@@ -90,6 +89,7 @@ private:
 	std::vector<int> _annoyedSoundMale, _annoyedSoundFemale;
 	std::vector<SoldierNamePool*> _names;
 	int _totalSoldierNamePoolWeight;
+	int _monthlyBuyLimit;
 	std::string _armorForAvatar;
 	int _avatarOffsetX, _avatarOffsetY, _flagOffset;
 	bool _allowPromotion, _allowPiloting, _showTypeInInventory;
@@ -100,8 +100,9 @@ private:
 	std::vector<std::string> _skillNames;
 	std::vector<const RuleSkill*> _skills;
 	ScriptValues<RuleSoldier> _scriptValues;
-	int _healthAccuracyReduction = 25;
-	int _woundAccuracyReduction = 10;
+	int _healthAccuracyReduction{25};
+	int _woundAccuracyReduction{10};
+	int _moraleGainOnPanic{15};
 
 	void addSoldierNamePool(const std::string &namFile);
 public:
@@ -237,6 +238,8 @@ public:
 	int getHealthAccuracyReduction() const { return _healthAccuracyReduction; }
 	/// Gets the amount of accuracy loss for having wounds.
 	int getWoundAccuracyReduction() const { return _woundAccuracyReduction; }
+	/// Gets the amount of morale to gain back on panic/beserk.
+	int getMoraleGainOnPanic() const { return _moraleGainOnPanic; }
 };
 
 }

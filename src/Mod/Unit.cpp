@@ -116,6 +116,7 @@ void Unit::load(const YAML::YamlNodeReader& node, Mod *mod)
 	_healthAccuracyReduction = std::max(_healthAccuracyReduction, 0); // positive values only
 	reader.tryRead("woundAccuracyReduction", _woundAccuracyReduction);
 	_woundAccuracyReduction = std::max(_woundAccuracyReduction, 0); // positive values only
+	reader.tryRead("moraleGainOnPanic", _moraleGainOnPanic);
 
 
 	if (reader["builtInWeapons"])
