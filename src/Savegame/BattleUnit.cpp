@@ -1423,10 +1423,7 @@ bool BattleUnit::isFloating() const
  */
 void BattleUnit::aim(bool aiming)
 {
-	if (aiming)
-		_status = STATUS_AIMING;
-	else
-		_status = STATUS_STANDING;
+	_status = aiming ? STATUS_AIMING : STATUS_STANDING;
 }
 
 /**
@@ -1444,11 +1441,12 @@ void BattleUnit::aim(bool aiming)
  */
 int BattleUnit::directionTo(Position point) const
 {
-	double ox = point.x - _pos.x;
-	double oy = point.y - _pos.y;
+	// Aim from center of unit to center of point (ugly magic number 0.5)
+	double ox = point.x + 0.5 - (_pos.x + 0.5 * getArmor()->getSize());
+	double oy = point.y + 0.5 - (_pos.y + 0.5 * getArmor()->getSize());
 	if (ox == 0 && oy == 0)
 	{
-		return _direction; // Don't turn for tiles above/below
+		return getTurretType() == -1 ? _direction : _directionTurret; // Don't turn for tiles above/below
 	}
 	double angle = std::atan2(ox, -oy);
 	// divide the pie in 4 angles each at 1/8th before each quarter
