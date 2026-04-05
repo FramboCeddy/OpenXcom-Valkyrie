@@ -70,26 +70,26 @@ struct BattleActionCost : RuleItemUseCost
 
 struct BattleAction : BattleActionCost
 {
-	Position target;
 	std::list<Position> waypoints;
-	bool targeting;
-	int value;
 	std::string result;
+	int value;
+	int diff;
+	int autoShotCounter;
+	int finalFacing;
+	int number; // first action of turn, second, etc.?
+	int terrainMeleeTilePart = 0; // terrain melee
+	BattleActionOrigin relativeOrigin = BattleActionOrigin::CENTRE; // preferred origin voxel (centre, left or right)
+	Position target;
+	Position cameraPosition;
+	bool targeting;
 	bool strafe = false;
 	bool run = false;
 	bool sneak = false;
 	bool ignoreSpottedEnemies = false;
 	bool kneel = false;
-	int diff;
-	int autoShotCounter;
-	Position cameraPosition;
 	bool desperate; // ignoring newly-spotted units
-	int finalFacing;
 	bool finalAction;
-	int number; // first action of turn, second, etc.?
 	bool sprayTargeting; // Used to separate waypoint checks between confirm firing mode and the "spray" autoshot
-	BattleActionOrigin relativeOrigin = BattleActionOrigin::CENTRE; // preferred origin voxel (centre, left or right)
-	int terrainMeleeTilePart = 0; // terrain melee
 
 	/// Default constructor
 	BattleAction() : target(-1, -1, -1), targeting(false), value(0), diff(0), autoShotCounter(0), cameraPosition(0, 0, -1), desperate(false), finalFacing(-1), finalAction(false), number(0), sprayTargeting(false) { }

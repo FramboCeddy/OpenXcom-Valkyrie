@@ -105,13 +105,13 @@ Projectile::~Projectile()
  * @return The objectnumber(0-3) or unit(4) or out of map (5) or -1 (no line of fire).
  */
 
-int Projectile::calculateTrajectory(double accuracy)
+VoxelType Projectile::calculateTrajectory(double accuracy)
 {
 	Position originVoxel = _save->getTileEngine()->getOriginVoxel(_action, _save->getTile(_origin));
 	return calculateTrajectory(accuracy, originVoxel);
 }
 
-int Projectile::calculateTrajectory(double accuracy, const Position& originVoxel, bool excludeUnit)
+VoxelType Projectile::calculateTrajectory(double accuracy, const Position& originVoxel, bool excludeUnit)
 {
 	Tile *targetTile = _save->getTile(_action.target);
 	BattleUnit *bu = _action.actor;
@@ -205,7 +205,7 @@ int Projectile::calculateTrajectory(double accuracy, const Position& originVoxel
  * @param accuracy The unit's accuracy.
  * @return True when a trajectory is possible.
  */
-int Projectile::calculateThrow(double accuracy)
+VoxelType Projectile::calculateThrow(double accuracy)
 {
 	Tile *targetTile = _save->getTile(_action.target);
 
@@ -267,7 +267,7 @@ int Projectile::calculateThrow(double accuracy)
 
 	_distance = 0.0f;
 	double curvature;
-	int test = V_OUTOFBOUNDS;
+	VoxelType test = V_OUTOFBOUNDS;
 	for (const auto& pos : targets)
 	{
 		targetVoxel = pos;
@@ -276,7 +276,10 @@ int Projectile::calculateThrow(double accuracy)
 			break;
 		}
 	}
-	if (!forced && test == V_OUTOFBOUNDS) return test; //no line of fire
+	if (!forced && test == V_OUTOFBOUNDS)
+	{
+		return test; // no line of fire
+	}
 
 	test = V_OUTOFBOUNDS;
 	int tries = 0;
@@ -300,7 +303,10 @@ int Projectile::calculateThrow(double accuracy)
 
 
 		test = _save->getTileEngine()->calculateParabolaVoxel(originVoxel, targetVoxel, true, &_trajectory, _action.actor, curvature, deltas);
-		if (forced) return O_OBJECT; //fake hit
+		if (forced)
+		{
+			return V_OBJECT; // fake hit
+		}
 		Position endPoint = getPositionFromEnd(_trajectory, ItemDropVoxelOffset).toTile();
 		Tile *endTile = _save->getTile(endPoint);
 		// check if the item would land on a tile with a blocking object
@@ -509,10 +515,7 @@ Position Projectile::getPosition(int offset) const
  */
 int Projectile::getParticle(int i) const
 {
-	if (_bulletSprite != Mod::NO_SURFACE)
-		return _bulletSprite + i;
-	else
-		return Mod::NO_SURFACE;
+	return _bulletSprite == Mod::NO_SURFACE ? Mod::NO_SURFACE : _bulletSprite + i;
 }
 
 /**
@@ -522,10 +525,7 @@ int Projectile::getParticle(int i) const
  */
 BattleItem *Projectile::getItem() const
 {
-	if (_action.type == BA_THROW)
-		return _action.weapon;
-	else
-		return 0;
+	return _action.type == BA_THROW ? _action.weapon : 0;
 }
 
 /**
@@ -533,7 +533,10 @@ BattleItem *Projectile::getItem() const
  */
 void Projectile::skipTrajectory()
 {
-	while (move());
+	while (move())
+	{
+		; // Do nothing
+	}
 }
 
 /**

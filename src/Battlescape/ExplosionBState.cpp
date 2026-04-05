@@ -29,8 +29,13 @@
 #include "../Savegame/Tile.h"
 #include "../Mod/Mod.h"
 #include "../Mod/RuleItem.h"
-#include "../Mod/Armor.h"
 #include "../Engine/RNG.h"
+#include <algorithm>
+#include "BattlescapeGame.h"
+#include "BattleState.h"
+#include "Position.h"
+#include "../Mod/RuleDamageType.h"
+#include "../Mod/Unit.h"
 
 namespace OpenXcom
 {

@@ -46,8 +46,19 @@
 #include "../Ufopaedia/Ufopaedia.h"
 #include <unordered_map>
 #include "../Engine/Screen.h"
-#include "../Engine/CrossPlatform.h"
 #include "TileEngine.h"
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+#include <SDL_stdinc.h>
+#include <SDL_video.h>
+#include "BattlescapeGame.h"
+#include "../Engine/InteractiveSurface.h"
+#include "../Engine/State.h"
+#include "../Engine/Surface.h"
+#include "../Engine/Unicode.h"
+#include "../Mod/Unit.h"
 
 namespace OpenXcom
 {
@@ -279,18 +290,13 @@ void Inventory::drawGridLabels(bool showTuCost)
 		// Draw label
 		text.setX(i->getX());
 		text.setY(i->getY() - text.getFont()->getHeight() - text.getFont()->getSpacing());
-		if (showTuCost && _selItem != 0 && _selItem->getSlot() != i)
+		std::ostringstream ss;
+		ss << _game->getLanguage()->getString(i->getId()).arg(1 + _groundOffset / _groundSlotsX).arg(1 + _xMax / _groundSlotsX);
+		if (showTuCost && _selItem && _selItem->getSlot() != i)
 		{
-			std::ostringstream ss;
-			ss << _game->getLanguage()->getString(i->getId()).arg(1 + _groundOffset / _groundSlotsX).arg(1 + _xMax / _groundSlotsX);
-			ss << ":";
-			ss << _selItem->getMoveToCost(i);
-			text.setText(ss.str().c_str());
+			ss << ":" << _selItem->getMoveToCost(i);
 		}
-		else
-		{
-			text.setText(_game->getLanguage()->getString(i->getId()).arg(1 + _groundOffset / _groundSlotsX).arg(1 + _xMax / _groundSlotsX));
-		}
+		text.setText(ss.str().c_str());
 		text.blit(_gridLabels->getSurface());
 	}
 }

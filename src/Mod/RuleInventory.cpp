@@ -246,8 +246,12 @@ bool RuleInventory::fitItemInSlot(const RuleItem *item, int x, int y) const
 int RuleInventory::getCost(const RuleInventory* slot) const
 {
 	if (slot == this)
+	{
 		return 0;
-	return _costs.find(slot->getId())->second;
+	}
+	auto move = _costs.find(slot->getId());
+	// There's no move const defined from this invSlot to the other invSlot
+	return move != _costs.end() ? move->second : 0;
 }
 
 int RuleInventory::getListOrder() const

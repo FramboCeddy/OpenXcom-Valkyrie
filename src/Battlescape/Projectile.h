@@ -29,7 +29,7 @@ class SavedBattleGame;
 class Surface;
 class Tile;
 class Mod;
-
+enum VoxelType : int;
 /**
  * A class that represents a projectile. Map is the owner of an instance of this class during its short life.
  * It calculates its own trajectory and then moves along this pre-calculated trajectory in voxel space.
@@ -66,10 +66,10 @@ public:
 	/// Cleans up the Projectile.
 	~Projectile();
 	/// Calculates the trajectory for a straight path.
-	int calculateTrajectory(double accuracy);
-	int calculateTrajectory(double accuracy, const Position& originVoxel, bool excludeUnit = true);
+	VoxelType calculateTrajectory(double accuracy);
+	VoxelType calculateTrajectory(double accuracy, const Position& originVoxel, bool excludeUnit = true);
 	/// Calculates the trajectory for a curved path.
-	int calculateThrow(double accuracy);
+	VoxelType calculateThrow(double accuracy);
 	/// Moves the projectile one step in its trajectory.
 	bool move();
 	/// Gets the current position in voxel space.

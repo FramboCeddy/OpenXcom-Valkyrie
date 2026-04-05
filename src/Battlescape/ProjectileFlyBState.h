@@ -17,9 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <unordered_set>
 #include "BattleState.h"
 #include "Position.h"
+#include "BattlescapeGame.h"
 
 namespace OpenXcom
 {
@@ -28,7 +28,7 @@ class BattlescapeGame;
 class BattleUnit;
 class BattleItem;
 class Tile;
-
+enum VoxelType : int;
 /**
  * A projectile state.
  */
@@ -37,12 +37,13 @@ class ProjectileFlyBState : public BattleState
 private:
 	BattleUnit *_unit;
 	BattleItem *_ammo;
-	Position _origin, _targetVoxel, _originVoxel;
-	int _projectileImpact;
+	VoxelType _projectileImpact;
 	int _range;
+	Position _origin, _targetVoxel, _originVoxel;
+	bool _initialized, _targetFloor;
+
 	/// Tries to create a projectile sprite.
 	bool createNewProjectile();
-	bool _initialized, _targetFloor;
 
 public:
 	/// Creates a new ProjectileFly class

@@ -760,7 +760,7 @@ public:
 	/// Get the flag for "floor above me".
 	bool getFloorAbove() const;
 	/// Get any utility weapon we may be carrying, or a built in one.
-	BattleItem *getUtilityWeapon(BattleType type);
+	BattleItem *getUtilityWeapon(BattleType type) const;
 	/// Set fire damage from environment.
 	void setEnviFire(int damage);
 	/// Set smoke damage from environment.
@@ -836,7 +836,7 @@ public:
 	/// Artificially alter a unit's XP (used for shotguns).
 	void nerfXP();
 	/// Was this unit just hit?
-	bool getHitState();
+	bool getHitState() const;
 	/// reset the unit hit state.
 	void resetHitState();
 	/// Was this unit melee attacked by a given attacker this turn (both hit and miss count)?

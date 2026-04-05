@@ -4095,7 +4095,7 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 		const auto& expStat = _exp.*statPtr;
 		const auto& statCap = caps.*statPtr;
 
-		if (!expStat || currentStat >= statCap) // no exp or already at statCap
+		if (expStat == 0 || currentStat >= statCap) // no exp or already at statCap
 		{
 			continue;
 		}
@@ -5271,7 +5271,7 @@ bool BattleUnit::getFloorAbove() const
  * Get the name of any utility weapon we may be carrying, or a built in one.
  * @return the name .
  */
-BattleItem *BattleUnit::getUtilityWeapon(BattleType type)
+BattleItem *BattleUnit::getUtilityWeapon(BattleType type) const
 {
 	BattleItem *melee = getRightHandWeapon();
 	if (melee && melee->getRules()->getBattleType() == type)
@@ -5682,7 +5682,7 @@ void BattleUnit::nerfXP()
 /**
  * Was this unit just hit?
  */
-bool BattleUnit::getHitState()
+bool BattleUnit::getHitState() const
 {
 	return _hitByAnything;
 }

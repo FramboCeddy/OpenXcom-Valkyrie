@@ -4438,11 +4438,14 @@ VoxelType TileEngine::calculateLineVoxel(Position origin, Position target, bool 
  * @param delta Is the deviation of the angles it should take into account, 0,0,0 is perfection.
  * @return The objectnumber(0-3) or unit(4) or out of map (5) or -1(hit nothing).
  */
-int TileEngine::calculateParabolaVoxel(Position origin, Position target, bool storeTrajectory, std::vector<Position> *trajectory, BattleUnit *excludeUnit, double curvature, const Position delta)
+VoxelType TileEngine::calculateParabolaVoxel(Position origin, Position target, bool storeTrajectory, std::vector<Position> *trajectory, BattleUnit *excludeUnit, double curvature, const Position delta)
 {
-	if (target == origin) return V_EMPTY;//just in case
+	if (target == origin)
+	{
+		return V_EMPTY; // just in case
+	}
 
-	int result = V_EMPTY;
+	VoxelType result = V_EMPTY;
 	Position lastPosition = origin;
 	Position nextPosition = lastPosition;
 
@@ -5689,7 +5692,7 @@ int TileEngine::faceWindow(Position position)
  * @param voxelType The type of voxel at which this parabola terminates.
  * @return Validity of action.
  */
-bool TileEngine::validateThrow(BattleAction &action, Position originVoxel, Position targetVoxel, int depth, double *curve, int *voxelType, bool forced)
+bool TileEngine::validateThrow(BattleAction &action, Position originVoxel, Position targetVoxel, int depth, double *curve, VoxelType *voxelType, bool forced)
 {
 	bool foundCurve = false;
 	double curvature = 0.5;
@@ -5727,7 +5730,7 @@ bool TileEngine::validateThrow(BattleAction &action, Position originVoxel, Posit
 	// thows should be around 10 tiles far, make one allocation that fit 99% cases with some margin
 	trajectory.resize(16*20);
 	// we try 8 different curvatures to try and reach our goal.
-	int test = V_OUTOFBOUNDS;
+	VoxelType test = V_OUTOFBOUNDS;
 	while (!foundCurve && curvature < 5.0)
 	{
 		trajectory.clear();

@@ -52,8 +52,6 @@ protected:
 	static Game *_game;
 	std::vector<Surface*> _surfaces;
 	std::vector<Surface*> _surfacesOwned;
-	bool _screen;
-	bool _soundPlayed;
 	InteractiveSurface *_modal;
 	RuleInterface *_ruleInterface;
 	RuleInterface *_ruleInterfaceParent;
@@ -61,6 +59,8 @@ protected:
 
 	SDL_Color _palette[256];
 	Uint8 _cursorColor;
+	bool _screen;
+	bool _soundPlayed;
 public:
 	/// Creates a new state linked to a game.
 	State();
