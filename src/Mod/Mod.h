@@ -186,7 +186,6 @@ private:
 	std::map<std::string, Armor*> _armors;
 	std::map<std::string, ArticleDefinition*> _ufopaediaArticles;
 	std::map<std::string, RuleInventory*> _invs;
-	bool _inventoryOverlapsPaperdoll;
 	std::map<std::string, RuleResearch *> _research;
 	std::map<std::string, RuleManufacture *> _manufacture;
 	std::map<std::string, RuleManufactureShortcut *> _manufactureShortcut;
@@ -217,6 +216,17 @@ private:
 	RuleConverter *_converter;
 	ModScriptGlobal *_scriptGlobal;
 
+	std::string _manaUnlockResearch;
+	std::string _loseMoney, _loseRating, _loseDefeat;
+
+	double _performanceBonusFactor;
+
+	AIAttackWeight _aiTargetWeightThreatThreshold = AIAttackWeight{ 50 };
+	AIAttackWeight _aiTargetWeightAsHostile = AIAttackWeight{ 100 };
+	AIAttackWeight _aiTargetWeightAsHostileCivilians = AIAttackWeight{ 50 };
+	AIAttackWeight _aiTargetWeightAsFriendly = AIAttackWeight{ -200 };
+	AIAttackWeight _aiTargetWeightAsNeutral = AIAttackWeight{ -100 };
+
 	int _maxViewDistance, _maxDarknessToSeeUnits;
 	int _maxStaticLightDistance, _maxDynamicLightDistance, _enhancedLighting;
 	int _costHireEngineer, _costHireScientist;
@@ -224,59 +234,36 @@ private:
 
 	int _aiUseDelayBlaster, _aiUseDelayFirearm, _aiUseDelayGrenade, _aiUseDelayProxy, _aiUseDelayMelee, _aiUseDelayPsionic, _aiUseDelayMedikit;
 	int _aiFireChoiceIntelCoeff, _aiFireChoiceAggroCoeff;
-	bool _aiExtendedFireModeChoice, _aiRespectMaxRange, _aiDestroyBaseFacilities;
-	bool _aiPickUpWeaponsMoreActively, _aiPickUpWeaponsMoreActivelyCiv;
 	int _aiReactionFireThreshold, _aiReactionFireThresholdCiv;
-	AIAttackWeight _aiTargetWeightThreatThreshold = AIAttackWeight{ 50 };
-	AIAttackWeight _aiTargetWeightAsHostile = AIAttackWeight{ 100 };
-	AIAttackWeight _aiTargetWeightAsHostileCivilians = AIAttackWeight{ 50 };
-	AIAttackWeight _aiTargetWeightAsFriendly = AIAttackWeight{ -200 };
-	AIAttackWeight _aiTargetWeightAsNeutral = AIAttackWeight{ -100 };
-
 	int _maxLookVariant, _tooMuchSmokeThreshold, _customTrainingFactor;
 	int _chanceToStopRetaliation;
 	int _chanceToDetectAlienBaseEachMonth;
-	bool _lessAliensDuringBaseDefense;
-	bool _allowCountriesToCancelAlienPact, _buildInfiltrationBaseCloseToTheCountry, _infiltrateRandomCountryInTheRegion;
-	bool _allowAlienBasesOnWrongTextures;
+
 	int _kneelBonusGlobal, _oneHandedPenaltyGlobal;
 	int _enableCloseQuartersCombat, _closeQuartersAccuracyGlobal, _closeQuartersTuCostGlobal, _closeQuartersEnergyCostGlobal, _closeQuartersSneakUpGlobal;
 	int _noLOSAccuracyPenaltyGlobal;
 	int _explodeInventoryGlobal;
 	int _surrenderMode;
 	int _bughuntMinTurn, _bughuntMaxEnemies, _bughuntRank, _bughuntLowMorale, _bughuntTimeUnitsLeft;
-
 	int _manaMissingWoundThreshold = 200;
 	int _healthMissingWoundThreshold = 100;
-	bool _manaEnabled, _manaBattleUI, _manaTrainingPrimary, _manaTrainingSecondary, _manaReplenishAfterMission;
-	bool _healthReplenishAfterMission = true;
-	std::string _manaUnlockResearch;
 
-	std::string _loseMoney, _loseRating, _loseDefeat;
 	int _ufoGlancingHitThreshold, _ufoBeamWidthParameter;
 	int _ufoTractorBeamSizeModifiers[5];
 	int _escortRange, _drawEnemyRadarCircles;
-	bool _escortsJoinFightAgainstHK, _hunterKillerFastRetarget;
 	int _crewEmergencyEvacuationSurvivalChance, _pilotsEmergencyEvacuationSurvivalChance;
-	bool _showUfoPreviewInBaseDefense;
 	std::array<int, (size_t)(RANK_COMMANDER + 1)> _soldiersPerRank;
 	int _pilotAccuracyZeroPoint, _pilotAccuracyRange, _pilotReactionsZeroPoint, _pilotReactionsRange;
 	int _pilotBraveryThresholds[3];
-	double _performanceBonusFactor;
-	bool _enableNewResearchSorting;
+
 	int _displayCustomCategories;
-	bool _shareAmmoCategories, _showDogfightDistanceInKm, _showFullNameInAlienInventory;
 	int _alienInventoryOffsetX, _alienInventoryOffsetBigUnit;
-	bool _hidePediaInfoButton;
 	int _extraNerdyPediaInfoType;
-	bool _extraNerdyPediaInfoPercent;
-	bool _giveScoreAlsoForResearchedArtifacts, _statisticalBulletConservation, _stunningImprovesMorale;
 	int _tuRecoveryWakeUpNewTurn;
 	int _shortRadarRange;
 	int _buildTimeReductionScaling;
 	int _defeatScore, _defeatFunds;
-	bool _countriesIgnoreCouncilPoints;
-	bool _difficultyDemigod;
+
 	std::pair<std::string, int> _alienFuel;
 	RuleResearch* _finalResearch = nullptr;
 	std::string _fontName, _psiUnlockResearch, _fakeUnderwaterBaseUnlockResearch, _newBaseUnlockResearch;
@@ -290,17 +277,15 @@ private:
 	GameTime _startingTime;
 	int _startingDifficulty;
 	int _baseDefenseMapFromLocation;
+	int _pediaReplaceCraftFuelWithRangeType;
 	std::map<int, std::string> _missionRatings, _monthlyRatings;
 	std::map<std::string, std::string> _fixedUserOptions, _recommendedUserOptions;
 	std::vector<std::string> _hiddenMovementBackgrounds;
 	std::vector<std::string> _baseNamesFirst, _baseNamesMiddle, _baseNamesLast;
 	std::vector<std::string> _operationNamesFirst, _operationNamesLast;
-	bool _disableUnderwaterSounds;
-	bool _enableUnitResponseSounds;
 	std::map<std::string, std::vector<int> > _selectUnitSound, _startMovingSound, _selectWeaponSound, _annoyedSound;
 	std::vector<int> _selectBaseSound, _startDogfightSound;
 	std::vector<int> _flagByKills;
-	int _pediaReplaceCraftFuelWithRangeType;
 	std::vector<StatAdjustment> _statAdjustment;
 
 	// overrides for DIFFICULTY_COEFFICIENT[]
@@ -318,8 +303,6 @@ private:
 	std::vector<std::string> _alienMissionsIndex, _terrainIndex, _customPalettesIndex, _arcScriptIndex, _eventScriptIndex, _eventIndex, _missionScriptIndex, _adhocScriptIndex;
 	std::vector<std::vector<int> > _alienItemLevels;
 	std::vector<std::array<SDL_Color, TransparenciesOpacityLevels>> _transparencies;
-	int _facilityListOrder, _craftListOrder, _itemCategoryListOrder, _itemListOrder, _armorListOrder, _alienRaceListOrder, _researchListOrder,  _manufactureListOrder;
-	int _soldierBonusListOrder, _transformationListOrder, _ufopaediaListOrder, _invListOrder, _soldierListOrder;
 	std::vector<ModData> _modData;
 	ModData* _modCurrent;
 	const SDL_Color *_statePalette;
@@ -343,6 +326,29 @@ private:
 	size_t _surfaceOffsetBasebits = 0;
 	size_t _soundOffsetBattle = 0;
 	size_t _soundOffsetGeo = 0;
+
+	int _facilityListOrder, _craftListOrder, _itemCategoryListOrder, _itemListOrder, _armorListOrder, _alienRaceListOrder, _researchListOrder, _manufactureListOrder;
+	int _soldierBonusListOrder, _transformationListOrder, _ufopaediaListOrder, _invListOrder, _soldierListOrder;
+
+	bool _inventoryOverlapsPaperdoll;
+	bool _aiExtendedFireModeChoice, _aiRespectMaxRange, _aiDestroyBaseFacilities;
+	bool _aiPickUpWeaponsMoreActively, _aiPickUpWeaponsMoreActivelyCiv;
+	bool _lessAliensDuringBaseDefense;
+	bool _allowCountriesToCancelAlienPact, _buildInfiltrationBaseCloseToTheCountry, _infiltrateRandomCountryInTheRegion;
+	bool _allowAlienBasesOnWrongTextures;
+	bool _manaEnabled, _manaBattleUI, _manaTrainingPrimary, _manaTrainingSecondary, _manaReplenishAfterMission;
+	bool _healthReplenishAfterMission = true;
+	bool _escortsJoinFightAgainstHK, _hunterKillerFastRetarget;
+	bool _showUfoPreviewInBaseDefense;
+	bool _enableNewResearchSorting;
+	bool _shareAmmoCategories, _showDogfightDistanceInKm, _showFullNameInAlienInventory;
+	bool _hidePediaInfoButton;
+	bool _extraNerdyPediaInfoPercent;
+	bool _giveScoreAlsoForResearchedArtifacts, _statisticalBulletConservation, _stunningImprovesMorale;
+	bool _countriesIgnoreCouncilPoints;
+	bool _difficultyDemigod;
+	bool _disableUnderwaterSounds;
+	bool _enableUnitResponseSounds;
 
 	/// Loads a ruleset from a YAML file that have basic resources configuration.
 	void loadResourceConfigFile(const FileMap::FileRecord &filerec);
@@ -436,6 +442,7 @@ public:
 	static int SMOKE_RANGE[2];
 	static int RESEARCH_RANGE;
 	static int BASE_DETECTION_CHANCE[2];
+	static int PANIC_THRESHOLDS[2];
 
 	static std::string DEBRIEF_MUSIC_GOOD;
 	static std::string DEBRIEF_MUSIC_BAD;

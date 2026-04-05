@@ -2757,35 +2757,39 @@ void BattleUnit::prepareMorale(int morale)
 	if (!isOut())
 	{
 		moraleChange(morale);
-		int chance = 100 - (2 * getMorale());
-		if (RNG::percent(chance))
+		int chance = 0;
+		if (Mod::PANIC_THRESHOLDS[1] != Mod::PANIC_THRESHOLDS[0])
 		{
-			int berserkChance = _unitRules ? _unitRules->getBerserkChance() : -1; // -1 represents true 1/3 (33.33333...%)
-			bool berserk = false;
-			if (berserkChance == -1)
-			{
-				berserk = (RNG::generate(0, 2) == 0); // vanilla OG
-			}
-			else
-			{
-				berserk = RNG::percent(berserkChance);
-			}
-			_status = (berserk ? STATUS_BERSERK : STATUS_PANICKING); // 33% chance of berserk, panic can mean freeze or flee, but that is determined later
-			_wantsToSurrender = true;
+			// lerp chance to panic
+			int inverseChance = 100 * (getMorale() - Mod::PANIC_THRESHOLDS[0]) / (Mod::PANIC_THRESHOLDS[1] - Mod::PANIC_THRESHOLDS[0]);
+			chance = std::clamp(100 - inverseChance, 0, 100);
 		}
 		else
 		{
-			// successfully avoided panic
-			// increase bravery experience counter
-			if (chance > 1)
-				addBraveryExp();
+			// if both thresholds are equal, having that exact morale will be 50/50
+			chance = getMorale() == Mod::PANIC_THRESHOLDS[0] ? 50 :
+					 getMorale() > Mod::PANIC_THRESHOLDS[0] ? 0 : 100;
+		}
+
+		if (chance > 0 && (chance >= 100 || RNG::percent(chance)))
+		{
+			int berserkChance = _unitRules ? _unitRules->getBerserkChance() : -1; // -1 represents true 1/3 (33.33333...%)
+			bool berserk = (berserkChance == -1) ? (RNG::generate(0, 2) == 0) : RNG::percent(berserkChance);
+			_status = berserk ? STATUS_BERSERK : STATUS_PANICKING; // 33% chance of berserk, panic can mean freeze or flee, but that is determined later
+			_wantsToSurrender = true;
+		}
+		else if (chance > 0) // successfully avoided panic
+		{
+			addBraveryExp();
 		}
 	}
 	else
 	{
 		// knocked out units are willing to surrender if they wake up
 		if (_status == STATUS_UNCONSCIOUS)
+		{
 			_wantsToSurrender = true;
+		}
 	}
 }
 /**
@@ -2910,13 +2914,11 @@ void BattleUnit::updateUnitStats(bool tuAndEnergy, bool rest)
  */
 void BattleUnit::moraleChange(int change)
 {
-	if (!isFearable()) return;
-
-	_morale += change;
-	if (_morale > 100)
-		_morale = 100;
-	if (_morale < 0)
-		_morale = 0;
+	if (!isFearable())
+	{
+		return;
+	}
+	_morale = std::clamp(_morale + change, 0, 100);
 }
 
 /**

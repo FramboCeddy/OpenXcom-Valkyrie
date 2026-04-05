@@ -19,7 +19,6 @@
 #include "Mod.h"
 #include "ModScript.h"
 #include <algorithm>
-#include <functional>
 #include <sstream>
 #include <climits>
 #include <cassert>
@@ -91,7 +90,6 @@
 #include "../Savegame/Base.h"
 #include "../Savegame/Country.h"
 #include "../Savegame/Soldier.h"
-#include "../Savegame/BattleUnit.h"
 #include "../Savegame/Craft.h"
 #include "../Savegame/CraftWeapon.h"
 #include "../Savegame/ItemContainer.h"
@@ -109,8 +107,6 @@
 #include "RuleConverter.h"
 #include "RuleSoldierTransformation.h"
 #include "RuleSoldierBonus.h"
-
-#define ARRAYLEN(x) (std::size(x))
 
 namespace OpenXcom
 {
@@ -184,6 +180,7 @@ int Mod::FIRE_DAMAGE_RANGE[2];
 int Mod::SMOKE_RANGE[2];
 int Mod::RESEARCH_RANGE;
 int Mod::BASE_DETECTION_CHANCE[2] = {15, 21};
+int Mod::PANIC_THRESHOLDS[2] = {0, 50};
 std::string Mod::DEBRIEF_MUSIC_GOOD;
 std::string Mod::DEBRIEF_MUSIC_BAD;
 int Mod::DIFFICULTY_COEFFICIENT[5];
@@ -260,6 +257,8 @@ void Mod::resetGlobalStatics()
 	RESEARCH_RANGE = 50;
 	BASE_DETECTION_CHANCE[0] = 15;
 	BASE_DETECTION_CHANCE[1] = 21;
+	PANIC_THRESHOLDS[0] = 0;
+	PANIC_THRESHOLDS[1] = 50;
 	DEBRIEF_MUSIC_GOOD = "GMMARS";
 	DEBRIEF_MUSIC_BAD = "GMMARS";
 
@@ -2705,23 +2704,39 @@ void Mod::loadConstants(const YAML::YamlNodeReader &reader)
 	reader.tryRead("explosiveDamageRange", EXPLOSIVE_DAMAGE_RANGE);
 	if (const auto& arrayReader = reader["fireDamageRange"])
 	{
-		for (size_t j = 0; j < std::size(FIRE_DAMAGE_RANGE); j++)
+		for (size_t j = 0; j < std::size(FIRE_DAMAGE_RANGE); ++j)
 		{
 			arrayReader[j].tryReadVal(FIRE_DAMAGE_RANGE[j]);
 		}
 	}
 	if (const auto& arrayReader = reader["smokeRange"])
 	{
-		for (size_t j = 0; j < std::size(SMOKE_RANGE); j++)
+		for (size_t j = 0; j < std::size(SMOKE_RANGE); ++j)
 		{
 			arrayReader[j].tryReadVal(SMOKE_RANGE[j]);
 			SMOKE_RANGE[j] = std::clamp(SMOKE_RANGE[j], 1, 15); // capped between 1 and 15 density
 		}
-		// force the max value to be at least as big as min value
-		SMOKE_RANGE[1] = std::max(SMOKE_RANGE[0], SMOKE_RANGE[1]); 
+		// Swap values if they are in descending order
+		if (SMOKE_RANGE[0] > SMOKE_RANGE[1])
+		{
+			std::swap(SMOKE_RANGE[0], SMOKE_RANGE[1]);
+		}
 	}
 	reader.tryRead("researchRange", RESEARCH_RANGE);
 	RESEARCH_RANGE = std::clamp(RESEARCH_RANGE, 0, 100); // Force research range in [0, 100]
+
+	if (const auto& arrayReader = reader["panicThresholds"])
+	{
+		for (size_t j = 0; j < std::size(PANIC_THRESHOLDS); ++j)
+		{
+			arrayReader[j].tryReadVal(PANIC_THRESHOLDS[j]);
+		}
+		// Swap values if they are in descending order
+		if (PANIC_THRESHOLDS[0] > PANIC_THRESHOLDS[1])
+		{
+			std::swap(PANIC_THRESHOLDS[0], PANIC_THRESHOLDS[1]);
+		}
+	}
 
 	reader.tryRead("goodDebriefingMusic", DEBRIEF_MUSIC_GOOD);
 	reader.tryRead("badDebriefingMusic", DEBRIEF_MUSIC_BAD);
@@ -5456,7 +5471,7 @@ void Mod::loadVanillaResources()
 
 	// Load palettes
 	const char *pal[] = { "PAL_GEOSCAPE", "PAL_BASESCAPE", "PAL_GRAPHS", "PAL_UFOPAEDIA", "PAL_BATTLEPEDIA" };
-	for (size_t i = 0; i < ARRAYLEN(pal); ++i)
+	for (size_t i = 0; i < std::size(pal); ++i)
 	{
 		std::string s = "GEODATA/PALETTES.DAT";
 		_palettes[pal[i]] = new Palette();
@@ -5493,7 +5508,7 @@ void Mod::loadVanillaResources()
 		{ 8, 12, 16, 255 },
 		{ 3, 4, 8, 255 },
 		{ 3, 3, 6, 255 } };
-		for (size_t i = 0; i < ARRAYLEN(gradient); ++i)
+		for (size_t i = 0; i < std::size(gradient); ++i)
 		{
 			SDL_Color *color = _palettes[s2]->getColors(Palette::backPos + 16 + i);
 			*color = gradient[i];
@@ -5541,7 +5556,7 @@ void Mod::loadVanillaResources()
 		"INTICON.PCK",
 		"TEXTURE.DAT" };
 
-	for (size_t i = 0; i < ARRAYLEN(sets); ++i)
+	for (size_t i = 0; i < std::size(sets); ++i)
 	{
 		std::ostringstream s;
 		s << "GEOGRAPH/" << sets[i];
@@ -5594,10 +5609,10 @@ void Mod::loadVanillaResources()
 				cats[0] = catsDos;
 
 			Options::currentSound = SOUND_AUTO;
-			for (size_t i = 0; i < ARRAYLEN(catsId); ++i)
+			for (size_t i = 0; i < std::size(catsId); ++i)
 			{
 				SoundSet *sound = _sounds[catsId[i]];
-				for (size_t j = 0; j < ARRAYLEN(cats); ++j)
+				for (size_t j = 0; j < std::size(cats); ++j)
 				{
 					bool wav = true;
 					if (cats[j] == 0)
@@ -5683,7 +5698,7 @@ void Mod::loadVanillaResources()
 			"CustomItemPreviews",
 		};
 
-		for (size_t i = 0; i < ARRAYLEN(surfaceNames); ++i)
+		for (size_t i = 0; i < std::size(surfaceNames); ++i)
 		{
 			SurfaceSet* s = _sets[surfaceNames[i]];
 			if (s)
@@ -5730,7 +5745,7 @@ void Mod::loadVanillaResources()
 			"GEO.CAT",
 		};
 
-		for (size_t i = 0; i < ARRAYLEN(soundNames); ++i)
+		for (size_t i = 0; i < std::size(soundNames); ++i)
 		{
 			SoundSet* s = _sounds[soundNames[i]];
 			s->setMaxSharedSounds((int)s->getTotalSounds());
@@ -5802,7 +5817,7 @@ void Mod::loadBattlescapeResources()
 
 	std::string scrs[] = { "TAC00.SCR" };
 
-	for (size_t i = 0; i < ARRAYLEN(scrs); ++i)
+	for (size_t i = 0; i < std::size(scrs); ++i)
 	{
 		_surfaces[scrs[i]] = new Surface(320, 200);
 		_surfaces[scrs[i]]->loadScr("UFOGRAPH/" + scrs[i]);
@@ -5824,7 +5839,7 @@ void Mod::loadBattlescapeResources()
 	{ 2, 0, 24, 255 } };
 
 	const auto& ufographContents = FileMap::getVFolderContents("UFOGRAPH");
-	for (size_t i = 0; i < ARRAYLEN(lbms); ++i)
+	for (size_t i = 0; i < std::size(lbms); ++i)
 	{
 		if (ufographContents.find(lbms[i]) == ufographContents.end())
 		{
@@ -5854,7 +5869,7 @@ void Mod::loadBattlescapeResources()
 		"SCANBORD.PCK",
 		"UNIBORD.PCK" };
 
-	for (size_t i = 0; i < ARRAYLEN(spks); ++i)
+	for (size_t i = 0; i < std::size(spks); ++i)
 	{
 		std::string fname = spks[i];
 		std::transform(fname.begin(), fname.end(), fname.begin(), tolower);
@@ -6080,7 +6095,7 @@ void Mod::loadExtraResources()
 		for (auto& pair : _musicDefs)
 		{
 			Music *music = 0;
-			for (size_t j = 0; j < ARRAYLEN(priority) && music == 0; ++j)
+			for (size_t j = 0; j < std::size(priority) && music == 0; ++j)
 			{
 				music = loadMusic(priority[j], pair.second, adlibcat, aintrocat, gmcat);
 			}
