@@ -29,9 +29,10 @@
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/BattleItem.h"
 #include "../Engine/Exception.h"
-#include "../Mod/Mod.h"
 #include "../Mod/RuleItem.h"
-#include "../fmath.h"
+#include "BattleState.h"
+#include "Position.h"
+#include "../Mod/Unit.h"
 
 namespace OpenXcom
 {
@@ -56,7 +57,10 @@ MeleeAttackBState::~MeleeAttackBState()
  */
 void MeleeAttackBState::init()
 {
-	if (_initialized) return;
+	if (_initialized)
+	{
+		return;
+	}
 	_initialized = true;
 
 	int terrainMeleeTilePart = _action.terrainMeleeTilePart;
@@ -144,7 +148,8 @@ void MeleeAttackBState::init()
 	}
 
 	int height = _target->getFloatHeight() + (_target->getHeight() / 2) - _parent->getSave()->getTile(_action.target)->getTerrainLevel();
-	_voxel = _action.target.toVoxel() + Position(8, 8, height);
+	int sizeOffset = _target->getArmor()->getSize() * 8;
+	_voxel = _action.target.toVoxel() + Position(sizeOffset, sizeOffset, height);
 
 	if (!_parent->getSave()->getTile(_voxel.toTile()))
 	{
@@ -227,10 +232,21 @@ void MeleeAttackBState::performMeleeAttack(int terrainMeleeTilePart)
 	_parent->getMap()->setCursorType(CT_NONE);
 
 	// offset the damage voxel ever so slightly so that the target knows which side the attack came from
-	Position difference = _unit->getPosition() - _action.target;
-	// large units may cause it to offset too much, so we'll clamp the values.
-	difference.x = Clamp<Sint16>(difference.x, -1, 1);
-	difference.y = Clamp<Sint16>(difference.y, -1, 1);
+	Position difference = _unit->getPositionVexels() - _target->getPositionVexels();
+	// we need to reduce the voxel offset because this damagePosition also gets used for LoF voxelcheck
+	// so it must be a low enough difference to not miss on small LoFs
+	if (_unit->isBigUnit() && _target->isBigUnit())
+	{
+		// This causes the 4 corners to count as a 'diagonal' attack
+		difference.x = difference.x / 32;
+		difference.y = difference.y / 32;
+	}
+	else
+	{
+		// For 2x2 vs 1x1 unit, The 4 corners will be 'diagonal' attacks
+		difference.x = difference.x / 16;
+		difference.y = difference.y / 16;
+	}
 
 	Position damagePosition = _voxel + difference;
 
