@@ -21,7 +21,6 @@
 #include <sstream>
 #include <algorithm>
 #include "../Engine/Collections.h"
-#include "../Engine/Surface.h"
 #include "../Engine/Script.h"
 #include "../Engine/ScriptBind.h"
 #include "../Engine/Language.h"
@@ -1587,24 +1586,36 @@ int BattleUnit::damage(Position relative, int damage, const RuleDamageType *type
 			const int abs_x = abs(relative.x);
 			const int abs_y = abs(relative.y);
 			if (abs_y > abs_x * 2)
+			{
 				relativeDirection = 8 + 4 * (relative.y > 0);
+			}
 			else if (abs_x > abs_y * 2)
+			{
 				relativeDirection = 10 + 4 * (relative.x < 0);
+			}
 			else
 			{
 				if (relative.x < 0)
 				{
 					if (relative.y > 0)
+					{
 						relativeDirection = 13;
+					}
 					else
+					{
 						relativeDirection = 15;
+					}
 				}
 				else
 				{
 					if (relative.y > 0)
+					{
 						relativeDirection = 11;
+					}
 					else
+					{
 						relativeDirection = 9;
+					}
 				}
 			}
 

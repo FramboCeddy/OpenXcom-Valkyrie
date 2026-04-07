@@ -22,8 +22,9 @@
 #include "../Engine/Surface.h"
 #include "../Battlescape/Position.h"
 #include "../Mod/MapData.h"
-
-#include <SDL_types.h> // for Uint8
+#include <SDL_stdinc.h> // for Uint8
+#include "../Engine/Yaml.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {

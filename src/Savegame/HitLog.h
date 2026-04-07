@@ -20,7 +20,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include "BattleUnit.h"
+#include "../Mod/Unit.h"
 
 namespace OpenXcom
 {

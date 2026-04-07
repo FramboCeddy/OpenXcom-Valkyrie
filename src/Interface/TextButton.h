@@ -39,9 +39,9 @@ class TextButton : public InteractiveSurface
 {
 private:
 	Uint8 _color;
+	bool _contrast, _geoscapeButton;
 	Text *_text;
 	TextButton **_group;
-	bool _contrast, _geoscapeButton;
 	ComboBox *_comboBox;
 	// for use by RuleInterface
 	void setSecondaryColor(Uint8 color)  override { setTextColor(color); }

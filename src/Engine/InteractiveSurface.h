@@ -21,6 +21,8 @@
 #include <map>
 #include "Surface.h"
 #include "State.h"
+#include <string>
+#include "Action.h"
 
 namespace OpenXcom
 {
@@ -39,14 +41,14 @@ class InteractiveSurface : public Surface
 private:
 	static const int NUM_BUTTONS = 7;
 	static const SDLKey SDLK_ANY;
-	Uint8 _buttonsPressed;
 	std::string _tooltip;
+	Uint8 _buttonsPressed;
 
 protected:
+	bool _isHovered, _isFocused, _listButton, _tftdMode;
 	std::map<Uint8, ActionHandler> _click, _press, _release;
 	ActionHandler _in, _over, _out;
 	std::map<SDLKey, ActionHandler> _keyPress, _keyRelease;
-	bool _isHovered, _isFocused, _listButton, _tftdMode;
 
 	/// Is this mouse button pressed?
 	bool isButtonPressed(Uint8 button = 0) const;

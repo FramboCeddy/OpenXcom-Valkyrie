@@ -27,6 +27,7 @@ class Window;
 class Text;
 class BattlescapeState;
 class SavedBattleGame;
+class Action;
 
 /**
  * A screen with links to the OXCE battlescape functionality.

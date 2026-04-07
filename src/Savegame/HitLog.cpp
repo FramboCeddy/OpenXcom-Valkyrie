@@ -19,6 +19,8 @@
 #include "HitLog.h"
 #include "../Engine/Language.h"
 #include <regex>
+#include <string>
+#include "../Mod/Unit.h"
 
 namespace OpenXcom
 {
