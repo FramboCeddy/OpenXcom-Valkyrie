@@ -173,8 +173,8 @@ std::vector<int> &Country::getActivityAlien()
  */
 void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int averageFunding, const SavedGame* save)
 {
-	const int good = (xcomTotal / 10) + _activityXcom.back();
-	const int bad = (alienTotal / 20) + _activityAlien.back();
+	const int good = (xcomTotal / Mod::REGION_ACTIVITY_DIVIDER_XCOM) + _activityXcom.back();
+	const int bad = (alienTotal / Mod::REGION_ACTIVITY_DIVIDER_ALIEN) + _activityAlien.back();
 	const int funding = _funding.back(); // TODO: have funding always be stored in thousands? or remove the concept of funding being in thousands at all?
 	const int oldFunding = funding / 1000;
 

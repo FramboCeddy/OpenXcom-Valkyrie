@@ -202,6 +202,8 @@ int Mod::EXTENDED_UNDERWATER_THROW_FACTOR;
 bool Mod::EXTENDED_EXPERIENCE_AWARD_SYSTEM;
 bool Mod::EXTENDED_FORCE_SPAWN;
 int Mod::EXTENDED_SMOKE_OFFSET;
+int Mod::REGION_ACTIVITY_DIVIDER_ALIEN = 20;
+int Mod::REGION_ACTIVITY_DIVIDER_XCOM = 10;
 
 extern std::string OXCE_CURRENCY_SYMBOL;
 
@@ -328,6 +330,9 @@ void Mod::resetGlobalStatics()
 	EXTENDED_SMOKE_OFFSET = 0;
 
 	OXCE_CURRENCY_SYMBOL = "$";
+
+	REGION_ACTIVITY_DIVIDER_ALIEN = 20;
+	REGION_ACTIVITY_DIVIDER_XCOM = 10;
 }
 
 /**
@@ -3625,9 +3630,17 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 		{
 			arrayReader[j].tryReadVal(BASE_DETECTION_CHANCE[j]);
 		}
-		// force the max value to be at least as big as min value
-		BASE_DETECTION_CHANCE[1] = std::max(BASE_DETECTION_CHANCE[0], BASE_DETECTION_CHANCE[1]);
+		// swap the lower value into the first index
+		if (BASE_DETECTION_CHANCE[0] > BASE_DETECTION_CHANCE[1])
+		{
+			std::swap(BASE_DETECTION_CHANCE[0], BASE_DETECTION_CHANCE[1]);
+		}
 	}
+	// Only allow a divider of 1 (= equal weight to country activity)
+	reader.tryRead("RegionActivityDividerAlien", REGION_ACTIVITY_DIVIDER_ALIEN);
+	REGION_ACTIVITY_DIVIDER_ALIEN = std::max(1, REGION_ACTIVITY_DIVIDER_ALIEN);
+	reader.tryRead("RegionActivityDividerXcom", REGION_ACTIVITY_DIVIDER_XCOM);
+	REGION_ACTIVITY_DIVIDER_XCOM = std::max(1, REGION_ACTIVITY_DIVIDER_XCOM);
 }
 
 /**
