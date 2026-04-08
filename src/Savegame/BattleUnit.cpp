@@ -4101,6 +4101,10 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 	statsOld.statGrowth = (*stats);
 	statsDiff.statGrowth = -(*stats); // subtract old stat
 	const UnitStats caps = soldier->getRules()->getStatCaps();
+	int manaLossOriginal = _stats.mana - _mana;
+	int healthLossOriginal = _stats.health - _health;
+	int manaLoss = mod->getReplenishManaAfterMission() ? 0 : manaLossOriginal;
+	int healthLoss = mod->getReplenishHealthAfterMission() ? 0 : healthLossOriginal;
 
 	for (auto& statPtr : stats->primaryStats)
 	{
@@ -4123,7 +4127,7 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 		}
 		else if (&currentStat == &stats->mana)
 		{
-			// Only if it's a secondary stat
+			// Only if it's a primary stat
 			if (mod->isManaTrainingPrimary())
 			{
 				currentStat += improveStat(expStat);
@@ -4184,11 +4188,6 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 	}
 
 	statsDiff.statGrowth += *stats; // add new stat
-
-	int manaLossOriginal = _stats.mana - _mana;
-	int healthLossOriginal = _stats.health - _health;
-	int manaLoss = mod->getReplenishManaAfterMission() ? 0 : manaLossOriginal;
-	int healthLoss = mod->getReplenishHealthAfterMission() ? 0 : healthLossOriginal;
 
 	int recovery = _armor->getInstantWoundRecovery() ? 0 : (int)RNG::generate((healthLossOriginal * 0.5), (healthLossOriginal * 1.5));
 
