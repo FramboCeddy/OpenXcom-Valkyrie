@@ -4112,18 +4112,28 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 		{
 			continue;
 		}
-		if (&currentStat == &stats->bravery && expStat > RNG::generate(0, 10))
+
+		if (&currentStat == &stats->bravery)
 		{
-			currentStat += 10; // special bravery handle
+			// special bravery handle
+			if (expStat > RNG::generate(0, 10))
+			{
+				currentStat += 10;
+			}
 		}
-		else if (mod->isManaTrainingPrimary() && &currentStat == &stats->mana)
+		else if (&currentStat == &stats->mana)
 		{
-			currentStat += improveStat(expStat);
+			// Only if it's a secondary stat
+			if (mod->isManaTrainingPrimary())
+			{
+				currentStat += improveStat(expStat);
+			}
 		}
 		else
 		{
 			currentStat += improveStat(expStat);
 		}
+
 		if (Options::forceStatCaps)
 		{
 			currentStat = std::min(currentStat, statCap);
@@ -4147,19 +4157,25 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
 			{
 				continue;
 			}
-			if (&(stats->*statPtr) == &stats->stamina)
+
+			if (&currentStat == &stats->stamina)
 			{
-				// stamina has special treatment
+				// Stamina has special treatment
 				currentStat += RNG::generate(0, (statCap - currentStat) / 15 + 2);
 			}
-			else if (mod->isManaTrainingSecondary() && &(stats->*statPtr) == &stats->mana)
+			else if (&currentStat == &stats->mana)
 			{
-				currentStat += RNG::generate(0, (statCap - currentStat) / 10 + 2);
+				// Only if it's a secondary stat
+				if (mod->isManaTrainingSecondary())
+				{
+					currentStat += RNG::generate(0, (statCap - currentStat) / 10 + 2);
+				}
 			}
 			else
 			{
 				currentStat += RNG::generate(0, (statCap - currentStat) / 10 + 2);
 			}
+
 			if (Options::forceStatCaps)
 			{
 				currentStat = std::min(currentStat, statCap);
