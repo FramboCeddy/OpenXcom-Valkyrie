@@ -981,6 +981,7 @@ void Map::drawTerrain(Surface *surface)
 				}
 
 				// Draw walls
+				if (_camera->getShowWallsAndObjects())
 				{
 					// Draw west wall
 					tmpSurface = tile->getSprite(O_WESTWALL);
@@ -1005,44 +1006,45 @@ void Map::drawTerrain(Surface *surface)
 						Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y - tile->getYOffset(O_OBJECT),
 										 tile->getObstacle(O_OBJECT) ? obstacleShade : tileShade, false, _nvColor);
 					}
-					// draw an item on top of the floor (if any)
-					BattleItem* item = tile->getTopItem();
-					if (item)
+				}
+
+				// draw an item on top of the floor (if any)
+				BattleItem* item = tile->getTopItem();
+				if (item)
+				{
+					itemSprite.draw(item, screenPosition.x, screenPosition.y + tile->getTerrainLevel(), tileShade);
+					if (_anyIndicator)
 					{
-						itemSprite.draw(item, screenPosition.x, screenPosition.y + tile->getTerrainLevel(), tileShade);
-						if (_anyIndicator)
+						BattleUnit* itemUnit = item->getUnit();
+						if (itemUnit && itemUnit->getStatus() == STATUS_UNCONSCIOUS && itemUnit->indicatorsAreEnabled())
 						{
-							BattleUnit* itemUnit = item->getUnit();
-							if (itemUnit && itemUnit->getStatus() == STATUS_UNCONSCIOUS && itemUnit->indicatorsAreEnabled())
+							if (_burnIndicator && itemUnit->getFire() > 0)
 							{
-								if (_burnIndicator && itemUnit->getFire() > 0)
-								{
-									_burnIndicator->blitNShade(surface,
-															   screenPosition.x,
-															   screenPosition.y + tile->getTerrainLevel(),
-															   tileShade);
-								}
-								else if (_woundIndicator && itemUnit->getFatalWounds() > 0)
-								{
-									_woundIndicator->blitNShade(surface,
-																screenPosition.x,
-																screenPosition.y + tile->getTerrainLevel(),
-																tileShade);
-								}
-								else if (_shockIndicator && itemUnit->hasNegativeHealthRegen())
-								{
-									_shockIndicator->blitNShade(surface,
-																screenPosition.x,
-																screenPosition.y + tile->getTerrainLevel(),
-																tileShade);
-								}
-								else if (_stunIndicator)
-								{
-									_stunIndicator->blitNShade(surface,
-															   screenPosition.x,
-															   screenPosition.y + tile->getTerrainLevel(),
-															   tileShade);
-								}
+								_burnIndicator->blitNShade(surface,
+															screenPosition.x,
+															screenPosition.y + tile->getTerrainLevel(),
+															tileShade);
+							}
+							else if (_woundIndicator && itemUnit->getFatalWounds() > 0)
+							{
+								_woundIndicator->blitNShade(surface,
+															screenPosition.x,
+															screenPosition.y + tile->getTerrainLevel(),
+															tileShade);
+							}
+							else if (_shockIndicator && itemUnit->hasNegativeHealthRegen())
+							{
+								_shockIndicator->blitNShade(surface,
+															screenPosition.x,
+															screenPosition.y + tile->getTerrainLevel(),
+															tileShade);
+							}
+							else if (_stunIndicator)
+							{
+								_stunIndicator->blitNShade(surface,
+															screenPosition.x,
+															screenPosition.y + tile->getTerrainLevel(),
+															tileShade);
 							}
 						}
 					}
@@ -1220,12 +1222,15 @@ void Map::drawTerrain(Surface *surface)
 					}
 				}
 
-				// Draw object
-				tmpSurface = tile->getSprite(O_OBJECT);
-				if (tmpSurface && !tile->isBackTileObject(O_OBJECT))
+				if (_camera->getShowWallsAndObjects())
 				{
-					Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y - tile->getYOffset(O_OBJECT),
-									 tile->getObstacle(O_OBJECT) ? obstacleShade : tileShade, false, _nvColor);
+					// Draw object
+					tmpSurface = tile->getSprite(O_OBJECT);
+					if (tmpSurface && !tile->isBackTileObject(O_OBJECT))
+					{
+						Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y - tile->getYOffset(O_OBJECT),
+										 tile->getObstacle(O_OBJECT) ? obstacleShade : tileShade, false, _nvColor);
+					}
 				}
 
 				// Draw cursor front

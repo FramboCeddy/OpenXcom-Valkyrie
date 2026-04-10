@@ -33,18 +33,20 @@ class Map;
 class Camera
 {
 private:
+	Map *_map;
 	Timer *_scrollMouseTimer, *_scrollKeyTimer;
 	int _spriteWidth, _spriteHeight;
 	int _mapsize_x, _mapsize_y, _mapsize_z;
 	int _screenWidth, _screenHeight;
-	Position _mapOffset, _center;
 	int _scrollMouseX, _scrollMouseY, _scrollKeyX, _scrollKeyY;
-	bool _scrollTrigger;
 	int _visibleMapHeight;
+	Position _mapOffset, _center;
+	bool _scrollTrigger;
 	bool _showAllLayers;
 	bool _showSingleLayer;
-	Map *_map;
-public:
+	bool _showWallsAndObjects = true;
+
+  public:
 	static const int SCROLL_BORDER = 5;
 	static const int SCROLL_DIAGONAL_EDGE = 60;
 	/// Creates a new camera.
@@ -105,6 +107,10 @@ public:
 	void toggleShowSingleLayer() { _showSingleLayer = !_showSingleLayer; }
 	/// Checks if the camera is showing a single map layer.
 	bool getShowSingleLayer() const { return _showSingleLayer; }
+	/// Toggles showing walls and objects
+	void toggleShowWallsAndObjects() { _showWallsAndObjects = !_showWallsAndObjects; }
+	/// Checks if the camera is showing walls and objects
+	bool getShowWallsAndObjects() const { return _showWallsAndObjects; }
 	/// Checks if map coordinates X,Y,Z are on screen.
 	bool isOnScreen(Position mapPos, const bool unitWalking, const int unitSize, const bool boundary) const;
 	/// Resize the viewable area.

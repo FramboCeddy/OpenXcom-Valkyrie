@@ -2762,9 +2762,26 @@ inline void BattlescapeState::handle(Action *action)
 					_map->getCamera()->toggleShowSingleLayer();
 
 					if (_map->getCamera()->getShowSingleLayer())
+					{
 						warningLongRaw(tr("STR_SINGLE_MAP_LAYER_ACTIVATED"));
+					}
 					else
+					{
 						warning("STR_SINGLE_MAP_LAYER_DEACTIVATED");
+					}
+				}
+				// "ctrl-y" - toggle wall/object visibility
+				else if (key == SDLK_y && ctrlPressed)
+				{
+					_map->getCamera()->toggleShowWallsAndObjects();
+					if (!_map->getCamera()->getShowWallsAndObjects())
+					{
+						warningLongRaw(tr("STR_INVISIBLE_WALLS_ACTIVATED"));
+					}
+					else
+					{
+						warning("STR_INVISIBLE_WALLS_DEACTIVATED");
+					}
 				}
 				// "ctrl-f" - show fatal wounds
 				else if (key == SDLK_f && ctrlPressed)

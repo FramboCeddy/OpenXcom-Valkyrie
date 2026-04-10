@@ -20,7 +20,8 @@ en-GB:
   STR_FORCE_STAT_CAPS: "Force Stat Caps"
   STR_FORCE_STAT_CAPS_DESC: "Forces the experience gained from a mission to not overlevel a soldier's stats."
 
-
+  STR_INVISIBLE_WALLS_ACTIVATED: "Walls and objects made invisible. {NEWLINE}Ctrl+x to disable."
+  STR_INVISIBLE_WALLS_DEACTIVATED: "Walls and objects made visible."
 
   # Stats For Nerds values:
   gravPower: "Grav shield power"
