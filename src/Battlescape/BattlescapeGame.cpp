@@ -2208,13 +2208,17 @@ void BattlescapeGame::spawnNewUnit(BattleItem *item)
 void BattlescapeGame::spawnNewUnit(BattleActionAttack attack, Position position)
 {
 	if (!attack.damage_item) // no idea how this happened, but make sure we have an item
+	{
 		return;
+	}
 
 	const RuleItem *item = attack.damage_item->getRules();
 	const Unit *type = item->getSpawnUnit();
 
 	if (!type)
+	{
 		return;
+	}
 
 	int chance = item->getSpawnUnitChance();
 	if (auto* conf = attack.weapon_item ? attack.weapon_item->getActionConf(attack.type) : nullptr)
@@ -2229,10 +2233,10 @@ void BattlescapeGame::spawnNewUnit(BattleActionAttack attack, Position position)
 
 
 	BattleUnit* owner = attack.attacker;
-	if (owner == nullptr)
+	if (!owner)
 	{
 		owner = attack.damage_item->getOwner();
-		if (owner == nullptr)
+		if (!owner)
 		{
 			owner = attack.damage_item->getPreviousOwner();
 		}
@@ -2298,8 +2302,18 @@ void BattlescapeGame::spawnNewUnit(BattleActionAttack attack, Position position)
 		}
 
 		// Pick the item sets if the unit has builtInWeaponSets
-		size_t itemLevel = (size_t)(getMod()->getAlienItemLevels().at(_save->getAlienItemLevel()).at(RNG::generate(0,9)));
+		auto& itemLevels = getMod()->getAlienItemLevels().at(_save->getAlienItemLevel());
+		int itemLevelSize = std::max(0, (int)itemLevels.size() - 1);
+		int itemLevel = itemLevels.at(RNG::generate(0, itemLevelSize));
 
+		size_t diff = (size_t)_parentState->getGame()->getSavedGame()->getDifficulty();
+		size_t arrayLen = std::size(Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY);
+		if (arrayLen > diff)
+		{
+			// reduce which month's item level we pick
+			itemLevel -= Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY[diff];
+			itemLevel = std::max(0, std::min(itemLevel, (int)_parentState->getGame()->getMod()->getAlienItemLevels().size() - 1));
+		}
 		// Initialize the unit and its position
 		newUnit->setTile(_save->getTile(position), _save);
 		newUnit->setPosition(position);

@@ -187,6 +187,7 @@ int Mod::DIFFICULTY_COEFFICIENT[5];
 int Mod::SELL_PRICE_COEFFICIENT[5];
 int Mod::BUY_PRICE_COEFFICIENT[5];
 int Mod::DIFFICULTY_BASED_RETAL_DELAY[5];
+int Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY[5] = {0, 0, 0, 0, 0};
 int Mod::UNIT_RESPONSE_SOUNDS_FREQUENCY[4];
 int Mod::PEDIA_FACILITY_RENDER_PARAMETERS[4];
 bool Mod::EXTENDED_ITEM_RELOAD_COST;
@@ -304,6 +305,11 @@ void Mod::resetGlobalStatics()
 	DIFFICULTY_BASED_RETAL_DELAY[2] = 0;
 	DIFFICULTY_BASED_RETAL_DELAY[3] = 0;
 	DIFFICULTY_BASED_RETAL_DELAY[4] = 0;
+
+	for (auto& index : DIFFICULTY_BASED_ITEM_LEVEL_DELAY)
+	{
+		index = 0;
+	}
 
 	UNIT_RESPONSE_SOUNDS_FREQUENCY[0] = 100; // select unit
 	UNIT_RESPONSE_SOUNDS_FREQUENCY[1] = 100; // start moving
@@ -3430,6 +3436,13 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 		for (size_t j = 0; j < std::size(DIFFICULTY_BASED_RETAL_DELAY); j++)
 			arrayReader[j].tryReadVal(DIFFICULTY_BASED_RETAL_DELAY[j]);
 	}
+	if (const auto& arrayReader = reader["difficultyBasedItemLevelDelay"])
+	{
+		for (size_t j = 0; j < std::size(DIFFICULTY_BASED_ITEM_LEVEL_DELAY); j++)
+		{
+			arrayReader[j].tryReadVal(DIFFICULTY_BASED_ITEM_LEVEL_DELAY[j]);
+		}
+	}
 	if (const auto& arrayReader = reader["unitResponseSoundsFrequency"])
 	{
 		for (size_t j = 0; j < std::size(UNIT_RESPONSE_SOUNDS_FREQUENCY); j++)
@@ -3636,10 +3649,10 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 			std::swap(BASE_DETECTION_CHANCE[0], BASE_DETECTION_CHANCE[1]);
 		}
 	}
-	// Only allow a divider of 1 (= equal weight to country activity)
-	reader.tryRead("RegionActivityDividerAlien", REGION_ACTIVITY_DIVIDER_ALIEN);
+	// minimum divider of 1 (= equal weight to country activity)
+	reader.tryRead("regionActivityDividerAlien", REGION_ACTIVITY_DIVIDER_ALIEN);
 	REGION_ACTIVITY_DIVIDER_ALIEN = std::max(1, REGION_ACTIVITY_DIVIDER_ALIEN);
-	reader.tryRead("RegionActivityDividerXcom", REGION_ACTIVITY_DIVIDER_XCOM);
+	reader.tryRead("regionActivityDividerXcom", REGION_ACTIVITY_DIVIDER_XCOM);
 	REGION_ACTIVITY_DIVIDER_XCOM = std::max(1, REGION_ACTIVITY_DIVIDER_XCOM);
 }
 

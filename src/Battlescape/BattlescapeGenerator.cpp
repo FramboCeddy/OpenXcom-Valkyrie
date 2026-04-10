@@ -825,19 +825,19 @@ void BattlescapeGenerator::run()
 	}
 
 	{
-		int month;
+		int month = _alienItemLevel;
 		if (_game->getSavedGame()->getMonthsPassed() != -1)
 		{
-			month =
-			((size_t) _game->getSavedGame()->getMonthsPassed()) > _game->getMod()->getAlienItemLevels().size() - 1 ?  // if
-			_game->getMod()->getAlienItemLevels().size() - 1 : // then
-			_game->getSavedGame()->getMonthsPassed() ;  // else
+			month = std::min(_game->getSavedGame()->getMonthsPassed(), (int)_game->getMod()->getAlienItemLevels().size() - 1);
 		}
-		else
+		size_t diff = (size_t)_game->getSavedGame()->getDifficulty();
+		size_t arrayLen = std::size(Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY);
+		if (arrayLen > diff)
 		{
-			month = _alienItemLevel;
+			// reduce which month's item level we pick
+			month -= Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY[diff];
+			month = std::max(0, std::min(month, (int)_game->getMod()->getAlienItemLevels().size() - 1));
 		}
-
 		_save->setAlienItemLevel(month);
 	}
 
