@@ -981,7 +981,7 @@ void Map::drawTerrain(Surface *surface)
 				}
 
 				// Draw walls
-				if (_camera->getShowWallsAndObjects())
+				if (_camera->getShowWallsAndObjects() < 1)
 				{
 					// Draw west wall
 					tmpSurface = tile->getSprite(O_WESTWALL);
@@ -999,6 +999,9 @@ void Map::drawTerrain(Surface *surface)
 						Surface::blitRaw(surface, tmpSurface, screenPosition.x, screenPosition.y - tile->getYOffset(O_NORTHWALL),
 										 tile->getObstacle(O_NORTHWALL) ? obstacleShade : wallShade, bool(tile->getSprite(O_WESTWALL)), _nvColor);
 					}
+				}
+				if (_camera->getShowWallsAndObjects() < 2)
+				{
 					// Draw object
 					tmpSurface = tile->getSprite(O_OBJECT);
 					if (tmpSurface && tile->isBackTileObject(O_OBJECT))
@@ -1222,7 +1225,7 @@ void Map::drawTerrain(Surface *surface)
 					}
 				}
 
-				if (_camera->getShowWallsAndObjects())
+				if (_camera->getShowWallsAndObjects() < 2)
 				{
 					// Draw object
 					tmpSurface = tile->getSprite(O_OBJECT);

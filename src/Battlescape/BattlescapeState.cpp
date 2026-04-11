@@ -2638,7 +2638,9 @@ void BattlescapeState::warningLongRaw(const std::string &message)
 std::string BattlescapeState::getMeleeDamagePreview(BattleUnit *actor, BattleItem *weapon) const
 {
 	if (!weapon)
+	{
 		return "";
+	}
 
 	bool discovered = false;
 	if (_game->getSavedGame()->getMonthsPassed() == -1)
@@ -2671,13 +2673,11 @@ std::string BattlescapeState::getMeleeDamagePreview(BattleUnit *actor, BattleIte
 			dmgType = weapon->getRules()->getMeleeType();
 		}
 
-		ss << tr(weapon->getRules()->getType());
-		ss << "\n";
-		ss << dmgType->getRandomDamage(totalDamage, 1);
-		ss << "-";
-		ss << dmgType->getRandomDamage(totalDamage, 2);
+		ss << tr(weapon->getRules()->getType()) << "\n" << dmgType->getRandomDamage(totalDamage, 1) << "<>" << dmgType->getRandomDamage(totalDamage, 2);
 		if (dmgType->RandomType == DRT_UFO_WITH_TWO_DICE)
+		{
 			ss << "*";
+		}
 	}
 	else
 	{
@@ -2774,13 +2774,13 @@ inline void BattlescapeState::handle(Action *action)
 				else if (key == SDLK_y && ctrlPressed)
 				{
 					_map->getCamera()->toggleShowWallsAndObjects();
-					if (!_map->getCamera()->getShowWallsAndObjects())
+					if (_map->getCamera()->getShowWallsAndObjects() == 0)
 					{
-						warningLongRaw(tr("STR_INVISIBLE_WALLS_ACTIVATED"));
+						warning("STR_INVISIBLE_WALLS_DEACTIVATED");
 					}
 					else
 					{
-						warning("STR_INVISIBLE_WALLS_DEACTIVATED");
+						warningLongRaw(tr("STR_INVISIBLE_WALLS_ACTIVATED"));
 					}
 				}
 				// "ctrl-f" - show fatal wounds

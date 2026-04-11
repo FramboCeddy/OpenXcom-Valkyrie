@@ -44,7 +44,7 @@ private:
 	bool _scrollTrigger;
 	bool _showAllLayers;
 	bool _showSingleLayer;
-	bool _showWallsAndObjects = true;
+	int _showWallsAndObjects = 0;
 
   public:
 	static const int SCROLL_BORDER = 5;
@@ -108,9 +108,9 @@ private:
 	/// Checks if the camera is showing a single map layer.
 	bool getShowSingleLayer() const { return _showSingleLayer; }
 	/// Toggles showing walls and objects
-	void toggleShowWallsAndObjects() { _showWallsAndObjects = !_showWallsAndObjects; }
+	void toggleShowWallsAndObjects() { _showWallsAndObjects = (++_showWallsAndObjects) % 3; }
 	/// Checks if the camera is showing walls and objects
-	bool getShowWallsAndObjects() const { return _showWallsAndObjects; }
+	int getShowWallsAndObjects() const { return _showWallsAndObjects; }
 	/// Checks if map coordinates X,Y,Z are on screen.
 	bool isOnScreen(Position mapPos, const bool unitWalking, const int unitSize, const bool boundary) const;
 	/// Resize the viewable area.
