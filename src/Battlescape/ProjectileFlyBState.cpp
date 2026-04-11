@@ -734,96 +734,103 @@ void ProjectileFlyBState::think()
 				_action.weapon->spendAmmoForAction(_action.type, _parent->getSave());
 			}
 
-			if (_projectileImpact != V_OUTOFBOUNDS) // FIXME: This is causing shotguns to not shoot any additional pellets if the initial impact was out of map, but the spread of the shotgun pellets could still hit something
+			bool firstHit = false;
+			bool shotgun = _ammo && _ammo->getRules()->getShotgunPellets() > 0 && _ammo->getRules()->getDamageType()->isDirect();
+			int offset = 0;
+			// explosions impact not inside the voxel but two steps back (projectiles generally move 2 voxels at a time)
+			if (_ammo && _ammo->getRules()->getExplosionRadius(attack) != 0 && _projectileImpact != V_UNIT)
 			{
-				bool shotgun = _ammo && _ammo->getRules()->getShotgunPellets() > 0 && _ammo->getRules()->getDamageType()->isDirect();
-				int offset = 0;
-				// explosions impact not inside the voxel but two steps back (projectiles generally move 2 voxels at a time)
-				if (_ammo && _ammo->getRules()->getExplosionRadius(attack) != 0 && _projectileImpact != V_UNIT)
-				{
-					offset = -2;
-				}
+				offset = -2;
+			}
+			if (_projectileImpact != V_OUTOFBOUNDS)
+			{
+				firstHit = true;
 				_parent->statePushFront(new ExplosionBState(
 					_parent, _parent->getMap()->getProjectile()->getLastPositions(offset),
 					attack, 0,
 					noMoreShotsToShoot(),
 					shotgun ? 0 : _range + _parent->getMap()->getProjectile()->getDistance()));
+			}
 
-				if (_projectileImpact == V_UNIT)
+			if (_projectileImpact == V_UNIT)
+			{
+				projectileHitUnit(_parent->getMap()->getProjectile()->getPosition(offset));
+			}
+
+			// remember unit's original XP values, used for nerfing below
+			_unit->rememberXP();
+
+			// special shotgun behaviour: trace extra projectile paths, and add bullet hits at their termination points.
+			if (shotgun)
+			{
+				int behaviorType = _ammo->getRules()->getShotgunBehaviorType();
+				int spread = _ammo->getRules()->getShotgunSpread();
+				int choke = _action.weapon->getRules()->getShotgunChoke();
+				Position firstPelletImpact = _parent->getMap()->getProjectile()->getPosition(-2);
+				Position originalTarget = _targetVoxel;
+
+				// Use impact location to determine spread (instead of originally targeted voxel)
+				if (firstPelletImpact != _parent->getSave()->getTileEngine()->getOriginVoxel(_action, _parent->getSave()->getTile(_origin)))
 				{
-					projectileHitUnit(_parent->getMap()->getProjectile()->getPosition(offset));
+					_targetVoxel = firstPelletImpact;
 				}
-
-				// remember unit's original XP values, used for nerfing below
-				_unit->rememberXP();
-
-				// special shotgun behaviour: trace extra projectile paths, and add bullet hits at their termination points.
-				if (shotgun)
+				else
 				{
-					int behaviorType = _ammo->getRules()->getShotgunBehaviorType();
-					int spread = _ammo->getRules()->getShotgunSpread();
-					int choke = _action.weapon->getRules()->getShotgunChoke();
-					Position firstPelletImpact = _parent->getMap()->getProjectile()->getPosition(-2);
-					Position originalTarget = _targetVoxel;
-
-					// Only use primary hit location for 'extended' shotgun behavior
-					// FIXME: this is a temp change, once we rework the calculations for secondary pellets we can modify this
-					// Use impact location to determine spread (instead of originally targeted voxel)
-					if (behaviorType == 1 && firstPelletImpact != _parent->getSave()->getTileEngine()->getOriginVoxel(_action, _parent->getSave()->getTile(_origin)))
-					{
-						_targetVoxel = firstPelletImpact;
-					}
-					else
-					{
-						_targetVoxel = originalTarget;
-					}
-
-					for (int i = 1; i < _ammo->getRules()->getShotgunPellets(); ++i)
-					{
-						Projectile* proj = new Projectile(_parent->getMod(), _parent->getSave(), _action, _origin, _targetVoxel, _ammo);
-						VoxelType secondaryImpact = proj->calculateTrajectory(std::max(0.0, (1.0 - spread / 100.0) * choke / 100.0));
-						if (secondaryImpact == V_EMPTY || secondaryImpact == V_OUTOFBOUNDS)
-						{
-							delete proj;
-							continue;
-						}
-						// shotgun pellets skip to the end of it's path
-						proj->skipTrajectory();
-
-						if (secondaryImpact == V_UNIT)
-						{
-							projectileHitUnit(proj->getPosition(offset));
-						}
-						Explosion* explosion = new Explosion(proj->getPosition(offset), _ammo->getRules()->getHitAnimation(), 0, false, false, _ammo->getRules()->getHitAnimationFrames());
-						int power = 0;
-						if (_action.weapon->getRules()->getIgnoreAmmoPower())
-						{
-							power = _action.weapon->getRules()->getPowerBonus(attack) - _action.weapon->getRules()->getPowerRangeReduction(proj->getDistance());
-						}
-						else
-						{
-							power = _ammo->getRules()->getPowerBonus(attack) - _ammo->getRules()->getPowerRangeReduction(proj->getDistance());
-						}
-						_parent->getMap()->getExplosions()->push_back(explosion);
-						_parent->getSave()->getTileEngine()->hit(attack, proj->getPosition(offset), power, _ammo->getRules()->getDamageType());
-						delete proj;
-						// do not work yet
-						//if (_ammo->getRules()->getExplosionRadius(_unit) != 0)
-						//{
-						//_parent->getTileEngine()->explode({ _action, _ammo }, proj->getPosition(offset), _ammo->getRules()->getPower(), _ammo->getRules()->getDamageType(), _ammo->getRules()->getExplosionRadius(), _unit);
-						//}
-					}
-					// reset back for the next shot in the (potential) autoshot sequence
 					_targetVoxel = originalTarget;
 				}
 
-				// nerf unit's XP values (gained via extra shotgun bullets)
-				_unit->nerfXP();
+				for (int i = 1; i < _ammo->getRules()->getShotgunPellets(); ++i)
+				{
+					Projectile* proj = new Projectile(_parent->getMod(), _parent->getSave(), _action, _origin, _targetVoxel, _ammo);
+					VoxelType secondaryImpact = proj->calculateTrajectory(std::max(0.0, (1.0 - spread / 100.0) * choke / 100.0));
+					if (secondaryImpact == V_EMPTY || secondaryImpact == V_OUTOFBOUNDS)
+					{
+						delete proj;
+						continue;
+					}
+					// shotgun pellets skip to the end of it's path
+					proj->skipTrajectory();
+
+					if (secondaryImpact == V_UNIT)
+					{
+						projectileHitUnit(proj->getPosition(offset));
+					}
+					if (firstHit)
+					{
+						Explosion* explosion = new Explosion(proj->getPosition(offset), _ammo->getRules()->getHitAnimation(), 0, false, false, _ammo->getRules()->getHitAnimationFrames());
+						_parent->getMap()->getExplosions()->push_back(explosion);
+					}
+					else
+					{
+						// we want the first projectile to hit something to count as our explosionBState
+						firstHit = true;
+						_parent->statePushFront(new ExplosionBState(
+							_parent, proj->getLastPositions(offset),
+							attack, 0, noMoreShotsToShoot(), 0));
+					}
+					int power = 0;
+					if (_action.weapon->getRules()->getIgnoreAmmoPower())
+					{
+						power = _action.weapon->getRules()->getPowerBonus(attack) - _action.weapon->getRules()->getPowerRangeReduction(proj->getDistance());
+					}
+					else
+					{
+						power = _ammo->getRules()->getPowerBonus(attack) - _ammo->getRules()->getPowerRangeReduction(proj->getDistance());
+					}
+					_parent->getSave()->getTileEngine()->hit(attack, proj->getPosition(offset), power, _ammo->getRules()->getDamageType());
+					delete proj;
+					// do not work yet
+					//if (_ammo->getRules()->getExplosionRadius(_unit) != 0)
+					//{
+					//_parent->getTileEngine()->explode({ _action, _ammo }, proj->getPosition(offset), _ammo->getRules()->getPower(), _ammo->getRules()->getDamageType(), _ammo->getRules()->getExplosionRadius(), _unit);
+					//}
+				}
+				// reset back for the next shot in the (potential) autoshot sequence
+				_targetVoxel = originalTarget;
 			}
-			else if (noMoreShotsToShoot())
-			{
-				_unit->aim(false);
-			}
+
+			// nerf unit's XP values (gained via extra shotgun bullets)
+			_unit->nerfXP();
 		}
 		delete _parent->getMap()->getProjectile();
 		_parent->getMap()->setProjectile(0);
