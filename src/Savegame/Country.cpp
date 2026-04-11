@@ -126,6 +126,39 @@ Country::Satisfaction Country::getSatisfaction() const
 	return _pact ? Satisfaction::ALIEN_PACT : _satisfaction;
 }
 
+/*
+ * Calculate the current satisfaction level, given the current activity
+ * @return satisfaction level
+ */
+Country::Satisfaction Country::calculateCurrentSatisfaction(int xcomTotal, int alienTotal) const
+{
+	if (_newPact)
+	{
+		return Satisfaction::ALIEN_PACT;
+	}
+	if (_pact && _cancelPact)
+	{
+		// cancelling a pact is always satisfied
+		return Satisfaction::SATISFIED;
+	}
+
+	const int good = (xcomTotal / Mod::REGION_ACTIVITY_DIVIDER_XCOM) + _activityXcom.back();
+	const int bad = (alienTotal / Mod::REGION_ACTIVITY_DIVIDER_ALIEN) + _activityAlien.back();
+
+	if (good - bad < -30)
+	{
+		return Satisfaction::UNHAPPY;
+	}
+	else if (good - bad > 30)
+	{
+		return Satisfaction::HAPPY;
+	}
+	else
+	{
+		return Satisfaction::SATISFIED;
+	}
+}
+
 /**
  * Adds to the country's xcom activity level.
  * @param activity how many points to add.
@@ -289,8 +322,8 @@ bool Country::getCancelPact() const
 void Country::setCancelPact()
 {
 	_cancelPact = _pact; // true for cancelling an existing pact, false for preventing a not-yet-signed pact
-		_newPact = false;
-	}
+	_newPact = false;
+}
 
 /**
  * no setter for this one, as it gets set automatically

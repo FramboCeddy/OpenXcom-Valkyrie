@@ -44,10 +44,10 @@ public:
 
 private:
 	RuleCountry *_rules;
-	bool _pact, _newPact, _cancelPact;
 	std::vector<int> _funding, _activityXcom, _activityAlien;
-	Satisfaction _satisfaction;
 	ScriptValues<Country> _scriptValues;
+	Satisfaction _satisfaction;
+	bool _pact, _newPact, _cancelPact;
 
 public:
 	/// Creates a new country of the specified type.
@@ -66,6 +66,8 @@ public:
 	void setFunding(int funding);
 	/// get the country's satisfaction level
 	Satisfaction getSatisfaction() const;
+	/// calculate the country's satisfaction level, given the current activity
+	Satisfaction calculateCurrentSatisfaction(int xcomTotal, int alienTotal) const;
 	/// add xcom activity in this country
 	void addActivityXcom(int activity);
 	/// add alien activity in this country

@@ -23,5 +23,12 @@ en-US:
   STR_INVISIBLE_WALLS_ACTIVATED: "Walls and objects made invisible. {NEWLINE}Ctrl+y to disable."
   STR_INVISIBLE_WALLS_DEACTIVATED: "Walls and objects made visible."
 
+  STR_ALIEN_PACT: "SIGNED PACT"
+  STR_UNHAPPY: "UNHAPPY"
+  STR_SATISFIED: "SATISFIED"
+  STR_HAPPY: "HAPPY"
+  STR_PREVIOUS_SATISFACTION: "Last month"
+  STR_CURRENT_SATISFACTION: "This month"
+
   # Stats For Nerds values:
   gravPower: "Grav shield power"

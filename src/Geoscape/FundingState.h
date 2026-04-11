@@ -66,6 +66,9 @@ private:
 
 	std::vector<FundingCountry> _fundingCountryList;
 	FundingCountrySort _fundingCountryOrder;
+	bool satisfaction = false;
+
+
 	void updateArrows();
 public:
 	/// Creates the Funding state.
@@ -86,6 +89,8 @@ public:
 	void sortFundingClick(Action* action);
 	/// Handler for clicking the Change arrow.
 	void sortChangeClick(Action* action);
+	// Give the string representation of a country's satisfaction, ready for translation
+	std::string getSatisfactionText(size_t satisfaction);
 };
 
 }

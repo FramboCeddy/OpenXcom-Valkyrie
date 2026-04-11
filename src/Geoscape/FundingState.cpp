@@ -31,6 +31,13 @@
 #include "../Mod/RuleCountry.h"
 #include "../Savegame/SavedGame.h"
 #include "../Engine/Options.h"
+#include "../Savegame/Region.h"
+#include <algorithm>
+#include <array>
+#include <string>
+#include "../Engine/Action.h"
+#include "../Engine/InteractiveSurface.h"
+#include "../Engine/State.h"
 
 namespace OpenXcom
 {
@@ -66,6 +73,7 @@ struct compareFundingCountryChange
 FundingState::FundingState()
 {
 	_screen = false;
+	satisfaction = _game->isShiftPressed();
 
 	// Create objects
 	_window = new Window(this, 320, 200, 0, 0, POPUP_BOTH);
@@ -110,9 +118,9 @@ FundingState::FundingState()
 
 	_txtCountry->setText(tr("STR_COUNTRY"));
 
-	_txtFunding->setText(tr("STR_FUNDING"));
+	_txtFunding->setText(satisfaction ? tr("STR_PREVIOUS_SATISFACTION") : tr("STR_FUNDING"));
 
-	_txtChange->setText(tr("STR_CHANGE"));
+	_txtChange->setText(satisfaction ? tr("STR_CURRENT_SATISFACTION") : tr("STR_CHANGE"));
 
 	_lstCountries->setColumns(3, 108, 100, 52);
 	_lstCountries->setDot(true);
@@ -128,13 +136,42 @@ FundingState::FundingState()
 
 	_fundingCountryOrder = FC_NONE;
 
-	for (auto* country : *_game->getSavedGame()->getCountries())
+	// Satisfaction instead of funding
+	if (satisfaction)
 	{
-		_fundingCountryList.push_back(FundingCountry(
-			tr(country->getRules()->getType()),
-			country->getFunding().back(),
-			country->getFunding().size() > 1 ? country->getFunding().back() - country->getFunding().at(country->getFunding().size() - 2) : 0)
-		);
+		int xcomTotal = 0;
+		int alienTotal = 0;
+		for (auto* region : *_game->getSavedGame()->getRegions())
+		{
+			xcomTotal += region->getActivityXcom().back();
+			alienTotal += region->getActivityAlien().back();
+		}
+
+		xcomTotal += _game->getSavedGame()->getResearchScores().back();
+		// subtract our council leniency if countries have to ignore it, because we already gained the points at the beginning of the month
+		if (_game->getMod()->getCountriesIgnoreCouncilPoints())
+		{
+			xcomTotal -= _game->getMod()->getCouncilPointsForMonth(_game->getSavedGame()->getMonthsPassed());
+		}
+
+		for (auto* country : *_game->getSavedGame()->getCountries())
+		{
+			_fundingCountryList.push_back(FundingCountry(
+				tr(country->getRules()->getType()),
+				(int)country->getSatisfaction(),
+				(int)country->calculateCurrentSatisfaction(xcomTotal, alienTotal)));
+		}
+	}
+	else
+	{
+		for (auto* country : *_game->getSavedGame()->getCountries())
+		{
+			_fundingCountryList.push_back(FundingCountry(
+				tr(country->getRules()->getType()),
+				country->getFunding().back(),
+				country->getFunding().size() > 1 ? country->getFunding().back() - country->getFunding().at(country->getFunding().size() - 2) : 0)
+			);
+		}
 	}
 }
 
@@ -240,21 +277,53 @@ void FundingState::sortList()
 void FundingState::updateList()
 {
 	_lstCountries->clearList();
-	for (const auto& country : _fundingCountryList)
+
+	if (satisfaction)
 	{
-		std::ostringstream ss;
-		ss << Unicode::TOK_COLOR_FLIP << Unicode::formatFunding(country.funding) << Unicode::TOK_COLOR_FLIP;
+		for (const auto& country : _fundingCountryList)
+		{
+			std::ostringstream ss;
+			if (country.change != country.funding)
+			{
+				ss << Unicode::TOK_COLOR_FLIP;
+			}
+			ss << tr(getSatisfactionText(country.funding));
+			if (country.change != country.funding)
+			{
+				ss << Unicode::TOK_COLOR_FLIP;
+			}
 
-		std::ostringstream ss2;
-		if (country.change != 0) ss2 << Unicode::TOK_COLOR_FLIP;
-		if (country.change > 0)  ss2 << '+';
-		ss2 << Unicode::formatFunding(country.change);
-		if (country.change != 0) ss2 << Unicode::TOK_COLOR_FLIP;
-
-		_lstCountries->addRow(3, country.name.c_str(), ss.str().c_str(), ss2.str().c_str());
+			std::ostringstream ss2;
+			if (country.change != country.funding)
+			{
+				ss2 << Unicode::TOK_COLOR_FLIP;
+			}
+			ss2 << tr(getSatisfactionText(country.change));
+			if (country.change != country.funding)
+			{
+				ss2 << Unicode::TOK_COLOR_FLIP;
+			}
+			_lstCountries->addRow(3, country.name.c_str(), ss.str().c_str(), ss2.str().c_str());
+		}
 	}
-	_lstCountries->addRow(2, tr("STR_TOTAL_UC").c_str(), Unicode::formatFunding(_game->getSavedGame()->getCountryFunding()).c_str());
-	_lstCountries->setRowColor(_game->getSavedGame()->getCountries()->size(), _txtCountry->getColor());
+	else
+	{
+		for (const auto& country : _fundingCountryList)
+		{
+			std::ostringstream ss;
+			ss << Unicode::TOK_COLOR_FLIP << Unicode::formatFunding(country.funding) << Unicode::TOK_COLOR_FLIP;
+
+			std::ostringstream ss2;
+			if (country.change != 0) ss2 << Unicode::TOK_COLOR_FLIP;
+			if (country.change > 0)  ss2 << '+';
+			ss2 << Unicode::formatFunding(country.change);
+			if (country.change != 0) ss2 << Unicode::TOK_COLOR_FLIP;
+
+			_lstCountries->addRow(3, country.name.c_str(), ss.str().c_str(), ss2.str().c_str());
+		}
+		_lstCountries->addRow(2, tr("STR_TOTAL_UC").c_str(), Unicode::formatFunding(_game->getSavedGame()->getCountryFunding()).c_str());
+		_lstCountries->setRowColor(_game->getSavedGame()->getCountries()->size(), _txtCountry->getColor());
+	}
 }
 
 /**
@@ -282,6 +351,15 @@ void FundingState::sortChangeClick(Action*)
 {
 	_fundingCountryOrder = _fundingCountryOrder == FC_CHANGE_ASC ? FC_CHANGE_DESC : FC_CHANGE_ASC;
 	sortList();
+}
+
+/*
+ *	Gives the string reference of satisfaction enum, ready for translation 
+ */
+std::string FundingState::getSatisfactionText(size_t satisfaction)
+{
+	const std::array<std::string, 4> satisfactionTexts = {"STR_ALIEN_PACT", "STR_UNHAPPY", "STR_SATISFIED", "STR_HAPPY"};
+	return satisfactionTexts[satisfaction];
 }
 
 }
