@@ -781,6 +781,13 @@ const std::string &SavedBattleGame::getAlienCustomMission() const
 {
 	return _alienCustomMission;
 }
+/**
+ *	Gets the alien item level
+ */
+int SavedBattleGame::getAlienItemLevel() const
+{
+	return _alienItemLevel;
+}
 
 /**
  * Sets the global shade.

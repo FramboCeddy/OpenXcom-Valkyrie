@@ -209,6 +209,8 @@ public:
 	int getSellPriceCoefficient() const;
 	/// Gets the buy price coefficient.
 	int getBuyPriceCoefficient() const;
+	/// Gets the difficulty based item level delay
+	int getItemLevelDelay() const;
 	/// Gets the game ending.
 	GameEnding getEnding() const;
 	/// Sets the game ending.

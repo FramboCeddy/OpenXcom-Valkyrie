@@ -2303,17 +2303,8 @@ void BattlescapeGame::spawnNewUnit(BattleActionAttack attack, Position position)
 
 		// Pick the item sets if the unit has builtInWeaponSets
 		auto& itemLevels = getMod()->getAlienItemLevels().at(_save->getAlienItemLevel());
-		int itemLevelSize = std::max(0, (int)itemLevels.size() - 1);
-		int itemLevel = itemLevels.at(RNG::generate(0, itemLevelSize));
+		int itemLevel = itemLevels.at(RNG::generate(0, itemLevels.size() - 1));
 
-		size_t diff = (size_t)_parentState->getGame()->getSavedGame()->getDifficulty();
-		size_t arrayLen = std::size(Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY);
-		if (arrayLen > diff)
-		{
-			// reduce which month's item level we pick
-			itemLevel -= Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY[diff];
-			itemLevel = std::max(0, std::min(itemLevel, (int)_parentState->getGame()->getMod()->getAlienItemLevels().size() - 1));
-		}
 		// Initialize the unit and its position
 		newUnit->setTile(_save->getTile(position), _save);
 		newUnit->setPosition(position);

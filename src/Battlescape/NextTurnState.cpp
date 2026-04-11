@@ -914,40 +914,49 @@ bool NextTurnState::deployReinforcements(const ReinforcementsData &wave)
 			Unit* rule = _game->getMod()->getUnit(alienName, true);
 			bool civilian = dd.percentageOutsideUfo != 0; // small misuse of an unused attribute ;) pls don't kill me
 			BattleUnit* unit = addReinforcement(wave, rule, dd.alienRank, civilian);
-			size_t itemLevel = (size_t)(_game->getMod()->getAlienItemLevels().at(month).at(RNG::generate(0, 9)));
-			if (unit)
+			if (!unit)
 			{
-				success = true;
-				_battleGame->initUnit(unit, itemLevel);
-				if (!rule->isLivingWeapon())
+				continue;
+			}
+
+			success = true;
+
+			auto& itemLevels = _game->getMod()->getAlienItemLevels().at(month);
+			int itemLevel = itemLevels.at(RNG::generate(0, itemLevels.size() - 1));
+			_battleGame->initUnit(unit, itemLevel);
+			// living weapons ignore alienItemLevels
+			if (rule->isLivingWeapon())
+			{
+				continue;
+			}
+
+			if (dd.itemSets.empty())
+			{
+				throw Exception("Reinforcements generator encountered an error: item set not defined");
+			}
+			if (itemLevel >= dd.itemSets.size())
+			{
+				itemLevel = dd.itemSets.size() - 1;
+			}
+			for (auto& itemType : dd.itemSets.at(itemLevel).items)
+			{
+				RuleItem* ruleItem = _game->getMod()->getItem(itemType);
+				if (ruleItem)
 				{
-					if (dd.itemSets.empty())
-					{
-						throw Exception("Reinforcements generator encountered an error: item set not defined");
-					}
-					if (itemLevel >= dd.itemSets.size())
-					{
-						itemLevel = dd.itemSets.size() - 1;
-					}
-					for (auto& itemType : dd.itemSets.at(itemLevel).items)
-					{
-						RuleItem* ruleItem = _game->getMod()->getItem(itemType);
-						if (ruleItem)
-						{
-							_battleGame->createItemForUnit(ruleItem, unit);
-						}
-					}
-					for (auto& iset : dd.extraRandomItems)
-					{
-						if (iset.items.empty())
-							continue;
-						int pick = RNG::generate(0, iset.items.size() - 1);
-						RuleItem* ruleItem = _game->getMod()->getItem(iset.items[pick]);
-						if (ruleItem)
-						{
-							_battleGame->createItemForUnit(ruleItem, unit);
-						}
-					}
+					_battleGame->createItemForUnit(ruleItem, unit);
+				}
+			}
+			for (auto& iset : dd.extraRandomItems)
+			{
+				if (iset.items.empty())
+				{
+					continue;
+				}
+				int pick = RNG::generate(0, iset.items.size() - 1);
+				RuleItem* ruleItem = _game->getMod()->getItem(iset.items[pick]);
+				if (ruleItem)
+				{
+					_battleGame->createItemForUnit(ruleItem, unit);
 				}
 			}
 		}

@@ -984,6 +984,11 @@ int SavedGame::getBuyPriceCoefficient() const
 	return Mod::BUY_PRICE_COEFFICIENT[std::min((int)_difficulty, 4)];
 }
 
+int SavedGame::getItemLevelDelay() const
+{
+	return Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY[getDifficulty()];
+}
+
 /**
  * Returns the game's current ending.
  * @return Ending state.

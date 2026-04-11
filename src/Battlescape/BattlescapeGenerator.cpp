@@ -824,22 +824,10 @@ void BattlescapeGenerator::run()
 		_worldShade = ruleDeploy->getMaxShade();
 	}
 
-	{
-		int month = _alienItemLevel;
-		if (_game->getSavedGame()->getMonthsPassed() != -1)
-		{
-			month = std::min(_game->getSavedGame()->getMonthsPassed(), (int)_game->getMod()->getAlienItemLevels().size() - 1);
-		}
-		size_t diff = (size_t)_game->getSavedGame()->getDifficulty();
-		size_t arrayLen = std::size(Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY);
-		if (arrayLen > diff)
-		{
-			// reduce which month's item level we pick
-			month -= Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY[diff];
-			month = std::max(0, std::min(month, (int)_game->getMod()->getAlienItemLevels().size() - 1));
-		}
-		_save->setAlienItemLevel(month);
-	}
+	// set item level with difficulty delay in mind
+	int month = _game->getSavedGame()->getMonthsPassed() == -1 ? _alienItemLevel : _game->getSavedGame()->getMonthsPassed();
+	int techLevel = std::clamp(month - _game->getSavedGame()->getItemLevelDelay(), 0, (int)_game->getMod()->getAlienItemLevels().size() - 1);
+	_save->setAlienItemLevel(techLevel);
 
 	auto& terrainMapScript = _terrain->getRandomMapScript();
 	const std::vector<MapScript*> *script = _game->getMod()->getMapScript(terrainMapScript);
@@ -1742,39 +1730,47 @@ void BattlescapeGenerator::deployAliens(const AlienDeployment *deployment)
 			}
 			Unit *rule = _game->getMod()->getUnit(alienName, true);
 			BattleUnit *unit = addAlien(rule, dd.alienRank, outside);
-			size_t itemLevel = (size_t)(_game->getMod()->getAlienItemLevels().at(_save->getAlienItemLevel()).at(RNG::generate(0,9)));
-			if (unit)
+			if (!unit)
 			{
-				_save->initUnit(unit, itemLevel);
-				if (!rule->isLivingWeapon())
+				continue;
+			}
+
+			auto& itemLevels = _game->getMod()->getAlienItemLevels().at(_save->getAlienItemLevel());
+			int itemLevel = itemLevels.at(RNG::generate(0, itemLevels.size() - 1));
+			_save->initUnit(unit, itemLevel);
+			// living weapons ignore alienItemLevels
+			if (rule->isLivingWeapon())
+			{
+				continue;
+			}
+
+			if (dd.itemSets.empty())
+			{
+				throw Exception("Unit generator encountered an error: item set not defined");
+			}
+			if (itemLevel >= dd.itemSets.size())
+			{
+				itemLevel = dd.itemSets.size() - 1;
+			}
+			for (auto& itemType : dd.itemSets.at(itemLevel).items)
+			{
+				RuleItem *ruleItem = _game->getMod()->getItem(itemType);
+				if (ruleItem)
 				{
-					if (dd.itemSets.empty())
-					{
-						throw Exception("Unit generator encountered an error: item set not defined");
-					}
-					if (itemLevel >= dd.itemSets.size())
-					{
-						itemLevel = dd.itemSets.size() - 1;
-					}
-					for (auto& itemType : dd.itemSets.at(itemLevel).items)
-					{
-						RuleItem *ruleItem = _game->getMod()->getItem(itemType);
-						if (ruleItem)
-						{
-							_save->createItemForUnit(ruleItem, unit);
-						}
-					}
-					for (auto& iset : dd.extraRandomItems)
-					{
-						if (iset.items.empty())
-							continue;
-						int pick = RNG::generate(0, iset.items.size() - 1);
-						RuleItem *ruleItem = _game->getMod()->getItem(iset.items[pick]);
-						if (ruleItem)
-						{
-							_save->createItemForUnit(ruleItem, unit);
-						}
-					}
+					_save->createItemForUnit(ruleItem, unit);
+				}
+			}
+			for (auto& iset : dd.extraRandomItems)
+			{
+				if (iset.items.empty())
+				{
+					continue;
+				}
+				int pick = RNG::generate(0, iset.items.size() - 1);
+				RuleItem *ruleItem = _game->getMod()->getItem(iset.items[pick]);
+				if (ruleItem)
+				{
+					_save->createItemForUnit(ruleItem, unit);
 				}
 			}
 		}
@@ -2634,39 +2630,44 @@ void BattlescapeGenerator::explodeOtherJunk()
  */
 void BattlescapeGenerator::deployCivilians(bool markAsVIP, int nodeRank, int max, bool roundUp, const std::string &civilianType)
 {
-	if (max)
+	if (max <= 0)
 	{
-		// inevitably someone will point out that ufopaedia says 0-16 civilians.
-		// to that person: this is only partially true;
-		// 0 civilians would only be a possibility if there were already 80 units,
-		// or no spawn nodes for civilians, but it would always try to spawn at least 8.
-		int number = RNG::generate(roundUp ? (max+1)/2 : max/2, max);
+		return;
+	}
 
-		if (number > 0)
+	// inevitably someone will point out that ufopaedia says 0-16 civilians.
+	// to that person: this is only partially true;
+	// 0 civilians would only be a possibility if there were already 80 units,
+	// or no spawn nodes for civilians, but it would always try to spawn at least 8.
+	int number = RNG::generate((roundUp ? (max + 1) / 2 : max / 2), max);
+
+	for (int i = 0; i < number; ++i)
+	{
+		Unit* rule = 0;
+		if (civilianType.size() > 0)
 		{
-			for (int i = 0; i < number; ++i)
-			{
-				Unit* rule = 0;
-				if (civilianType.size() > 0)
-				{
-					rule = _game->getMod()->getUnit(civilianType, true);
-				}
-				else
-				{
-					size_t pick = RNG::generate(0, _terrain->getCivilianTypes().size() - 1);
-					rule = _game->getMod()->getUnit(_terrain->getCivilianTypes().at(pick), true);
-				}
-				BattleUnit* civ = addCivilian(rule, nodeRank);
-				if (civ)
-				{
-					if (markAsVIP) civ->markAsVIP();
-					size_t itemLevel = (size_t)(_game->getMod()->getAlienItemLevels().at(_save->getAlienItemLevel()).at(RNG::generate(0,9)));
-					// Built in weapons: civilians may have levelled item lists with randomized distribution
-					// following the same basic rules as the alien item levels.
-					_save->initUnit(civ, itemLevel);
-				}
-			}
+			rule = _game->getMod()->getUnit(civilianType, true);
 		}
+		else
+		{
+			size_t pick = RNG::generate(0, _terrain->getCivilianTypes().size() - 1);
+			rule = _game->getMod()->getUnit(_terrain->getCivilianTypes().at(pick), true);
+		}
+		BattleUnit* civ = addCivilian(rule, nodeRank);
+		if (!civ)
+		{
+			continue;
+		}
+
+		if (markAsVIP)
+		{
+			civ->markAsVIP();
+		}
+		auto& itemLevels = _game->getMod()->getAlienItemLevels().at(_save->getAlienItemLevel());
+		int itemLevel = itemLevels.at(RNG::generate(0, itemLevels.size() - 1));
+		// Built in weapons: civilians may have levelled item lists with randomized distribution
+		// following the same basic rules as the alien item levels.
+		_save->initUnit(civ, itemLevel);
 	}
 }
 

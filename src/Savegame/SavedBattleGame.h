@@ -24,6 +24,14 @@
 #include "Tile.h"
 #include "../Mod/AlienDeployment.h"
 #include "../Mod/RuleCraft.h"
+#include <map>
+#include <utility>
+#include <SDL_video.h>
+#include "../Engine/Language.h"
+#include "../Engine/Script.h"
+#include "../Mod/MapData.h"
+#include "../Mod/RuleItem.h"
+#include "../Mod/Unit.h"
 
 namespace OpenXcom
 {
@@ -66,14 +74,11 @@ public:
 	static void ScriptRegisterUnitAnimations(ScriptParserBase* parser);
 
 private:
-	bool _isPreview;
 	SDL_Rect _craftPos;
-	int _craftZ;
 	Craft* _craftForPreview;
 	std::vector<Position> _craftTiles;
 	BattlescapeState *_battleState;
 	Mod *_rule;
-	int _mapsize_x, _mapsize_y, _mapsize_z;
 	std::vector<MapDataSet*> _mapDataSets;
 	std::vector<Tile> _tiles;
 	BattleUnit *_selectedUnit, *_undoUnit, *_lastSelectedUnit;
@@ -84,52 +89,56 @@ private:
 	TileEngine *_tileEngine;
 	std::string _missionType, _strTarget, _strCraftOrBase, _alienCustomDeploy, _alienCustomMission;
 	std::string _lastUsedMapScript;
-	int _alienItemLevel = 0;
 	std::string _reinforcementsDeployment, _reinforcementsRace;
-	int _reinforcementsItemLevel;
 	std::map<std::string, int> _reinforcementsMemory;
 	std::vector< std::vector<int> > _reinforcementsBlocks;
 	std::vector< std::vector<std::string> > _flattenedMapTerrainNames;
 	std::vector< std::vector<std::string> > _flattenedMapBlockNames;
 	const RuleStartingCondition *_startingCondition;
 	const RuleEnviroEffects *_enviroEffects;
-	bool _ecEnabledFriendly, _ecEnabledHostile, _ecEnabledNeutral;
-	int _globalShade;
+	std::vector<BattleUnit*> _exposedUnits;
+	std::list<BattleUnit*> _fallingUnits;
+	std::vector<Position> _tileSearch, _storageSpace;
+	std::vector< std::vector<std::pair<int, int> > > _baseModules;
+	ItemContainer *_baseItems;
+	double _ambientVolume;
+	std::vector<int> _ambienceRandom;
+	std::vector<BattleItem*> _recoverGuaranteed, _recoverConditional;
+	std::string _music;
+	std::string _hiddenMovementBackground;
+	HitLog *_hitLog;
+	ScriptValues<SavedBattleGame> _scriptValues;
+	EscapeType _vipEscapeType;
 	UnitFaction _side;
+	ChronoTrigger _chronoTrigger;
+	int _mapsize_x, _mapsize_y, _mapsize_z;
+	int _craftZ;
+	int _alienItemLevel = 0;
+	int _reinforcementsItemLevel;
+	int _globalShade;
 	int _turn, _bughuntMinTurn;
 	int _animFrame;
+	int _itemId;
+	int _vipSurvivalPercentage, _vipsSaved, _vipsLost, _vipsWaitingOutside, _vipsSavedScore, _vipsLostScore, _vipsWaitingOutsideScore;
+	int _objectiveType, _objectivesDestroyed, _objectivesNeeded;
+	int _depth, _ambience;
+	int _minAmbienceRandomDelay, _maxAmbienceRandomDelay, _currentAmbienceDelay;
+	int _turnLimit, _cheatTurn;
+	int _toggleBrightness;
+	int _toggleBrightnessTemp = 0, _toggleNightVisionColorTemp = 0;
+	BattleActionType _tuReserved;
+	bool _ecEnabledFriendly, _ecEnabledHostile, _ecEnabledNeutral;
 	bool _nameDisplay;
 	bool _debugMode, _bughuntMode;
 	bool _aborted;
 	bool _baseCraftInventory = false;
-	int _itemId;
-	EscapeType _vipEscapeType;
-	int _vipSurvivalPercentage, _vipsSaved, _vipsLost, _vipsWaitingOutside, _vipsSavedScore, _vipsLostScore, _vipsWaitingOutsideScore;
-	int _objectiveType, _objectivesDestroyed, _objectivesNeeded;
-	std::vector<BattleUnit*> _exposedUnits;
-	std::list<BattleUnit*> _fallingUnits;
 	bool _unitsFalling, _cheating;
-	std::vector<Position> _tileSearch, _storageSpace;
-	BattleActionType _tuReserved;
 	bool _kneelReserved;
-	std::vector< std::vector<std::pair<int, int> > > _baseModules;
-	ItemContainer *_baseItems;
-	int _depth, _ambience;
-	double _ambientVolume;
-	std::vector<int> _ambienceRandom;
-	int _minAmbienceRandomDelay, _maxAmbienceRandomDelay, _currentAmbienceDelay;
-	std::vector<BattleItem*> _recoverGuaranteed, _recoverConditional;
-	std::string _music;
-	int _turnLimit, _cheatTurn;
-	ChronoTrigger _chronoTrigger;
 	bool _beforeGame;
 	bool _togglePersonalLight, _toggleNightVision;
-	int _toggleBrightness;
 	bool _togglePersonalLightTemp = false, _toggleNightVisionTemp = false;
-	int _toggleBrightnessTemp = 0, _toggleNightVisionColorTemp = 0;
-	std::string _hiddenMovementBackground;
-	HitLog *_hitLog;
-	ScriptValues<SavedBattleGame> _scriptValues;
+	bool _isPreview;
+
 	/// Selects a soldier.
 	BattleUnit *selectPlayerUnit(int dir, bool checkReselect = false, bool setReselect = false, bool checkInventory = false);
 	/// Run newTurnUnit and newTurnItem scripts
@@ -189,7 +198,7 @@ public:
 	/// Sets the alien item level.
 	void setAlienItemLevel(int itemLevel) { _alienItemLevel = itemLevel; }
 	/// Gets the alien item level.
-	int getAlienItemLevel() const { return _alienItemLevel; }
+	int getAlienItemLevel() const;
 
 	/// Sets the alien deployment to use for reinforcements.
 	void setReinforcementsDeployment(const std::string &reinforcementsDeployment) { _reinforcementsDeployment = reinforcementsDeployment; }

@@ -141,6 +141,11 @@ RandomState& globalRandomState()
  */
 int generate(int min, int max)
 {
+	if (max == min)
+	{
+		return max;
+	}
+
 	return x.generate(min, max);
 }
 
@@ -165,6 +170,11 @@ double generate(double min, double max)
  */
 int seedless(int min, int max)
 {
+	if (max == min)
+	{
+		return max;
+	}
+
 	return x_seedless.generate(min, max);
 }
 
@@ -176,6 +186,15 @@ int seedless(int min, int max)
  */
 bool percent(int value)
 {
+	if (value <= 0)
+	{
+		return false;
+	}
+	if (value >= 100)
+	{
+		return true;
+	}
+
 	return x.percent(value);
 }
 

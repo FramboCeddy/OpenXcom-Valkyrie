@@ -3440,7 +3440,10 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	{
 		for (size_t j = 0; j < std::size(DIFFICULTY_BASED_ITEM_LEVEL_DELAY); j++)
 		{
-			arrayReader[j].tryReadVal(DIFFICULTY_BASED_ITEM_LEVEL_DELAY[j]);
+			if (!arrayReader[j].tryReadVal(DIFFICULTY_BASED_ITEM_LEVEL_DELAY[j]))
+			{
+				break;
+			}
 		}
 	}
 	if (const auto& arrayReader = reader["unitResponseSoundsFrequency"])

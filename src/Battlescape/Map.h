@@ -18,12 +18,17 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../Engine/InteractiveSurface.h"
-#include "../Engine/Options.h"
 #include "../Engine/Collections.h"
-#include "../Mod/MapData.h"
 #include "Position.h"
 #include "Particle.h"
 #include <vector>
+#include <list>
+#include <SDL_stdinc.h>
+#include <SDL_video.h>
+#include "../Engine/Action.h"
+#include "../Engine/Game.h"
+#include "../Engine/State.h"
+#include "../Engine/Surface.h"
 
 namespace OpenXcom
 {
@@ -67,52 +72,52 @@ private:
 	static const int BULLET_SPRITES = 35;
 	Timer *_scrollMouseTimer, *_scrollKeyTimer, *_obstacleTimer;
 	Timer *_fadeTimer;
-	int _fadeShade;
-	bool _nightVisionOn;
-	int _debugVisionMode;
-	int _nvColor;
 	Game *_game;
 	SavedBattleGame *_save;
-	bool _isTFTD;
 	Surface *_arrow;
 	Surface *_stunIndicator, *_woundIndicator, *_burnIndicator, *_shockIndicator;
-	bool _anyIndicator, _isAltPressed, _isCtrlPressed;
+	Projectile *_projectile;
+	Camera *_camera;
+	Text *_txtAccuracy;
+	SurfaceSet *_projectileSet;
+	BattlescapeMessage *_message;
+	std::list<Explosion *> _explosions;
+	std::vector<std::vector<Particle>> _vaporParticlesInit;
+	std::vector<std::vector<Particle>> _vaporParticles;
+	std::vector<Position> _waypoints;
+	const std::vector<Uint8> *_transparencies;
+	int _fadeShade;
+	int _debugVisionMode;
+	int _nvColor;
 	int _spriteWidth, _spriteHeight;
 	int _selectorX, _selectorY;
 	int _mouseX, _mouseY;
 	CursorType _cursorType;
 	int _cursorSize;
 	int _cacheActiveWeaponUfopediaArticleUnlocked; // -1 = unknown, 0 = locked, 1 = unlocked
-	bool _cacheIsCtrlPressed;
-	Position _cacheCursorPosition;
 	int _cacheHasLOS; // -1 = unknown, 0 = no LOS, 1 = has LOS
 	int _animFrame;
-	Projectile *_projectile;
+	int _visibleMapHeight;
+	int _bgColor;
+	int _iconHeight, _iconWidth, _messageColor;
+	int _hostileBarColor, _neutralBarColor, _borderBarColor;
+	Position _cacheCursorPosition;
+	bool _isTFTD;
+	bool _nightVisionOn;
+	bool _anyIndicator, _isAltPressed, _isCtrlPressed;
+	bool _cacheIsCtrlPressed;
 	bool _followProjectile;
 	bool _projectileInFOV;
-	std::list<Explosion *> _explosions;
-	std::vector<std::vector<Particle>> _vaporParticlesInit;
-	std::vector<std::vector<Particle>> _vaporParticles;
 	bool _explosionInFOV, _launch;
-	BattlescapeMessage *_message;
-	Camera *_camera;
-	int _visibleMapHeight;
-	std::vector<Position> _waypoints;
 	bool _unitDying, _smoothCamera, _smoothingEngaged, _flashScreen;
-	int _bgColor;
 	bool _previewSettingArrows, _previewSettingTu, _previewSettingEnergy;
-	Text *_txtAccuracy;
-	SurfaceSet *_projectileSet;
+	bool _showObstacles;
+	bool _showInfoOnCursor;
 
 	void drawUnit(UnitSprite &unitSprite, Tile *unitTile, Tile *currTile, Position tileScreenPosition, bool topLayer, BattleUnit* movingUnit = nullptr);
 	void drawTerrain(Surface *surface);
 	int getTerrainLevel(const Position& pos, int size) const;
 	int getWallShade(TilePart part, Tile* tileFrot);
-	int _iconHeight, _iconWidth, _messageColor;
-	int _hostileBarColor, _neutralBarColor, _borderBarColor;
-	const std::vector<Uint8> *_transparencies;
-	bool _showObstacles;
-	bool _showInfoOnCursor;
 public:
 	/// Creates a new map at the specified position and size.
 	Map(Game* game, int width, int height, int x, int y, int visibleMapHeight);
