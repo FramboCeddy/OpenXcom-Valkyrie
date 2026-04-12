@@ -313,6 +313,8 @@ void TechTreeViewerState::btnShowAllClick(Action*)
  */
 void TechTreeViewerState::initLists()
 {
+	auto* savedGame = _game->getSavedGame();
+	auto* mod = _game->getMod();
 	// Set topic name
 	{
 		std::ostringstream ss;
@@ -558,7 +560,7 @@ void TechTreeViewerState::initLists()
 			if (rule->getNeededItem())
 			{
 				const std::string strName = rule->getNeededItem()->getType();
-				std::string itemName = _showAll || isDiscoveredResearch(strName) ? tr(strName) : tr("STR_CENSORED");
+				std::string itemName = _showAll || isDiscoveredResearch(strName) || savedGame->isItemObtained(strName, mod) ? tr(strName) : tr("STR_CENSORED");
 				itemName.insert(0, "  ");
 				_lstLeft->addRow(1, itemName.c_str());
 				_lstLeft->setRowColor(row, getResearchColor(strName));
@@ -774,7 +776,7 @@ void TechTreeViewerState::initLists()
 		}
 		if (!Mod::isEmptyRuleName(rule->getSpawnedItem())) // TODO censor: spawned items need special censor rules? (like checking if you have the item in your stores)
 		{
-			std::string name = _showAll ? tr(rule->getSpawnedItem()) : tr("STR_CENSORED");
+			std::string name = _showAll || savedGame->isItemObtained(rule->getSpawnedItem(), mod) ? tr(rule->getSpawnedItem()) : tr("STR_CENSORED");
 			name.insert(0, "  ");
 			if (rule->getSpawnedItemCount() > 1)
 			{
