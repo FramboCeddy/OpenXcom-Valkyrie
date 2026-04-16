@@ -62,7 +62,7 @@ void Country::load(const YAML::YamlNodeReader& reader, const ScriptGlobal* share
 	reader.tryRead("pact", _pact);
 	reader.tryRead("newPact", _newPact);
 	reader.tryRead("cancelPact", _cancelPact);
-
+	reader.tryRead("satisfaction", _satisfaction);
 	_scriptValues.load(reader, shared);
 }
 
@@ -77,15 +77,20 @@ void Country::save(YAML::YamlNodeWriter writer, const ScriptGlobal* shared) cons
 	writer.write("funding", _funding);
 	writer.write("activityXcom", _activityXcom);
 	writer.write("activityAlien", _activityAlien);
+	writer.write("satisfaction", _satisfaction);
 	if (_pact)
 	{
 		writer.write("pact", _pact);
 		if (_cancelPact)
+		{
 			writer.write("cancelPact", _cancelPact);
+		}
 	}
 	// Note: can have a _newPact flag, even if already has a _pact from earlier (when xcom liberates and aliens retake a country during the same month)
 	if (_newPact)
+	{
 		writer.write("newPact", _newPact);
+	}
 
 	_scriptValues.save(writer, shared);
 }
@@ -132,14 +137,14 @@ Country::Satisfaction Country::getSatisfaction() const
  */
 Country::Satisfaction Country::calculateCurrentSatisfaction(int xcomTotal, int alienTotal) const
 {
-	if (_newPact)
+	if (_newPact && !_cancelPact)
 	{
 		return Satisfaction::ALIEN_PACT;
 	}
-	if (_pact && _cancelPact)
+	if (_pact)
 	{
 		// cancelling a pact is always satisfied
-		return Satisfaction::SATISFIED;
+		return _cancelPact ? Satisfaction::SATISFIED : Satisfaction::ALIEN_PACT;
 	}
 
 	const int good = (xcomTotal / Mod::REGION_ACTIVITY_DIVIDER_XCOM) + _activityXcom.back();
