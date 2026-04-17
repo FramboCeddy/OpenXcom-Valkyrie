@@ -1449,7 +1449,7 @@ int BattleUnit::directionTo(Position point) const
 	}
 	double angle = std::atan2(ox, -oy);
 	// divide the pie in 4 angles each at 1/8th before each quarter
-	double pie[4] = {(M_PI_4 * 4.0) - M_PI_4 / 2.0, (M_PI_4 * 3.0) - M_PI_4 / 2.0, (M_PI_4 * 2.0) - M_PI_4 / 2.0, (M_PI_4 * 1.0) - M_PI_4 / 2.0};
+	constexpr double pie[4] = {(M_PI_4 * 4.0) - M_PI_4 / 2.0, (M_PI_4 * 3.0) - M_PI_4 / 2.0, (M_PI_4 * 2.0) - M_PI_4 / 2.0, (M_PI_4 * 1.0) - M_PI_4 / 2.0};
 	int dir = 0;
 
 	if (angle > pie[0] || angle < -pie[0])
@@ -2582,8 +2582,8 @@ int BattleUnit::getAccuracyModifier(const BattleItem *item) const
 	}
 	// Apparently soldiers have rules in a different place from aliens/civs/HWP
 	auto woundMultiplier = getGeoscapeSoldier() ?
-							getGeoscapeSoldier()->getRules()->getWoundAccuracyReduction() :
-							getUnitRules()->getWoundAccuracyReduction();
+							getGeoscapeSoldier()->getRules()->getWoundStatReduction() :
+							getUnitRules()->getWoundStatReduction();
 	return std::max(10, getHealthModifier() - woundMultiplier * wounds);
 }
 
@@ -2596,8 +2596,8 @@ int BattleUnit::getHealthModifier() const
 	double healthPercent = (double)_health / (double)getBaseStats()->health;
 	// Apparently soldiers have rules in a different place from aliens/civs/HWP
 	int healthModifier = getGeoscapeSoldier() ?
-							getGeoscapeSoldier()->getRules()->getHealthAccuracyReduction() :
-							getUnitRules()->getHealthAccuracyReduction();
+							getGeoscapeSoldier()->getRules()->getHealthStatReduction() :
+							getUnitRules()->getHealthStatReduction();
 	// linear interpolation but do not go below 10% stats
 	return std::max(10, (int)(100 - healthModifier * (1 - healthPercent)));
 }
@@ -2666,8 +2666,7 @@ int BattleUnit::getFatalWounds() const
 double BattleUnit::getReactionScore() const
 {
 	//(Reactions Stat) x (Current Time Units / Max TUs)
-	double score = ((double)getBaseStats()->reactions * (double)getTimeUnits()) / (double)getBaseStats()->tu;
-	return score;
+	return ((double)getBaseStats()->reactions * (double)getTimeUnits()) / (double)getBaseStats()->tu;
 }
 
 /**
@@ -2676,22 +2675,23 @@ double BattleUnit::getReactionScore() const
  */
 void BattleUnit::prepareTimeUnits(int tu)
 {
-	if (!isOut())
+	if (isOut())
 	{
-		// Add to previous turn TU, if regen is less than normal unit need couple of turns to regen full bar
-		setValueMax(_tu, tu, 0, getBaseStats()->tu);
-
-		// Apply reductions, if new TU == 0 then it could make not spend TU decay
-		float encumbrance = (float)getBaseStats()->strength / (float)getCarriedWeight();
-		if (encumbrance < 1)
-		{
-		  _tu = int(encumbrance * _tu);
-		}
-		// Each fatal wound to the left or right leg reduces the soldier's TUs by 10%.
-		_tu -= (_tu * ((_fatalWounds[BODYPART_LEFTLEG]+_fatalWounds[BODYPART_RIGHTLEG]) * 10))/100;
-
-		setValueMax(_tu, 0, 0, getBaseStats()->tu);
+		return;
 	}
+
+	// Add to previous turn TU, if regen is less than normal unit need couple of turns to regen full bar
+	_tu = std::clamp(_tu + tu, 0, (int)getBaseStats()->tu);
+	// Apply reductions, if new TU == 0 then it could make not spend TU decay
+	float encumbrance = (float)getBaseStats()->strength / (float)getCarriedWeight();
+	if (encumbrance < 1)
+	{
+		_tu = int(encumbrance * _tu);
+	}
+	// Each fatal wound to the left or right leg reduces the soldier's TUs by 10%.
+	int woundReduction = getGeoscapeSoldier() ? getGeoscapeSoldier()->getRules()->getWoundStatReduction() : getUnitRules()->getWoundStatReduction();
+	_tu -= _tu * (_fatalWounds[BODYPART_LEFTLEG] + _fatalWounds[BODYPART_RIGHTLEG]) * woundReduction / 100;
+	_tu = std::clamp(_tu, 0, (int)getBaseStats()->tu);
 }
 
 /**
@@ -2700,13 +2700,15 @@ void BattleUnit::prepareTimeUnits(int tu)
  */
 void BattleUnit::prepareEnergy(int energy)
 {
-	if (!isOut())
+	if (isOut())
 	{
-		// Each fatal wound to the body reduces the soldier's energy recovery by 10%.
-		energy -= (_energy * (_fatalWounds[BODYPART_TORSO] * 10))/100;
-
-		setValueMax(_energy, energy, 0, getBaseStats()->stamina);
+		return;
 	}
+
+	// Each fatal wound to the body reduces the soldier's energy recovery
+	int woundReduction = getGeoscapeSoldier() ? getGeoscapeSoldier()->getRules()->getWoundStatReduction() : getUnitRules()->getWoundStatReduction();
+	energy -= _energy * _fatalWounds[BODYPART_TORSO] * woundReduction / 100;
+	_energy = std::clamp(_energy + energy, 0, (int)getBaseStats()->stamina);
 }
 
 /**
@@ -2782,7 +2784,7 @@ void BattleUnit::prepareMorale(int morale)
 					 getMorale() > Mod::PANIC_THRESHOLDS[0] ? 0 : 100;
 		}
 
-		if (chance > 0 && (chance >= 100 || RNG::percent(chance)))
+		if (RNG::percent(chance))
 		{
 			int berserkChance = _unitRules ? _unitRules->getBerserkChance() : -1; // -1 represents true 1/3 (33.33333...%)
 			bool berserk = (berserkChance == -1) ? (RNG::generate(0, 2) == 0) : RNG::percent(berserkChance);
@@ -4295,7 +4297,9 @@ int BattleUnit::getTurretType() const
 int BattleUnit::getFatalWound(UnitBodyPart part) const
 {
 	if (part < 0 || part >= BODYPART_MAX)
+	{
 		return 0;
+	}
 	return _fatalWounds[part];
 }
 /**
@@ -4306,7 +4310,9 @@ int BattleUnit::getFatalWound(UnitBodyPart part) const
 void BattleUnit::setFatalWound(int wound, UnitBodyPart part)
 {
 	if (part < 0 || part >= BODYPART_MAX)
+	{
 		return;
+	}
 	_fatalWounds[part] = Clamp(wound, 0, UnitStats::BaseStatLimit);
 }
 

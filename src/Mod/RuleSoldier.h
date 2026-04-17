@@ -100,8 +100,8 @@ private:
 	std::vector<std::string> _skillNames;
 	std::vector<const RuleSkill*> _skills;
 	ScriptValues<RuleSoldier> _scriptValues;
-	int _healthAccuracyReduction{25};
-	int _woundAccuracyReduction{10};
+	int _healthStatReduction{25};
+	int _woundStatReduction{10};
 	int _moraleGainOnPanic{15};
 
 	void addSoldierNamePool(const std::string &namFile);
@@ -235,9 +235,9 @@ public:
 	/// How much missing health will act as "fatal wounds" and prevent the soldier from going into battle.
 	int getHealthWoundThreshold() const { return _healthMissingWoundThreshold; }
 	/// Gets the amount of accuracy loss for losing health.
-	int getHealthAccuracyReduction() const { return _healthAccuracyReduction; }
+	int getHealthStatReduction() const { return _healthStatReduction; }
 	/// Gets the amount of accuracy loss for having wounds.
-	int getWoundAccuracyReduction() const { return _woundAccuracyReduction; }
+	int getWoundStatReduction() const { return _woundStatReduction; }
 	/// Gets the amount of morale to gain back on panic/beserk.
 	int getMoraleGainOnPanic() const { return _moraleGainOnPanic; }
 };

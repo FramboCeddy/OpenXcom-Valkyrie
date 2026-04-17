@@ -1945,6 +1945,8 @@ void StatsForNerdsState::initItemList()
 	addIntegerPercent(ss, itemRule->getConfigAimed()->accuracy, "accuracyAimed");
 	addIntegerPercent(ss, itemRule->getConfigAuto()->accuracy, "accuracyAuto");
 	addIntegerPercent(ss, itemRule->getConfigSnap()->accuracy, "accuracySnap");
+	addIntegerPercent(ss, itemRule->getMissileDrift(), "missileDrift", 50);
+
 	addRuleItemUseCostFull(ss, itemRule->getCostAimed(), "costAimed", RuleItemUseCost(), true, itemRule->getFlatAimed());
 	addRuleItemUseCostFull(ss, itemRule->getCostAuto(), "costAuto", RuleItemUseCost(), true, itemRule->getFlatAuto());
 	addRuleItemUseCostFull(ss, itemRule->getCostSnap(), "costSnap", RuleItemUseCost(), true, itemRule->getFlatSnap());
@@ -3697,6 +3699,7 @@ void StatsForNerdsState::initUfoList()
 	addIntegerSeconds(ss, ufoRule->getBreakOffTime(), "breakOffTime");
 	addInteger(ss, ufoRule->getScore(), "score");
 	addInteger(ss, ufoRule->getMissionScore(), "missionScore", 1);
+	addInteger(ss, ufoRule->getExplodeChance(), "explodeChance", 75);
 
 	addHeading("stats");
 	{
@@ -4037,10 +4040,7 @@ void StatsForNerdsState::initSoldierList()
 	addInteger(ss, soldierRule->getBuyCost(), "costBuy", 0, true);
 	addInteger(ss, soldierRule->getMonthlyBuyLimit(), "monthlyBuyLimit");
 
-	int time = soldierRule->getTransferTime();
-	if (time == 0)
-		time = _game->getMod()->getPersonnelTime();
-
+	int time = soldierRule->getTransferTime() != 0 ? soldierRule->getTransferTime() : _game->getMod()->getPersonnelTime();
 	addInteger(ss, time, "transferTime"); // not raw!
 
 	int baseCost = soldierRule->getSalaryCost(0);
@@ -4050,6 +4050,10 @@ void StatsForNerdsState::initSoldierList()
 	addInteger(ss, soldierRule->getSalaryCost(3) - baseCost, "costSalaryCaptain", 0, true);
 	addInteger(ss, soldierRule->getSalaryCost(4) - baseCost, "costSalaryColonel", 0, true);
 	addInteger(ss, soldierRule->getSalaryCost(5) - baseCost, "costSalaryCommander", 0, true);
+
+	addInteger(ss, soldierRule->getHealthStatReduction(), "healthStatReduction", 25);
+	addInteger(ss, soldierRule->getWoundStatReduction(), "woundStatReduction", 10);
+	addInteger(ss, soldierRule->getMoraleGainOnPanic(), "moraleGainOnPanic", 15);
 
 	if (_showDebug)
 	{
@@ -4192,6 +4196,9 @@ void StatsForNerdsState::initUnitList()
 	addInteger(ss, unitRule->getSpotterDuration(), "spotter"); // not raw!
 	addInteger(ss, unitRule->getSniperPercentage(), "sniper");
 
+	addInteger(ss, unitRule->getHealthStatReduction(), "healthAccuracyReduction", 25);
+	addInteger(ss, unitRule->getWoundStatReduction(), "woundAccuracyReduction", 10);
+	addInteger(ss, unitRule->getMoraleGainOnPanic(), "moraleGainOnPanic", 15);
 	if (_showDebug)
 	{
 		addSection("{Modding section}", "You don't need this info as a player", _white, true);

@@ -112,10 +112,10 @@ void Unit::load(const YAML::YamlNodeReader& node, Mod *mod)
 	reader.tryRead("canBeMindControlled", _canBeMindControlled);
 	reader.tryRead("berserkChance", _berserkChance);
 	reader.tryRead("builtInWeaponSets", _builtInWeaponsNames);
-	reader.tryRead("healthAccuracyReduction", _healthAccuracyReduction);
-	_healthAccuracyReduction = std::max(_healthAccuracyReduction, 0); // positive values only
-	reader.tryRead("woundAccuracyReduction", _woundAccuracyReduction);
-	_woundAccuracyReduction = std::max(_woundAccuracyReduction, 0); // positive values only
+	reader.tryRead("healthStatReduction", _healthStatReduction);
+	_healthStatReduction = std::max(_healthStatReduction, 0); // positive values only
+	reader.tryRead("woundStatReduction", _woundStatReduction);
+	_woundStatReduction = std::max(_woundStatReduction, 0); // positive values only
 	reader.tryRead("moraleGainOnPanic", _moraleGainOnPanic);
 
 

@@ -501,8 +501,8 @@ private:
 	int _intelligence, _aggression, _spotter, _sniper, _energyRecovery;
 	int _pickUpWeaponsMoreActively;
 	int _berserkChance;
-	int _healthAccuracyReduction{25};
-	int _woundAccuracyReduction{10};
+	int _healthStatReduction{25};
+	int _woundStatReduction{10};
 	int _moraleGainOnPanic{15};
 	Sint8 _avoidsFire;
 	bool _livingWeapon;
@@ -633,9 +633,9 @@ public:
 	/// Gets the probability of unit berserking when panicked.
 	int getBerserkChance() const { return _berserkChance; }
 	/// Gets the amount of accuracy loss for losing health.
-	int getHealthAccuracyReduction() const { return _healthAccuracyReduction; }
+	int getHealthStatReduction() const { return _healthStatReduction; }
 	/// Gets the amount of accuracy loss for having wounds.
-	int getWoundAccuracyReduction() const { return _woundAccuracyReduction; }
+	int getWoundStatReduction() const { return _woundStatReduction; }
 	/// Gets the amount of morale to gain back on panic/beserk.
 	int getMoraleGainOnPanic() const { return _moraleGainOnPanic; }
 

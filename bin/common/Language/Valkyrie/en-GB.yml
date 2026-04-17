@@ -32,3 +32,8 @@ en-GB:
 
   # Stats For Nerds values:
   gravPower: "Grav shield power"
+  explodeChance: "Power source explode chance"
+  missileDrift: "Missile drift"
+  healthStatReduction: "Health based stat loss"
+  woundStatyReduction: "Wound based stat loss"
+  moraleGainOnPanic: "Morale gained on panic"
