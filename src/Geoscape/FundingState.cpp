@@ -114,7 +114,14 @@ FundingState::FundingState()
 
 	_txtTitle->setAlign(ALIGN_CENTER);
 	_txtTitle->setBig();
-	_txtTitle->setText(tr("STR_INTERNATIONAL_RELATIONS"));
+	{
+		std::string title = tr("STR_INTERNATIONAL_SATISFACTION");
+		if (title == "STR_INTERNATIONAL_SATISFACTION" || !satisfaction) // IF the stringref is not changed, show the default text (ugly way of checking this)
+		{
+			title = tr("STR_INTERNATIONAL_RELATIONS");
+		}
+		_txtTitle->setText(title);
+	}
 
 	_txtCountry->setText(tr("STR_COUNTRY"));
 
