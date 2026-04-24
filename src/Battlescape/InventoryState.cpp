@@ -434,8 +434,7 @@ void InventoryState::init()
 	_soldier->clear();
 	_btnRank->clear();
 
-	// Only show slots on geoscape soldiers
-	if (Options::oxceInventoryShowUnitSlot && unit->getGeoscapeSoldier())
+	if (Options::oxceInventoryShowUnitSlot)
 	{
 		int unitSlot = 1;
 		int totalSlots = 99;
@@ -443,12 +442,16 @@ void InventoryState::init()
 		{
 			if (tmpUnit != unit)
 			{
-				unitSlot += tmpUnit->getArmor()->getTotalSize();
+				// Increase slot number if unit belongs to the current side (originally or currently through MC)
+				if (tmpUnit->getOriginalFaction() == _battleGame->getSide() || tmpUnit->getFaction() == _battleGame->getSide())
+				{
+					unitSlot += tmpUnit->getArmor()->getTotalSize();
+				}
 				continue;
 			}
 			if (!_noCraft && _battleGame->getMissionType() != "STR_BASE_DEFENSE")
 			{
-				auto* tmpCraft = unit->getGeoscapeSoldier() ? unit->getGeoscapeSoldier()->getCraft() : nullptr;
+				auto* tmpCraft = unit->getGeoscapeSoldier() ? unit->getGeoscapeSoldier()->getCraft() : nullptr; // TODO: find a way to get the craft size for non geoscape soldiers
 				if (tmpCraft)
 				{
 					totalSlots = tmpCraft->getMaxUnitsClamped();
@@ -457,6 +460,10 @@ void InventoryState::init()
 			break;
 		}
 		_txtPosition->setText(tr("STR_SLOT").arg(unitSlot).arg(totalSlots));
+	}
+	else
+	{
+		_txtPosition->setText(""); // remove slot text
 	}
 
 	_txtNameStatic->setBig();
