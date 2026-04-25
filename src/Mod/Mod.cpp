@@ -177,10 +177,11 @@ int Mod::GRAPHS_CURSOR;
 int Mod::DAMAGE_RANGE;
 int Mod::EXPLOSIVE_DAMAGE_RANGE;
 int Mod::FIRE_DAMAGE_RANGE[2];
-int Mod::SMOKE_RANGE[2];
-int Mod::RESEARCH_RANGE;
+int Mod::SMOKE_RANGE[2] = {7, 15};
+int Mod::RESEARCH_RANGE = 50;
 int Mod::BASE_DETECTION_CHANCE[2] = {15, 21};
 int Mod::PANIC_THRESHOLDS[2] = {0, 50};
+int Mod::FUNDING_RANGE[2] = {5, 20};
 std::string Mod::DEBRIEF_MUSIC_GOOD;
 std::string Mod::DEBRIEF_MUSIC_BAD;
 int Mod::DIFFICULTY_COEFFICIENT[5];
@@ -262,6 +263,9 @@ void Mod::resetGlobalStatics()
 	BASE_DETECTION_CHANCE[1] = 21;
 	PANIC_THRESHOLDS[0] = 0;
 	PANIC_THRESHOLDS[1] = 50;
+	FUNDING_RANGE[0] = 5;
+	FUNDING_RANGE[1] = 20;
+
 	DEBRIEF_MUSIC_GOOD = "GMMARS";
 	DEBRIEF_MUSIC_BAD = "GMMARS";
 
@@ -2746,6 +2750,20 @@ void Mod::loadConstants(const YAML::YamlNodeReader &reader)
 		if (PANIC_THRESHOLDS[0] > PANIC_THRESHOLDS[1])
 		{
 			std::swap(PANIC_THRESHOLDS[0], PANIC_THRESHOLDS[1]);
+		}
+	}
+
+	if (const auto& arrayReader = reader["fundingRange"])
+	{
+		for (size_t j = 0; j < std::size(FUNDING_RANGE); ++j)
+		{
+			arrayReader[j].tryReadVal(FUNDING_RANGE[j]);
+			FUNDING_RANGE[j] = std::max(FUNDING_RANGE[j], 0); // only positive values
+		}
+		// Swap values if they are in descending order
+		if (FUNDING_RANGE[0] > FUNDING_RANGE[1])
+		{
+			std::swap(FUNDING_RANGE[0], FUNDING_RANGE[1]);
 		}
 	}
 

@@ -443,6 +443,7 @@ public:
 	static int RESEARCH_RANGE;
 	static int BASE_DETECTION_CHANCE[2];
 	static int PANIC_THRESHOLDS[2];
+	static int FUNDING_RANGE[2];
 
 	static std::string DEBRIEF_MUSIC_GOOD;
 	static std::string DEBRIEF_MUSIC_BAD;

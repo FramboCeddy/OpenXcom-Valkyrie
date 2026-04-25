@@ -22,8 +22,13 @@
 #include "../Engine/RNG.h"
 #include "../Engine/ScriptBind.h"
 #include "../Savegame/SavedGame.h"
+#include "../Engine/Yaml.h"
+#include "../Mod/ModScript.h"
+#include "../Engine/Script.h"
 #include <algorithm>
 #include <tuple>
+#include <vector>
+#include <string>
 
 namespace OpenXcom
 {
@@ -216,12 +221,12 @@ void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int average
 	const int funding = _funding.back(); // TODO: have funding always be stored in thousands? or remove the concept of funding being in thousands at all?
 	const int oldFunding = funding / 1000;
 
-	// Note: this is a TEMPORARY variable! it's not saved in the save file, i.e. we don't know the value from the previous month!
 	_satisfaction = good - bad < -30 ? Satisfaction::UNHAPPY :		// unhappy
 					good - bad <= 30 ? Satisfaction::SATISFIED :	// satisfied
 									   Satisfaction::HAPPY;			// happy
 
 	int newFunding = 0;
+	auto& [changeMin, changeMax] = Mod::FUNDING_RANGE;
 	switch (_satisfaction)
 	{
 	case Satisfaction::UNHAPPY:
@@ -230,7 +235,7 @@ void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int average
 			_satisfaction = Satisfaction::SATISFIED;
 			break;
 		}
-		newFunding = (oldFunding * RNG::generate(5, 20) / 100) * 1000;
+		newFunding = (oldFunding * RNG::generate(changeMin, changeMax) / 100) * 1000;
 		newFunding = - std::clamp(newFunding, 1000, funding); // decrease at least by 1000, but not more than current funding
 		break;
 	case Satisfaction::SATISFIED:
@@ -241,7 +246,7 @@ void Country::newMonth(int xcomTotal, int alienTotal, int pactScore, int average
 			_satisfaction = Satisfaction::SATISFIED;
 			break;
 		}
-		newFunding = (oldFunding * RNG::generate(5, 20) / 100) * 1000;
+		newFunding = (oldFunding * RNG::generate(changeMin, changeMax) / 100) * 1000;
 		int cap = getRules()->getFundingCap() * 1000;
 		newFunding = std::clamp(newFunding, 1000, cap - funding); // increase at least by 1000, but not more than the cap allows
 		break;
