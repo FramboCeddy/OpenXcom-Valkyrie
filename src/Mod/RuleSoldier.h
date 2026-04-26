@@ -23,6 +23,7 @@
 #include "../Engine/Script.h"
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace OpenXcom
 {
@@ -65,22 +66,14 @@ public:
 private:
 	std::string _type;
 	YAML::YamlString _spawnedSoldier;
-	int _group;
-	int _listOrder;
 	std::vector<std::string> _requires;
 	RuleBaseFacilityFunctions _requiresBuyBaseFunc;
 	std::string _requiresBuyCountry;
-	UnitStats _minStats, _maxStats, _statCaps, _trainingStatCaps, _dogfightExperience;
 	std::string _armorName;
-	const Armor* _armor;
+	const Armor* _armor = nullptr;
 	std::string _specWeaponName;
-	const RuleItem* _specWeapon;
+	const RuleItem* _specWeapon = nullptr;
 	std::string _monthlyBuyLimitMessage;
-	int _costBuy, _costSalary, _costSalarySquaddie, _costSalarySergeant, _costSalaryCaptain, _costSalaryColonel, _costSalaryCommander;
-	int _standHeight, _kneelHeight, _floatHeight;
-	int _femaleFrequency, _value, _transferTime, _moraleLossWhenKilled;
-	int _manaMissingWoundThreshold = -1;
-	int _healthMissingWoundThreshold = -1;
 	std::vector<int> _deathSoundMale, _deathSoundFemale;
 	std::vector<int> _panicSoundMale, _panicSoundFemale, _berserkSoundMale, _berserkSoundFemale;
 	std::vector<int> _selectUnitSoundMale, _selectUnitSoundFemale;
@@ -88,21 +81,57 @@ private:
 	std::vector<int> _selectWeaponSoundMale, _selectWeaponSoundFemale;
 	std::vector<int> _annoyedSoundMale, _annoyedSoundFemale;
 	std::vector<SoldierNamePool*> _names;
-	int _totalSoldierNamePoolWeight;
-	int _monthlyBuyLimit;
 	std::string _armorForAvatar;
-	int _avatarOffsetX, _avatarOffsetY, _flagOffset;
-	bool _allowPromotion, _allowPiloting, _showTypeInInventory;
 	std::vector<StatString*> _statStrings;
 	std::vector<std::string> _rankStrings;
-	int _rankSprite, _rankSpriteBattlescape, _rankSpriteTiny;
-	int _skillIconSprite;
 	std::vector<std::string> _skillNames;
 	std::vector<const RuleSkill*> _skills;
 	ScriptValues<RuleSoldier> _scriptValues;
-	int _healthStatReduction{25};
-	int _woundStatReduction{10};
-	int _moraleGainOnPanic{15};
+
+	typedef std::pair<size_t, std::pair<int, int> > expGroup;
+	std::vector<expGroup> _experienceImprovement = {
+		{11, {2, 6}},
+		{6, {1, 4}},
+		{3, {1, 3}}, 
+		{1, {0, 1}}, };
+
+	int _listOrder;
+
+	int _rankSprite = 42;
+	int _rankSpriteBattlescape = 20;
+	int _rankSpriteTiny = 0;
+	int _skillIconSprite = 1;
+	int _avatarOffsetX = 67;
+	int _avatarOffsetY = 48;
+	int _flagOffset = 0;
+	int _totalSoldierNamePoolWeight = 0;
+	int _group = 0;
+	int _monthlyBuyLimit = 0;
+	int _costBuy = 0;
+	int _costSalary = 0;
+	int _costSalarySquaddie = 0;
+	int _costSalarySergeant = 0;
+	int _costSalaryCaptain = 0;
+	int _costSalaryColonel = 0;
+	int _costSalaryCommander = 0; // TODO: reimplement costSalaries as array of costSalaries?
+	int _standHeight = 0;
+	int _kneelHeight = 0;
+	int _floatHeight = 0;
+	int _femaleFrequency = 50;
+	int _value = 20;
+	int _transferTime = 0;
+	int _moraleLossWhenKilled = 100;
+	int _manaMissingWoundThreshold = -1;
+	int _healthMissingWoundThreshold = -1;
+	int _healthStatReduction = 25;
+	int _woundStatReduction = 10;
+	int _moraleGainOnPanic = 15;
+
+	UnitStats _minStats, _maxStats, _statCaps, _trainingStatCaps, _dogfightExperience;
+
+	bool _allowPromotion = true;
+	bool _allowPiloting = true;
+	bool _showTypeInInventory = false;
 
 	void addSoldierNamePool(const std::string &namFile);
 public:
@@ -240,6 +269,8 @@ public:
 	int getWoundStatReduction() const { return _woundStatReduction; }
 	/// Gets the amount of morale to gain back on panic/beserk.
 	int getMoraleGainOnPanic() const { return _moraleGainOnPanic; }
+	/// Gets the list of experience to stat improvements.
+	const std::vector<expGroup>& getExperienceImprovement() const { return _experienceImprovement; }
 };
 
 }

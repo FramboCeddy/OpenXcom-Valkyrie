@@ -45,14 +45,8 @@ namespace OpenXcom
  * type of soldier.
  * @param type String defining the type.
  */
-RuleSoldier::RuleSoldier(const std::string &type, int listOrder) : _type(type), _group(0), _listOrder(listOrder), _armor(nullptr), _specWeapon(nullptr),
-	_monthlyBuyLimit(0), _costBuy(0), _costSalary(0),
-	_costSalarySquaddie(0), _costSalarySergeant(0), _costSalaryCaptain(0), _costSalaryColonel(0), _costSalaryCommander(0),
-	_standHeight(0), _kneelHeight(0), _floatHeight(0), _femaleFrequency(50), _value(20), _transferTime(0), _moraleLossWhenKilled(100),
-	_totalSoldierNamePoolWeight(0),
-	_avatarOffsetX(67), _avatarOffsetY(48), _flagOffset(0),
-	_allowPromotion(true), _allowPiloting(true), _showTypeInInventory(false),
-	_rankSprite(42), _rankSpriteBattlescape(20), _rankSpriteTiny(0), _skillIconSprite(1)
+RuleSoldier::RuleSoldier(const std::string &type, int listOrder)
+	: _type(type), _listOrder(listOrder)
 {
 }
 
@@ -132,6 +126,21 @@ void RuleSoldier::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScri
 	reader.tryRead("woundStatReduction", _woundStatReduction);
 	_woundStatReduction = std::max(_woundStatReduction, 0); // positive values only
 	reader.tryRead("moraleGainOnPanic", _moraleGainOnPanic);
+
+	if (const auto& weights = reader["experienceThresholds"])
+	{
+		_experienceImprovement.clear();
+		_experienceImprovement.reserve(weights.childrenCount());
+		for (const auto& node : weights.children())
+		{
+			size_t experience = node.readKey<size_t>(); // TODO: don't allow same experience values
+			std::pair<int, int> statImprovements = node.readVal<std::pair<int, int> >();
+			_experienceImprovement.emplace_back(experience, statImprovements);
+		}
+		typedef std::pair<size_t, std::pair<int, int> > expGroup;
+		std::sort(_experienceImprovement.begin(), _experienceImprovement.end(),
+			[] (const expGroup& x, const expGroup& y) { return x.first > y.first; }); // sort highest exp-value first
+	}
 
 	mod->loadSoundOffset(_type, _deathSoundMale, reader["deathMale"], "BATTLE.CAT");
 	mod->loadSoundOffset(_type, _deathSoundFemale, reader["deathFemale"], "BATTLE.CAT");

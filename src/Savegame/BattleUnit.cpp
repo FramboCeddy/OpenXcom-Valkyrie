@@ -4236,11 +4236,22 @@ bool BattleUnit::postMissionProcedures(const Mod *mod, SavedGame *geoscape, Save
  */
 int BattleUnit::improveStat(int exp) const
 {
-	if      (exp > 10) return RNG::generate(2, 6);
-	else if (exp > 5)  return RNG::generate(1, 4);
-	else if (exp > 2)  return RNG::generate(1, 3);
-	else if (exp > 0)  return RNG::generate(0, 1);
-	else               return 0;
+	if (!_geoscapeSoldier)
+	{
+		return 0;
+	}
+
+	for (auto& [expThreshold, statImprovementRange] : _geoscapeSoldier->getRules()->getExperienceImprovement())
+	{
+		// expThresholds are saved in descending order
+		if (exp < expThreshold)
+		{
+			continue;
+		}
+
+		return RNG::generate(statImprovementRange.first, statImprovementRange.second);
+	}
+	return 0;
 }
 
 /**
