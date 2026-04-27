@@ -92,8 +92,10 @@ void sortReserchVector(std::vector<T> &vec)
 
 bool haveReserchVector(const std::vector<const RuleResearch*> &vec, const RuleResearch *res)
 {
-	auto find = std::lower_bound(vec.begin(), vec.end(), res, researchLess);
-	return find != vec.end() && *find == res;
+	auto find = std::find_if(vec.begin(), vec.end(), [&](const RuleResearch* r) { return r == res; });
+	return find != vec.end();
+	//auto find = std::lower_bound(vec.begin(), vec.end(), res, researchLess);
+	//return find != vec.end() && *find == res;
 }
 
 bool haveReserchVector(const std::vector<const RuleResearch*> &vec,  const std::string &res)
@@ -1442,7 +1444,7 @@ void SavedGame::setManufactureRuleStatus(const std::string &manufactureRule, int
 * @param researchRule The rule ID
 * @param newStatus Status to be set
 */
-void SavedGame::setResearchRuleStatus(const std::string &researchRule, int newStatus)
+void SavedGame::setResearchRuleStatus(const std::string &researchRule, ResearchStatus newStatus)
 {
 	_researchRuleStatus[researchRule] = newStatus;
 }
@@ -1606,7 +1608,7 @@ void SavedGame::addFinishedResearch(const RuleResearch * research, const Mod * m
 			for (const auto* dis : currentQueueItem->getDisabled())
 			{
 				removeDiscoveredResearch(dis); // unresearch
-				setResearchRuleStatus(dis->getName(), RuleResearch::RESEARCH_STATUS_DISABLED); // mark as permanently disabled
+				setResearchRuleStatus(dis->getName(), ResearchStatus::DISABLED); // mark as permanently disabled
 			}
 		}
 		else
@@ -1623,9 +1625,26 @@ void SavedGame::addFinishedResearch(const RuleResearch * research, const Mod * m
 		// process "re-enables": https://openxcom.org/forum/index.php?topic=12071.0
 		for (const auto* ree : currentQueueItem->getReenabled())
 		{
-			if (isResearchRuleStatusDisabled(ree->getName()))
+			if (!isResearchRuleStatusDisabled(ree->getName()))
 			{
-				setResearchRuleStatus(ree->getName(), RuleResearch::RESEARCH_STATUS_NEW); // reset status
+				continue;
+			}
+
+			if (Options::giveReenabledResearch)
+			{
+				for (const auto* diaryEntry : getResearchDiary())
+				{
+					if (diaryEntry->research == ree)
+					{
+						_discovered.push_back(ree); // Only add to discovered list to not receive other things on 'finish'
+						setResearchRuleStatus(ree->getName(), ResearchStatus::NORMAL); // reset status to normal
+						break;
+					}
+				}
+			}
+			else
+			{
+				setResearchRuleStatus(ree->getName(), ResearchStatus::NEW); // reset status so research is new
 			}
 		}
 
@@ -2098,14 +2117,14 @@ int SavedGame::getManufactureRuleStatus(const std::string &manufactureRule)
  * @param researchRule Research rule ID.
  * @return Status (0=new, 1=normal, 2=disabled, 3=hidden).
  */
-int SavedGame::getResearchRuleStatus(const std::string &researchRule) const
+ResearchStatus SavedGame::getResearchRuleStatus(const std::string &researchRule) const
 {
 	auto it = _researchRuleStatus.find(researchRule);
 	if (it != _researchRuleStatus.end())
 	{
 		return it->second;
 	}
-	return RuleResearch::RESEARCH_STATUS_NEW; // no status = new
+	return ResearchStatus::NEW; // no status = new
 }
 
 /**
@@ -2116,14 +2135,12 @@ int SavedGame::getResearchRuleStatus(const std::string &researchRule) const
 bool SavedGame::isResearchRuleStatusDisabled(const std::string &researchRule) const
 {
 	auto it = _researchRuleStatus.find(researchRule);
-	if (it != _researchRuleStatus.end())
+	if (it == _researchRuleStatus.end())
 	{
-		if (it->second == RuleResearch::RESEARCH_STATUS_DISABLED)
-		{
-			return true;
-		}
+		return false;
 	}
-	return false;
+
+	return it->second == ResearchStatus::DISABLED;
 }
 
 /**
@@ -2196,7 +2213,9 @@ bool SavedGame::isResearched(const std::string &research, bool considerDebugMode
 	//if (research.empty())
 	//	return true;
 	if (considerDebugMode && _debug)
+	{
 		return true;
+	}
 
 	return haveReserchVector(_discovered, research);
 }
@@ -2206,7 +2225,9 @@ bool SavedGame::isResearched(const RuleResearch *research, bool considerDebugMod
 	//if (research.empty())
 	//	return true;
 	if (considerDebugMode && _debug)
+	{
 		return true;
+	}
 
 	return haveReserchVector(_discovered, research);
 }
@@ -2214,9 +2235,13 @@ bool SavedGame::isResearched(const RuleResearch *research, bool considerDebugMod
 bool SavedGame::isResearched(const std::vector<std::string> &research, bool considerDebugMode) const
 {
 	if (research.empty())
+	{
 		return true;
+	}
 	if (considerDebugMode && _debug)
+	{
 		return true;
+	}
 
 	for (const auto& res : research)
 	{
@@ -2239,9 +2264,13 @@ bool SavedGame::isResearched(const std::vector<std::string> &research, bool cons
 bool SavedGame::isResearched(const std::vector<const RuleResearch *> &research, bool considerDebugMode, bool skipDisabled) const
 {
 	if (research.empty())
+	{
 		return true;
+	}
 	if (considerDebugMode && _debug)
+	{
 		return true;
+	}
 
 	for (const auto* res : research)
 	{
@@ -2276,12 +2305,16 @@ bool SavedGame::isItemObtained(const std::string &itemType, const Mod* mod) cons
 		for (auto* xbase : _bases)
 		{
 			if (xbase->getStorageItems()->getItem(item) > 0)
+			{
 				return true;
+			}
 
 			for (auto* xcraft : *xbase->getCrafts())
 			{
 				if (xcraft->getItems()->getItem(item) > 0)
+				{
 					return true;
+				}
 			}
 		}
 	}

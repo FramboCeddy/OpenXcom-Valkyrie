@@ -106,9 +106,9 @@ class SavedGame
 public:
 	Country *debugCountry = nullptr;
 	Region *debugRegion = nullptr;
-	int debugType = 0;
 	size_t debugZone = 0;
 	size_t debugArea = 0;
+	int debugType = 0;
 
 	/// Name of class used in script.
 	static constexpr const char *ScriptName = "GeoscapeGame";
@@ -120,17 +120,16 @@ public:
 	static const int MAX_CRAFT_LOADOUT_TEMPLATES = 10;
 
 private:
+	int _globeZoom;
+	double _globeLon, _globeLat;
 	std::string _name;
 	GameDifficulty _difficulty;
 	GameEnding _end;
-	bool _ironman;
 	GameTime *_time;
 	std::vector<std::string> _userNotes;
 	std::vector<std::string> _geoscapeDebugLog;
 	std::vector<int> _researchScores;
 	std::vector<int64_t> _funds, _maintenance, _incomes, _expenditures;
-	double _globeLon, _globeLat;
-	int _globeZoom;
 	std::map<std::string, int> _ids;
 	std::vector<Country*> _countries;
 	std::vector<Region*> _regions;
@@ -146,15 +145,13 @@ private:
 	std::map<std::string, int> _generatedEvents;
 	std::map<std::string, int> _ufopediaRuleStatus;
 	std::map<std::string, int> _manufactureRuleStatus;
-	std::map<std::string, int> _researchRuleStatus;
+	std::map<std::string, ResearchStatus> _researchRuleStatus;
 	std::map<std::string, int> _monthlyPurchaseLimitLog;
 	std::map<std::string, bool> _hiddenPurchaseItemsMap;
 	std::map<std::string, RuleCraftDeployment> _customRuleCraftDeployments;
 	Base* _previewBase;
 	std::vector<AlienMission*> _activeMissions;
 	std::vector<GeoscapeEvent*> _geoscapeEvents;
-	bool _debug, _warned;
-	bool _togglePersonalLight, _toggleNightVision;
 	int _toggleBrightness;
 	int _monthsPassed;
 	int _daysPassed;
@@ -174,9 +171,12 @@ private:
 	std::vector<MissionStatistics*> _missionStatistics;
 	std::set<int> _ignoredUfos;
 	std::set<const RuleItem *> _autosales;
+	ScriptValues<SavedGame> _scriptValues;
+	bool _ironman;
+	bool _debug, _warned;
+	bool _togglePersonalLight, _toggleNightVision;
 	bool _disableSoldierEquipment;
 	bool _alienContainmentChecked;
-	ScriptValues<SavedGame> _scriptValues;
 
 	static SaveInfo getSaveInfo(const std::string &file, Language *lang);
 public:
@@ -284,7 +284,7 @@ public:
 	/// Sets the status of a manufacture rule
 	void setManufactureRuleStatus(const std::string &manufactureRule, int newStatus);
 	/// Sets the status of a research rule
-	void setResearchRuleStatus(const std::string &researchRule, int newStatus);
+	void setResearchRuleStatus(const std::string &researchRule, ResearchStatus newStatus);
 	/// Sets the item as hidden or unhidden
 	void setHiddenPurchaseItemsStatus(const std::string &itemName, bool hidden);
 	/// Selects a "getOneFree" topic for the given research rule.
@@ -334,9 +334,9 @@ public:
 	/// Gets the status of a manufacture rule.
 	int getManufactureRuleStatus(const std::string &manufactureRule);
 	/// Gets all the research rule status info.
-	const std::map<std::string, int> &getResearchRuleStatusRaw() const { return _researchRuleStatus; }
+	const std::map<std::string, ResearchStatus> &getResearchRuleStatusRaw() const { return _researchRuleStatus; }
 	/// Gets the status of a research rule.
-	int getResearchRuleStatus(const std::string &researchRule) const;
+	ResearchStatus getResearchRuleStatus(const std::string &researchRule) const;
 	/// Is the research permanently disabled?
 	bool isResearchRuleStatusDisabled(const std::string &researchRule) const;
 	/// Gets if a research still has undiscovered non-disabled "getOneFree".

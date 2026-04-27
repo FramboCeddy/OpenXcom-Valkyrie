@@ -579,7 +579,7 @@ void createOptionsVALK()
 void createAdvancedOptionsVALK()
 {
 	_info.push_back(OptionInfo(OPTION_VALK, "techTreeCensorCost", &techTreeCensorCost, false, "STR_TECHTREE_CENSOR_COST", "STR_GENERAL"));
-	_info.push_back(OptionInfo(OPTION_VALK, "recoveryPointsForAmmo", &recoveryPointsForAmmo, false, "STR_RECOVERY_POINTS_FOR_AMMO", "STR_GENERAL"));
+	_info.push_back(OptionInfo(OPTION_VALK, "giveReenabledResearch", &giveReenabledResearch, false, "STR_GIVE_REENABLED_RESEARCH", "STR_GENERAL"));
 
 	_info.push_back(OptionInfo(OPTION_VALK, "craftRepairsLast", &craftRepairsLast, false, "STR_CRAFT_REPAIRS_LAST", "STR_BASESCAPE"));
 
@@ -587,6 +587,7 @@ void createAdvancedOptionsVALK()
 	_info.push_back(OptionInfo(OPTION_VALK, "euclidDistanceAccuracy", &euclidDistanceAccuracy, false, "STR_EUCLID_DISTANCE_ACCURACY", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "accuracyForFirstWaypoint", &accuracyForFirstWaypoint, false, "STR_ACCURACY_FOR_FIRST_WAYPOINT", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "forceStatCaps", &forceStatCaps, false, "STR_FORCE_STAT_CAPS", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "recoveryPointsForAmmo", &recoveryPointsForAmmo, false, "STR_RECOVERY_POINTS_FOR_AMMO", "STR_BATTLESCAPE"));
 }
 
 void createControlsVALK()

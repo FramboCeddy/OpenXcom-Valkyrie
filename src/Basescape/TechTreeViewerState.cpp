@@ -176,7 +176,7 @@ TechTreeViewerState::TechTreeViewerState(const RuleResearch *r, const RuleManufa
 	}
 	for (auto& [name, researchStatus] : _game->getSavedGame()->getResearchRuleStatusRaw())
 	{
-		if (researchStatus == RuleResearch::RESEARCH_STATUS_DISABLED)
+		if (researchStatus == ResearchStatus::DISABLED)
 		{
 			auto* rr = _game->getMod()->getResearch(name, false);
 			if (rr)

@@ -166,7 +166,7 @@ void ResearchInfoState::buildUi()
 	if (_rule)
 	{
 		// mark new/hidden as normal
-		_game->getSavedGame()->setResearchRuleStatus(_rule->getName(), RuleResearch::RESEARCH_STATUS_NORMAL);
+		_game->getSavedGame()->setResearchRuleStatus(_rule->getName(), ResearchStatus::NORMAL);
 	}
 }
 

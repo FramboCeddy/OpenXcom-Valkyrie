@@ -40,7 +40,7 @@ class NewResearchListState : public TouchState
 {
 private:
 	Base *_base;
-	bool _sortByCost;
+	std::vector<RuleResearch *> _projects;
 	TextButton *_btnOK;
 	ComboBox *_cbxSort;
 	ToggleTextButton *_btnShowOnlyNew;
@@ -50,12 +50,13 @@ private:
 	TextList *_lstResearch;
 	size_t _lstScroll;
 	Uint8 _colorNormal, _colorNew, _colorHidden;
+	bool _sortByCost;
 	bool _isSortingEnabled;
+
 	void onClick(Action* action);
 	void onSelectProject(Action *action);
 	void onToggleProjectStatus(Action *action);
 	void onOpenTechTreeViewer(Action *action);
-	std::vector<RuleResearch *> _projects;
 public:
 	/// Creates the New research list state.
 	NewResearchListState(Base *base, bool sortByCost);

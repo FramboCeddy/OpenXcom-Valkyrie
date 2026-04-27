@@ -16,11 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <algorithm>
 #include "NewPossibleResearchState.h"
 #include "../Engine/Game.h"
 #include "../Engine/LocalizedText.h"
-#include "../Mod/Mod.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
@@ -29,6 +27,10 @@
 #include "../Basescape/ResearchState.h"
 #include "../Savegame/SavedGame.h"
 #include "../Engine/Options.h"
+#include "../Engine/Action.h"
+#include "../Engine/InteractiveSurface.h"
+#include <vector>
+#include <new>
 
 namespace OpenXcom
 {
@@ -38,7 +40,7 @@ namespace OpenXcom
  * @param base Pointer to the base to get info from.
  * @param possibilities List of newly possible ResearchProject
  */
-NewPossibleResearchState::NewPossibleResearchState(Base * base, const std::vector<RuleResearch *> & possibilities) : _base(base)
+NewPossibleResearchState::NewPossibleResearchState(Base *base, const std::vector<RuleResearch *> & possibilities) : _base(base)
 {
 	_screen = false;
 
@@ -80,19 +82,41 @@ NewPossibleResearchState::NewPossibleResearchState(Base * base, const std::vecto
 	bool foundNew = false;
 	for (const auto* rule : possibilities)
 	{
-		// Note: ignore all topics with "requires" (same reason as in NewResearchListState::fillProjectList())
-		if (rule->getRequirements().empty())
+		// ignore all topics with "requires" (same reason as in NewResearchListState::fillProjectList())
+		if (!rule->getRequirements().empty())
 		{
-			// Also ignore:
-			// 1. things that already popped before
-			// 2. things that never popped, but are researched already (can happen for topics that can be researched multiple times)
-			if (!_game->getSavedGame()->wasResearchPopped(rule) && !_game->getSavedGame()->isResearched(rule, false))
+			continue;
+		}
+		// ignore things that already popped before
+		if (_game->getSavedGame()->wasResearchPopped(rule))
+		{
+			continue;
+		}
+		// ignore things that are researched already (can happen for topics that can be researched multiple times)
+		if (_game->getSavedGame()->isResearched(rule, false))
+		{
+			continue;
+		}
+		// option will discover re-enabled research instead of making it newly available
+		if (Options::giveReenabledResearch)
+		{
+			bool inDiary = false;
+			for (const auto* diaryEntry : _game->getSavedGame()->getResearchDiary())
 			{
-				_game->getSavedGame()->addPoppedResearch(rule);
-				_lstPossibilities->addRow(1, tr(rule->getName()).c_str());
-				foundNew = true;
+				if (diaryEntry->research == rule)
+				{
+					inDiary = true;
+					break;
+				}
+			}
+			if (inDiary)
+			{
+				continue;
 			}
 		}
+		_game->getSavedGame()->addPoppedResearch(rule);
+		_lstPossibilities->addRow(1, tr(rule->getName()).c_str());
+		foundNew = true;
 	}
 
 	if (foundNew)

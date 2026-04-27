@@ -18,6 +18,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../Engine/State.h"
+#include <vector>
 
 namespace OpenXcom
 {
@@ -29,6 +30,7 @@ class Text;
 class Base;
 class TextList;
 class RuleResearch;
+class Action;
 
 /**
  * Window which inform the player of new possible research projects.

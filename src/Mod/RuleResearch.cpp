@@ -21,14 +21,18 @@
 #include "../Engine/Collections.h"
 #include "../Engine/ScriptBind.h"
 #include "Mod.h"
+#include "../Engine/Script.h"
+#include "../Engine/Yaml.h"
+#include "ModScript.h"
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace OpenXcom
 {
 
-RuleResearch::RuleResearch(const std::string &name, int listOrder) :
-	_name(name), _spawnedItemCount(1), _cost(0), _points(0),
-	_sequentialGetOneFree(false), _needItem(false), _destroyItem(false), _unlockFinalMission(false), _repeatable(false),
-	_listOrder(listOrder)
+RuleResearch::RuleResearch(const std::string &name, int listOrder)
+	: _name(name), _listOrder(listOrder)
 {
 }
 

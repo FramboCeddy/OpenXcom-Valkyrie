@@ -196,3 +196,4 @@ OPT bool recoveryPointsForAmmo;
 OPT bool accuracyForFirstWaypoint;
 OPT bool craftRepairsLast;
 OPT bool forceStatCaps;
+OPT bool giveReenabledResearch;

@@ -1,27 +1,15 @@
 en-GB:
   STR_ENGINE_VALK: VALKYRIE
-  STR_VISUAL_SMOKE_DENSITY: "Visual Smoke Density"
-  STR_VISUAL_SMOKE_DENSITY_DESC: "Displays the density of smoke visually through a different graphical representation."
-  STR_EUCLID_DISTANCE_ACCURACY: "Euclidean Distance for Accuracy"
-  STR_EUCLID_DISTANCE_ACCURACY_DESC: "Uses Euclidean distance for accuracy calculations."
+
   STR_FILTER_PROFITABILITY: "Profitability"
   STR_ITEMS_LOADED: "Items>{ALT}{0}{ALT}/{ALT}{1}"
   STR_SPACE_LOADED: "Space>{ALT}{0}{ALT}/{ALT}{1}"
-  STR_TECHTREE_CENSOR_COST: "Censor Tech Tree Research Cost"
-  STR_TECHTREE_CENSOR_COST_DESC: "Censor the research cost symbols when looking up a research in the Tech Tree view."
-  STR_CENSORED: "***"
-  STR_HIDE_SPOILERS: "Hide spoilers"
-  STR_RECOVERY_POINTS_FOR_AMMO: "Recovery Points for Ammo"
-  STR_RECOVERY_POINTS_FOR_AMMO_DESC: "Gain the recovery points for ammo that is currently loaded inside of weapons you recover."
-  STR_ACCURACY_FOR_FIRST_WAYPOINT: "Firing Accuracy For First Waypoint"
-  STR_ACCURACY_FOR_FIRST_WAYPOINT_DESC: "Use the weapon's firing accuracy to determine how accurate your shot to the first launch waypoint will be."
-  STR_CRAFT_REPAIRS_LAST: "Craft Maintenance Repairs Last"
-  STR_CRAFT_REPAIRS_LAST_DESC: "Changes the order of craft maintenance from repair>rearm>refuel to rearm>refuel>repair."
-  STR_FORCE_STAT_CAPS: "Force Stat Caps"
-  STR_FORCE_STAT_CAPS_DESC: "Forces the experience gained from a mission to not overlevel a soldier's stats."
 
   STR_INVISIBLE_WALLS_ACTIVATED: "Walls and objects made invisible. {NEWLINE}Ctrl+y to disable."
   STR_INVISIBLE_WALLS_DEACTIVATED: "Walls and objects made visible."
+
+  STR_CENSORED: "***"
+  STR_HIDE_SPOILERS: "Hide spoilers"
 
   STR_INTERNATIONAL_SATISFACTION: ""
   STR_ALIEN_PACT: "SIGNED PACT"
@@ -31,7 +19,25 @@ en-GB:
   STR_PREVIOUS_SATISFACTION: "Last month"
   STR_CURRENT_SATISFACTION: "This month"
 
-  # Stats For Nerds values:
+  # Advanced Options
+  STR_VISUAL_SMOKE_DENSITY: "Visual Smoke Density"
+  STR_VISUAL_SMOKE_DENSITY_DESC: "Displays the density of smoke visually through a different graphical representation."
+  STR_EUCLID_DISTANCE_ACCURACY: "Euclidean Distance for Accuracy"
+  STR_EUCLID_DISTANCE_ACCURACY_DESC: "Uses Euclidean distance for accuracy calculations."
+  STR_TECHTREE_CENSOR_COST: "Censor Tech Tree Research Cost"
+  STR_TECHTREE_CENSOR_COST_DESC: "Censor the research cost symbols when looking up a research in the Tech Tree view."
+  STR_RECOVERY_POINTS_FOR_AMMO: "Recovery Points for Ammo"
+  STR_RECOVERY_POINTS_FOR_AMMO_DESC: "Gain the recovery points for ammo that is currently loaded inside of weapons you recover."
+  STR_ACCURACY_FOR_FIRST_WAYPOINT: "Firing Accuracy For First Waypoint"
+  STR_ACCURACY_FOR_FIRST_WAYPOINT_DESC: "Use the weapon's firing accuracy to determine how accurate your shot to the first launch waypoint will be."
+  STR_CRAFT_REPAIRS_LAST: "Craft Maintenance Repairs Last"
+  STR_CRAFT_REPAIRS_LAST_DESC: "Changes the order of craft maintenance from repair>rearm>refuel to rearm>refuel>repair."
+  STR_FORCE_STAT_CAPS: "Force Stat Caps"
+  STR_FORCE_STAT_CAPS_DESC: "Forces the experience gained from a mission to not overlevel a soldier's stats."
+  STR_GIVE_REENABLED_RESEARCH: "Give Reenabled Research"
+  STR_GIVE_REENABLED_RESEARCH_DESC: "Research topics that were previously researched, then disabled and reenabled are given as completed instead of available."
+
+  # Stats For Nerds
   gravPower: "Grav shield power"
   explodeChance: "Power source explode chance"
   missileDrift: "Missile drift"

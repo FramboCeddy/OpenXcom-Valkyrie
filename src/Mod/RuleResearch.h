@@ -22,12 +22,22 @@
 #include "../Engine/Yaml.h"
 #include "RuleBaseFacilityFunctions.h"
 #include "ModScript.h"
+#include <utility>
+#include "../Engine/Script.h"
 
 namespace OpenXcom
 {
 
 class Mod;
+class RuleItem;
 
+enum class ResearchStatus : int
+{
+	NEW,
+	NORMAL,
+	DISABLED,
+	HIDDEN,
+};
 /**
  * Represents one research project.
  * Dependency is the list of RuleResearchs which must be discovered before a RuleResearch became available.
@@ -44,33 +54,35 @@ class RuleResearch
 {
  private:
 	std::string _name, _lookup, _cutscene, _spawnedItem, _spawnedEvent;
-	int _spawnedItemCount;
 	std::vector<std::string> _spawnedItemList;
 	std::vector<std::string> _decreaseCounter, _increaseCounter;
-	int _cost, _points;
+
 	std::vector<std::string> _dependenciesName, _unlocksName, _disablesName, _reenablesName, _getOneFreeName, _requiresName;
 	RuleBaseFacilityFunctions _requiresBaseFunc;
 	std::vector<const RuleResearch*> _dependencies, _unlocks, _disables, _reenables, _getOneFree, _requires;
-	bool _sequentialGetOneFree;
+	ScriptValues<RuleResearch> _scriptValues;
 	std::vector<std::pair<std::string, std::vector<std::string> > > _getOneFreeProtectedName;
 	std::vector<std::pair<const RuleResearch*, std::vector<const RuleResearch*> > > _getOneFreeProtected;
 	std::string _neededItemName;
 	const RuleItem* _neededItem = nullptr;
-	bool _needItem, _destroyItem, _unlockFinalMission;
-	bool _repeatable;
+
+	int _spawnedItemCount = 1;
+	int _cost = 0;
+	int _points = 0;
 	int _listOrder;
 
-	ScriptValues<RuleResearch> _scriptValues;
+	bool _repeatable = false;
+	bool _sequentialGetOneFree = false;
+	bool _needItem = false;
+	bool _destroyItem = false;
+	bool _unlockFinalMission = false;
+
 public:
 	/// Name of class used in script.
 	static constexpr const char* ScriptName = "RuleResearch";
 	/// Register all useful function used by script.
 	static void ScriptRegister(ScriptParserBase* parser);
 
-	static const int RESEARCH_STATUS_NEW = 0;
-	static const int RESEARCH_STATUS_NORMAL = 1;
-	static const int RESEARCH_STATUS_DISABLED = 2;
-	static const int RESEARCH_STATUS_HIDDEN = 3;
 	RuleResearch(const std::string &name, int listOrder);
 
 	/// Loads the research from YAML.
