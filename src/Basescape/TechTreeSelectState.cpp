@@ -239,7 +239,7 @@ void TechTreeSelectState::initLists()
 
 		const std::string name = _parent->isSpoilerEnabled() || _parent->isDiscoveredResearch(res) ? tr(res) : tr("STR_CENSORED");
 		_availableTopics.push_back(res);
-		_lstTopics->addRow(1, tr(name).c_str());
+		_lstTopics->addRow(1, name.c_str());
 		_lstTopics->setRowColor(row, _parent->getResearchColor(res));
 		++row;
 	}
