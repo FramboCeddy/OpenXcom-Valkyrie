@@ -63,33 +63,37 @@ public:
 private:
 	std::string _name;
 	std::string _callsign;
-	int _id, _nationality, _improvement, _psiStrImprovement;
+	std::string _statString;
 	RuleSoldier *_rules;
-	UnitStats _initialStats, _currentStats, _tmpStatsWithSoldierBonuses, _tmpStatsWithAllBonuses;
-	UnitStats _dailyDogfightExperienceCache;
-	SoldierRank _rank;
 	Craft *_craft;
-	SoldierGender _gender;
-	SoldierLook _look;
+	Armor *_armor;
+	Armor *_replacedArmor;
+	Armor *_transformedArmor;
+	const Armor* _personalEquipmentArmor;
+	SoldierDeath *_death;
+	SoldierDiary *_diary;
+	std::vector<EquipmentLayoutItem*> _equipmentLayout;           // last used equipment layout, managed by the game
+	std::vector<EquipmentLayoutItem*> _personalEquipmentLayout;   // personal  equipment layout, managed by the player
+	std::vector<const RuleSoldierBonus*> _bonusCache;
+	std::map<std::string, int> _previousTransformations, _transformationBonuses;
+	ScriptValues<Soldier> _scriptValues;
+
+	int _id, _nationality, _improvement, _psiStrImprovement;
 	int _lookVariant;
 	int _missions, _kills, _stuns;
 	int _healthMissing = 0; // amount of health missing until full health recovery, this is less serious than wound recovery.
 	int _manaMissing = 0;   // amount of mana missing until full mana recovery
 	float _recovery = 0.0;  // amount of hospital attention soldier needs... used to calculate recovery time
+
+	UnitStats _initialStats, _currentStats, _tmpStatsWithSoldierBonuses, _tmpStatsWithAllBonuses;
+	UnitStats _dailyDogfightExperienceCache;
+
+	SoldierRank _rank;
+	SoldierGender _gender;
+	SoldierLook _look;
+
 	bool _recentlyPromoted, _psiTraining, _training, _returnToTrainingWhenHealed;
-	Armor *_armor;
-	Armor *_replacedArmor;
-	Armor *_transformedArmor;
-	std::vector<EquipmentLayoutItem*> _equipmentLayout;           // last used equipment layout, managed by the game
-	std::vector<EquipmentLayoutItem*> _personalEquipmentLayout;   // personal  equipment layout, managed by the player
-	const Armor* _personalEquipmentArmor;
-	SoldierDeath *_death;
-	SoldierDiary *_diary;
-	std::string _statString;
 	bool _corpseRecovered;
-	std::map<std::string, int> _previousTransformations, _transformationBonuses;
-	std::vector<const RuleSoldierBonus*> _bonusCache;
-	ScriptValues<Soldier> _scriptValues;
 public:
 	/// Creates a new soldier.
 	Soldier(RuleSoldier *rules, Armor *armor, int nationality, int id = 0);

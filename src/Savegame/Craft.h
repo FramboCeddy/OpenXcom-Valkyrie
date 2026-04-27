@@ -89,23 +89,25 @@ public:
 private:
 	const RuleCraft *_rules;
 	Base *_base;
-	int _fuel, _excessFuel, _damage, _shield, _interceptionOrder, _takeoff;
 	std::vector<CraftWeapon*> _weapons;
 	ItemContainer *_items;
 	ItemContainer *_tempSoldierItems;
 	ItemContainer *_tempExtraItems;
 	std::vector<Vehicle*> _vehicles;
 	std::string _status;
-	bool _lowFuel, _mission, _inBattlescape, _inDogfight;
-	double _speedMaxRadian;
 	RuleCraftStats _stats;
-	bool _isAutoPatrolling;
-	double _lonAuto, _latAuto;
 	std::vector<int> _pilots;
 	std::map<int, SoldierDeploymentData> _customSoldierDeployment;
 	std::vector<VehicleDeploymentData> _customVehicleDeployment;
-	int _skinIndex;
 	ScriptValues<Craft> _scriptValues;
+	double _speedMaxRadian;
+	double _lonAuto, _latAuto;
+
+	int _fuel, _excessFuel, _damage, _shield, _interceptionOrder, _takeoff;
+	int _skinIndex;
+
+	bool _isAutoPatrolling;
+	bool _lowFuel, _mission, _inBattlescape, _inDogfight;
 
 	void recalcSpeedMaxRadian();
 
@@ -251,6 +253,8 @@ public:
 	void returnToBase();
 	/// Returns the crew to their base (using transfers).
 	void evacuateCrew(const Mod *mod);
+	/// Returns the equipment to the base (using transfers).
+	void recoverEquipment(const Mod *mod);
 	/// Checks if a target is detected by the craft's radar.
 	UfoDetection detect(const Ufo *target, const SavedGame *save, bool alreadyTracked) const;
 	/// Handles craft logic.

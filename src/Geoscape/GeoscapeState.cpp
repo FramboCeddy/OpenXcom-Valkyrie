@@ -1166,6 +1166,7 @@ void GeoscapeState::time5Seconds()
 				{
 					// Note: this was moved from DogfightState.cpp, as it was not 100% reliable there
 					xcraft->evacuateCrew(_game->getMod());
+					xcraft->recoverEquipment(_game->getMod());
 				}
 				// if a transport craft has been shot down, kill all the soldiers on board.
 				if (xcraft->getRules()->getMaxUnitsLimit() > 0)

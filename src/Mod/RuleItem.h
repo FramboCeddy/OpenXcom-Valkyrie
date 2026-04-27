@@ -377,9 +377,9 @@ private:
 	std::map<const RuleItem*, std::vector<int> > _recoveryTransformations;
 	std::vector<std::string> _categories;
 
+	double _size;
 	Unit* _vehicleUnit;
 	int _vehicleFixedAmmoSlot;
-	double _size;
 	int _monthlyBuyLimit;
 	std::string _monthlyBuyLimitMessage;
 	int _costBuy, _costSell, _transferTime, _weight;
@@ -403,8 +403,6 @@ private:
 	std::vector<int> _psiMissSound;
 	int _psiMissAnimation, _psiMissAnimFrames;
 	int _power, _powerForAnimation;
-	bool _hidePower;
-	bool _ignoreAmmoPower;
 	float _powerRangeReduction;
 	float _powerRangeThreshold;
 	std::vector<std::vector<std::string>> _compatibleAmmoNames = std::vector<std::vector<std::string>>(AmmoSlotMax);
@@ -412,6 +410,8 @@ private:
 	std::unordered_map<const RuleItem*, int> _compatibleAmmoSlots;
 	RuleDamageType _damageType, _meleeType;
 	bool _damageTypeSet, _meleeTypeSet;
+	bool _hidePower;
+	bool _ignoreAmmoPower;
 	RuleItemAction _confAimed, _confAuto, _confSnap, _confMelee;
 	int _accuracyUse, _accuracyMind, _accuracyPanic, _accuracyThrow, _accuracyCloseQuarters;
 	int _missileDrift;
@@ -422,11 +422,11 @@ private:
 	BattleType _battleType;
 	BattleFuseType _fuseType;
 	RuleItemFuseTrigger _fuseTriggerEvents;
-	bool _hiddenOnMinimap;
 	std::string _painKillerActionName, _stimulantActionName, _healActionName;
 	std::string _medikitActionName, _psiAttackName, _primeActionName, _unprimeActionName, _primeActionMessage, _unprimeActionMessage;
 	std::string _sellActionMessage;
 
+	bool _hiddenOnMinimap;
 	bool _twoHanded, _blockBothHands, _fixedWeapon, _fixedWeaponShow, _isConsumable, _isFireExtinguisher;
 	bool _isAmmoRechargeable;
 	bool _specialUseEmptyHand, _specialUseEmptyHandShow;
@@ -451,10 +451,10 @@ private:
 	int _turretType;
 	int _aiUseDelay, _aiMeleeHitCount;
 	bool _recover, _recoverCorpse, _ignoreInBaseDefense, _ignoreInCraftEquip, _liveAlien;
+	bool _arcingShot;
 	int _liveAlienPrisonType;
 	int _attraction;
 	RuleItemUseFlatRule _flatUse, _flatThrow, _flatPrime, _flatUnprime;
-	bool _arcingShot;
 	ExperienceTrainingMode _experienceTrainingMode;
 	int _manaExperience;
 	int _loadOrder;

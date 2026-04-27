@@ -1089,6 +1089,52 @@ void Craft::evacuateCrew(const Mod *mod)
 	}
 	removeAllPilots(); // just in case
 }
+/*
+* Gives some equipment back when a plane gets shot down
+*/
+void Craft::recoverEquipment(const Mod* mod)
+{
+	int recoverChance = mod->getEquipmentEmergencyEvacuationSurvivalChance();
+	if (recoverChance <= 0)
+	{
+		return;
+	}
+
+	for (auto& [ruleItem, quantity] : *_items->getContents())
+	{
+		int recoverAmount = 0;
+		if (recoverChance >= 100)
+		{
+			recoverAmount = quantity;
+		}
+		else
+		{
+			for (int i = 0; i < quantity; ++i)
+			{
+				if (RNG::percent(recoverChance))
+				{
+					++recoverAmount;
+				}
+			}
+		}
+		// create transfer with certain amount of items
+		Transfer* trans = new Transfer(ruleItem->getTransferTime());
+		trans->setItems(ruleItem, recoverAmount);
+		_base->getTransfers()->push_back(trans);
+		// We don't need to delete any items from the contents, they'll go with the plane
+	}
+	for (auto &veh : _vehicles)
+	{
+		bool recoverVehicle = RNG::percent(recoverChance);
+		if (recoverVehicle)
+		{
+			// create transfer for vehicle, but no ammo
+			Transfer* trans = new Transfer(veh->getRules()->getTransferTime());
+			trans->setItems(veh->getRules(), 1);
+			_base->getTransfers()->push_back(trans);
+		}
+	}
+}
 
 /**
  * Moves the craft to its destination.

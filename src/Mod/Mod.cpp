@@ -3355,6 +3355,8 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	reader.tryRead("hunterKillerFastRetarget", _hunterKillerFastRetarget);
 	reader.tryRead("crewEmergencyEvacuationSurvivalChance", _crewEmergencyEvacuationSurvivalChance);
 	reader.tryRead("pilotsEmergencyEvacuationSurvivalChance", _pilotsEmergencyEvacuationSurvivalChance);
+	reader.tryRead("equipmentEmergencyEvacuationSurvivalChance", _equipmentEmergencyEvacuationSurvivalChance);
+	_equipmentEmergencyEvacuationSurvivalChance = std::clamp(_equipmentEmergencyEvacuationSurvivalChance, 0, 100); // percent chance
 	reader.tryRead("showUfoPreviewInBaseDefense", _showUfoPreviewInBaseDefense);
 	reader.tryRead("soldiersPerSergeant", _soldiersPerRank[RANK_SERGEANT]);
 	reader.tryRead("soldiersPerCaptain", _soldiersPerRank[RANK_CAPTAIN]);

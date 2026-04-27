@@ -121,9 +121,9 @@ private:
 	int _scientists, _engineers;
 	std::vector<ResearchProject *> _research;
 	std::vector<Production *> _productions;
+	AlienMission* _retaliationMission;
 	bool _inBattlescape;
 	bool _retaliationTarget;
-	AlienMission* _retaliationMission;
 	bool _fakeUnderwater;
 	std::vector<Vehicle*> _vehicles;
 	std::vector<Vehicle*> _vehiclesFromBase;

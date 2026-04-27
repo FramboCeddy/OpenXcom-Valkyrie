@@ -51,13 +51,13 @@ private:
 	std::list<State*> _states, _deleted;
 	SavedGame *_save;
 	Mod *_mod;
-	bool _quit, _init, _update;
 	FpsCounter *_fpsCounter;
-	bool _mouseActive;
-	unsigned int _timeOfLastFrame;
 	int _timeUntilNextFrame;
-	bool _ctrl, _alt, _shift, _rmb, _mmb;
+	unsigned int _timeOfLastFrame;
 	int _scrollStep;
+	bool _quit, _init, _update;
+	bool _mouseActive;
+	bool _ctrl, _alt, _shift, _rmb, _mmb;
 	static const double VOLUME_GRADIENT;
 
 public:
