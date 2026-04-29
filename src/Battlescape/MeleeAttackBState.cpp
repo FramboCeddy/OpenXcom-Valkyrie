@@ -33,6 +33,8 @@
 #include "BattleState.h"
 #include "Position.h"
 #include "../Mod/Unit.h"
+#include <SDL_stdinc.h>
+#include <algorithm>
 
 namespace OpenXcom
 {
@@ -231,25 +233,27 @@ void MeleeAttackBState::performMeleeAttack(int terrainMeleeTilePart)
 	_action.weapon->spendAmmoForAction(BA_HIT, _parent->getSave());
 	_parent->getMap()->setCursorType(CT_NONE);
 
-	// offset the damage voxel ever so slightly so that the target knows which side the attack came from
-	Position difference = _unit->getPositionVexels() - _target->getPositionVexels();
-	// we need to reduce the voxel offset because this damagePosition also gets used for LoF voxelcheck
-	// so it must be a low enough difference to not miss on small LoFs
-	if (_unit->isBigUnit() && _target->isBigUnit())
+	Position damagePosition = _voxel;
+	if (_target) // terrainMelee does not set a target
 	{
-		// This causes the 4 corners to count as a 'diagonal' attack
-		difference.x = difference.x / 32;
-		difference.y = difference.y / 32;
+		Position difference = _unit->getPositionVexels() - _target->getPositionVexels();
+		// we need to reduce the voxel offset because this damagePosition also gets used for LoF voxelcheck
+		// so it must be a low enough difference to not miss on small LoFs
+		if (_unit->isBigUnit() && _target->isBigUnit())
+		{
+			// This causes the 4 corners to count as a 'diagonal' attack
+			difference.x = difference.x / 32;
+			difference.y = difference.y / 32;
+		}
+		else
+		{
+			// For 2x2 vs 1x1 unit, The 4 corners will be 'diagonal' attacks
+			difference.x = difference.x / 16;
+			difference.y = difference.y / 16;
+		}
+		// offset the damage voxel ever so slightly so that the target knows which side the attack came from
+		damagePosition += difference;
 	}
-	else
-	{
-		// For 2x2 vs 1x1 unit, The 4 corners will be 'diagonal' attacks
-		difference.x = difference.x / 16;
-		difference.y = difference.y / 16;
-	}
-
-	Position damagePosition = _voxel + difference;
-
 
 	// make an explosion action
 	_parent->statePushFront(new ExplosionBState(_parent, damagePosition, BattleActionAttack::GetAferShoot(_action, _ammo), 0, true, 0, 0, terrainMeleeTilePart));
