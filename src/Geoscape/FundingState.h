@@ -58,7 +58,7 @@ struct FundingCountry
 class FundingState : public State
 {
 private:
-	TextButton *_btnOk;
+	TextButton *_btnOk, *_btnSwitch;
 	Window *_window;
 	Text *_txtTitle, *_txtCountry, *_txtFunding, *_txtChange;
 	TextList *_lstCountries;
@@ -66,7 +66,7 @@ private:
 
 	std::vector<FundingCountry> _fundingCountryList;
 	FundingCountrySort _fundingCountryOrder;
-	bool satisfaction = false;
+	bool _satisfaction = false;
 
 
 	void updateArrows();
@@ -91,6 +91,10 @@ public:
 	void sortChangeClick(Action* action);
 	// Give the string representation of a country's satisfaction, ready for translation
 	std::string getSatisfactionText(size_t satisfaction);
+	/// Switches between funding and satisfaction views.
+	void btnSwitchClick(Action* action);
+	/// Populates the list of countries with their respective funding or satisfaction
+	void calculateFundingOrSatisfaction(bool satisfaction);
 };
 
 }

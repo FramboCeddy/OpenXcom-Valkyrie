@@ -73,11 +73,12 @@ struct compareFundingCountryChange
 FundingState::FundingState()
 {
 	_screen = false;
-	satisfaction = _game->isShiftPressed();
+	_satisfaction = _game->isShiftPressed();
 
 	// Create objects
 	_window = new Window(this, 320, 200, 0, 0, POPUP_BOTH);
-	_btnOk = new TextButton(50, 12, 135, 180);
+	_btnSwitch = new TextButton(100, 12, 40, 180);
+	_btnOk = new TextButton(100, 12, 180, 180);
 	_txtTitle = new Text(320, 17, 0, 8);
 	_txtCountry = new Text(100, 9, 32, 30);
 	_txtFunding = new Text(100, 9, 140, 30);
@@ -92,6 +93,7 @@ FundingState::FundingState()
 
 	add(_window, "window", "fundingWindow");
 	add(_btnOk, "button", "fundingWindow");
+	add(_btnSwitch, "button", "fundingWindow");
 	add(_txtTitle, "text1", "fundingWindow");
 	add(_txtCountry, "text2", "fundingWindow");
 	add(_txtFunding, "text2", "fundingWindow");
@@ -112,11 +114,14 @@ FundingState::FundingState()
 	_btnOk->onKeyboardPress((ActionHandler)&FundingState::btnOkClick, Options::keyCancel);
 	_btnOk->onKeyboardPress((ActionHandler)&FundingState::btnOkClick, Options::keyGeoFunding);
 
+	_btnSwitch->setText(_satisfaction ? tr("STR_FUNDING_BUTTON") : tr("STR_SATISFACTION_BUTTON"));
+	_btnSwitch->onMouseClick((ActionHandler)&FundingState::btnSwitchClick);
+
 	_txtTitle->setAlign(ALIGN_CENTER);
 	_txtTitle->setBig();
 	{
 		std::string title = tr("STR_INTERNATIONAL_SATISFACTION");
-		if (title == "STR_INTERNATIONAL_SATISFACTION" || !satisfaction) // IF the stringref is not changed, show the default text (ugly way of checking this)
+		if (!_satisfaction || title == "STR_INTERNATIONAL_SATISFACTION") // IF the stringref is not changed, show the default text (ugly way of checking this)
 		{
 			title = tr("STR_INTERNATIONAL_RELATIONS");
 		}
@@ -125,9 +130,9 @@ FundingState::FundingState()
 
 	_txtCountry->setText(tr("STR_COUNTRY"));
 
-	_txtFunding->setText(satisfaction ? tr("STR_PREVIOUS_SATISFACTION") : tr("STR_FUNDING"));
+	_txtFunding->setText(_satisfaction ? tr("STR_PREVIOUS_SATISFACTION") : tr("STR_FUNDING"));
 
-	_txtChange->setText(satisfaction ? tr("STR_CURRENT_SATISFACTION") : tr("STR_CHANGE"));
+	_txtChange->setText(_satisfaction ? tr("STR_CURRENT_SATISFACTION") : tr("STR_CHANGE"));
 
 	_lstCountries->setColumns(3, 108, 100, 52);
 	_lstCountries->setDot(true);
@@ -143,43 +148,7 @@ FundingState::FundingState()
 
 	_fundingCountryOrder = FC_NONE;
 
-	// Satisfaction instead of funding
-	if (satisfaction)
-	{
-		int xcomTotal = 0;
-		int alienTotal = 0;
-		for (auto* region : *_game->getSavedGame()->getRegions())
-		{
-			xcomTotal += region->getActivityXcom().back();
-			alienTotal += region->getActivityAlien().back();
-		}
-
-		xcomTotal += _game->getSavedGame()->getResearchScores().back();
-		// subtract our council leniency if countries have to ignore it, because we already gained the points at the beginning of the month
-		if (_game->getMod()->getCountriesIgnoreCouncilPoints())
-		{
-			xcomTotal -= _game->getMod()->getCouncilPointsForMonth(_game->getSavedGame()->getMonthsPassed());
-		}
-
-		for (auto* country : *_game->getSavedGame()->getCountries())
-		{
-			_fundingCountryList.push_back(FundingCountry(
-				tr(country->getRules()->getType()),
-				(int)country->getSatisfaction(),
-				(int)country->calculateCurrentSatisfaction(xcomTotal, alienTotal)));
-		}
-	}
-	else
-	{
-		for (auto* country : *_game->getSavedGame()->getCountries())
-		{
-			_fundingCountryList.push_back(FundingCountry(
-				tr(country->getRules()->getType()),
-				country->getFunding().back(),
-				country->getFunding().size() > 1 ? country->getFunding().back() - country->getFunding().at(country->getFunding().size() - 2) : 0)
-			);
-		}
-	}
+	calculateFundingOrSatisfaction(_satisfaction);
 }
 
 /**
@@ -285,7 +254,7 @@ void FundingState::updateList()
 {
 	_lstCountries->clearList();
 
-	if (satisfaction)
+	if (_satisfaction)
 	{
 		for (const auto& country : _fundingCountryList)
 		{
@@ -367,6 +336,72 @@ std::string FundingState::getSatisfactionText(size_t satisfaction)
 {
 	const std::array<std::string, 4> satisfactionTexts = {"STR_ALIEN_PACT", "STR_UNHAPPY", "STR_SATISFIED", "STR_HAPPY"};
 	return satisfactionTexts[satisfaction];
+}
+
+void FundingState::btnSwitchClick(Action* action)
+{
+	_satisfaction = !_satisfaction;
+
+	_btnSwitch->setText(_satisfaction ? tr("STR_FUNDING_BUTTON") : tr("STR_SATISFACTION_BUTTON"));
+	std::string title = tr("STR_INTERNATIONAL_SATISFACTION");
+	if (!_satisfaction || title == "STR_INTERNATIONAL_SATISFACTION") // IF the stringref is not changed, show the default text (ugly way of checking this)
+	{
+		title = tr("STR_INTERNATIONAL_RELATIONS");
+	}
+	_txtTitle->setText(title);
+
+	_sortFunding->setX(_sortFunding->getX() - _txtFunding->getTextWidth());
+	_sortChange->setX(_sortChange->getX() - _txtChange->getTextWidth());
+	_txtFunding->setText(_satisfaction ? tr("STR_PREVIOUS_SATISFACTION") : tr("STR_FUNDING"));
+	_txtChange->setText(_satisfaction ? tr("STR_CURRENT_SATISFACTION") : tr("STR_CHANGE"));
+	_sortFunding->setX(_sortFunding->getX() + _txtFunding->getTextWidth());
+	_sortChange->setX(_sortChange->getX() + _txtChange->getTextWidth());
+
+	_fundingCountryOrder = FC_NONE;
+
+	calculateFundingOrSatisfaction(_satisfaction);
+	updateList();
+}
+
+void FundingState::calculateFundingOrSatisfaction(bool satisfaction)
+{
+	_fundingCountryList.clear();
+
+	if (satisfaction)
+	{
+		int xcomTotal = 0;
+		int alienTotal = 0;
+		for (auto* region : *_game->getSavedGame()->getRegions())
+		{
+			xcomTotal += region->getActivityXcom().back();
+			alienTotal += region->getActivityAlien().back();
+		}
+
+		xcomTotal += _game->getSavedGame()->getResearchScores().back();
+		// subtract our council leniency if countries have to ignore it, because we already gained the points at the beginning of the month
+		if (_game->getMod()->getCountriesIgnoreCouncilPoints())
+		{
+			xcomTotal -= _game->getMod()->getCouncilPointsForMonth(_game->getSavedGame()->getMonthsPassed());
+		}
+
+		for (auto* country : *_game->getSavedGame()->getCountries())
+		{
+			_fundingCountryList.push_back(FundingCountry(
+				tr(country->getRules()->getType()),
+				(int)country->getSatisfaction(),
+				(int)country->calculateCurrentSatisfaction(xcomTotal, alienTotal)));
+		}
+	}
+	else // funding
+	{
+		for (auto* country : *_game->getSavedGame()->getCountries())
+		{
+			_fundingCountryList.push_back(FundingCountry(
+				tr(country->getRules()->getType()),
+				country->getFunding().back(),
+				country->getFunding().size() > 1 ? country->getFunding().back() - country->getFunding().at(country->getFunding().size() - 2) : 0));
+		}
+	}
 }
 
 }
