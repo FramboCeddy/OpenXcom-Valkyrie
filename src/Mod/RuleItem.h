@@ -414,7 +414,7 @@ private:
 	bool _ignoreAmmoPower;
 	RuleItemAction _confAimed, _confAuto, _confSnap, _confMelee;
 	int _accuracyUse, _accuracyMind, _accuracyPanic, _accuracyThrow, _accuracyCloseQuarters;
-	int _missileDrift;
+	int _missileDrift = 40;
 	int _noLOSAccuracyPenalty;
 	int _explodeInventory;
 	RuleItemUseCostRule _costUse, _costMind, _costPanic, _costThrow, _costPrime, _costUnprime;

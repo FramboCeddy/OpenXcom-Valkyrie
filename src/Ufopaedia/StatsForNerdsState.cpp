@@ -1893,6 +1893,7 @@ void StatsForNerdsState::initItemList()
 	addBoolean(ss, itemRule->getArcingShot(), "arcingShot");
 	addBoolean(ss, itemRule->isFireExtinguisher(), "isFireExtinguisher");
 	addInteger(ss, itemRule->getWaypoints(), "waypoints");
+	addIntegerPercent(ss, itemRule->getMissileDrift(), "missileDrift", 40);
 	addInteger(ss, itemRule->getSprayWaypoints(), "sprayWaypoints");
 
 	addInteger(ss, itemRule->getShotgunPellets(), "shotgunPellets");
@@ -1945,7 +1946,6 @@ void StatsForNerdsState::initItemList()
 	addIntegerPercent(ss, itemRule->getConfigAimed()->accuracy, "accuracyAimed");
 	addIntegerPercent(ss, itemRule->getConfigAuto()->accuracy, "accuracyAuto");
 	addIntegerPercent(ss, itemRule->getConfigSnap()->accuracy, "accuracySnap");
-	addIntegerPercent(ss, itemRule->getMissileDrift(), "missileDrift", 50);
 
 	addRuleItemUseCostFull(ss, itemRule->getCostAimed(), "costAimed", RuleItemUseCost(), true, itemRule->getFlatAimed());
 	addRuleItemUseCostFull(ss, itemRule->getCostAuto(), "costAuto", RuleItemUseCost(), true, itemRule->getFlatAuto());

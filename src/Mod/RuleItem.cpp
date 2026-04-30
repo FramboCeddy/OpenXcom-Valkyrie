@@ -184,7 +184,7 @@ RuleItem::RuleItem(const std::string &type, int listOrder) :
 	_vaporColorSurface(-1), _vaporDensitySurface(0), _vaporProbabilitySurface(15),
 	_kneelBonus(-1), _oneHandedPenalty(-1),
 	_monthlySalary(0), _monthlyMaintenance(0),
-	_sprayWaypoints(0), _missileDrift(50)
+	_sprayWaypoints(0)
 {
 	_accuracyMulti.setFiring();
 	_meleeMulti.setMelee();

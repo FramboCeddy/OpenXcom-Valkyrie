@@ -183,7 +183,7 @@ VoxelType Projectile::calculateTrajectory(double accuracy, const Position& origi
 		{
 			auto* ammo =  _action.weapon->getAmmoForAction(_action.type);
 			auto missileDrift = ammo ? ammo->getRules()->getMissileDrift() : _action.weapon->getRules()->getMissileDrift();
-			accuracy = 1.1 - (missileDrift / 100.0); // 50 missile drift gives vanilla 0.6
+			accuracy = 1.0 - (missileDrift / 100.0); // 40 missile drift gives vanilla 0.6
 		}
 		else if (_action.actor->getFaction() != FACTION_PLAYER)
 		{
