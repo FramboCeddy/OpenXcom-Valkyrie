@@ -196,7 +196,8 @@ void GlobalResearchState::fillProjectList()
 		if (!baseProjects.empty() || xbase->getScientists() > 0)
 		{
 			std::string baseName = xbase->getName(_game->getLanguage());
-			_lstResearch->addRow(3, baseName.c_str(), "", "");
+			std::string scientists = xbase->getScientists() == 0 ? "" : std::to_string(xbase->getScientists());
+			_lstResearch->addRow(3, baseName.c_str(), scientists.c_str(), "");
 			_lstResearch->setRowColor(_lstResearch->getLastRowIndex(), _lstResearch->getSecondaryColor());
 
 			// dummy
