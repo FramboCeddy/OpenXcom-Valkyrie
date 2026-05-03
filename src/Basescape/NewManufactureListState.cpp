@@ -42,6 +42,14 @@
 #include "../Ufopaedia/Ufopaedia.h"
 #include <vector>
 #include <string>
+#include <cstdint>
+#include <sstream>
+#include <SDL_mouse.h>
+#include "../Engine/Action.h"
+#include "../Engine/InteractiveSurface.h"
+#include "../Engine/State.h"
+#include "../Engine/Unicode.h"
+#include "../Mod/RuleBaseFacilityFunctions.h"
 
 namespace OpenXcom
 {
@@ -138,6 +146,7 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base), _sho
 
 	_catStrings.push_back("STR_ALL_ITEMS");
 	_cbxCategory->setOptions(_catStrings, true);
+	_cbxCategory->onChange((ActionHandler)&NewManufactureListState::cbxCategoryChange);
 
 	_btnQuickSearch->setText(""); // redraw
 	_btnQuickSearch->onEnter((ActionHandler)&NewManufactureListState::btnQuickSearchApply);
@@ -155,7 +164,9 @@ void NewManufactureListState::init()
 
 	if (_doInit)
 	{
-		fillProductionList(_refreshCategories);
+		recalculateProductionList();
+		displayProductionList();
+		//fillProductionList(_refreshCategories);
 	}
 	_doInit = true;
 	_refreshCategories = true;
@@ -202,7 +213,9 @@ void NewManufactureListState::lstProdClickLeft(Action *)
 
 	ManufacturingFilterType basicFilter = (ManufacturingFilterType)(_cbxFilter->getSelected());
 	if (basicFilter == MANU_FILTER_FACILITY_REQUIRED)
+	{
 		return;
+	}
 
 	RuleManufacture* rule = _game->getMod()->getManufacture(_displayedStrings[_lstManufacture->getSelectedRow()]);
 
@@ -227,29 +240,32 @@ void NewManufactureListState::lstProdClickRight(Action *)
 		for (size_t row = 0; row < _lstManufacture->getTexts(); ++row)
 		{
 			RuleManufacture *info = _game->getMod()->getManufacture(_displayedStrings[row]);
-			if (info)
+			if (!info)
 			{
-				if (_showRequirements)
-				{
-					std::ostringstream ss;
-					int count = 0;
-					std::vector<std::string> missed = _game->getMod()->getBaseFunctionNames(~baseFunc & info->getRequireBaseFunc());
-					for (const auto& name : missed)
-					{
-						if (count > 0)
-						{
-							ss << ", ";
-						}
-						ss << tr(name);
-						count++;
-					}
-					_lstManufacture->setCellText(row, 1, ss.str().c_str());
-				}
-				else
-				{
-					_lstManufacture->setCellText(row, 1, tr(info->getCategory()));
-				}
+				continue;
 			}
+
+			if (_showRequirements)
+			{
+				std::ostringstream ss;
+				int count = 0;
+				std::vector<std::string> missed = _game->getMod()->getBaseFunctionNames(~baseFunc & info->getRequireBaseFunc());
+				for (const auto& name : missed)
+				{
+					if (count > 0)
+					{
+						ss << ", ";
+					}
+					ss << tr(name);
+					count++;
+				}
+				_lstManufacture->setCellText(row, 1, ss.str().c_str());
+			}
+			else
+			{
+				_lstManufacture->setCellText(row, 1, tr(info->getCategory()));
+			}
+
 		}
 	}
 	else
@@ -306,7 +322,9 @@ void NewManufactureListState::lstProdClickMiddle(Action *)
 
 void NewManufactureListState::cbxFilterChange(Action *)
 {
-	fillProductionList(Options::manufactureKeepCategories ? false : true);
+	recalculateProductionList();
+	displayProductionList();
+
 }
 
 /**
@@ -315,7 +333,7 @@ void NewManufactureListState::cbxFilterChange(Action *)
 
 void NewManufactureListState::cbxCategoryChange(Action *)
 {
-	fillProductionList(false);
+	displayProductionList();
 }
 
 /**
@@ -343,7 +361,7 @@ void NewManufactureListState::btnQuickSearchToggle(Action *action)
 */
 void NewManufactureListState::btnQuickSearchApply(Action *)
 {
-	fillProductionList(false);
+	displayProductionList();
 }
 
 /**
@@ -352,7 +370,7 @@ void NewManufactureListState::btnQuickSearchApply(Action *)
 */
 void NewManufactureListState::btnShowOnlyNewClick(Action *)
 {
-	fillProductionList(false);
+	displayProductionList();
 }
 
 /**
@@ -363,7 +381,9 @@ void NewManufactureListState::btnMarkAllAsSeenClick(Action *)
 {
 	ManufacturingFilterType basicFilter = (ManufacturingFilterType)(_cbxFilter->getSelected());
 	if (basicFilter == MANU_FILTER_FACILITY_REQUIRED)
+	{
 		return;
+	}
 
 	for (const auto& name : _displayedStrings)
 	{
@@ -374,114 +394,69 @@ void NewManufactureListState::btnMarkAllAsSeenClick(Action *)
 		}
 	}
 
-	fillProductionList(false);
+	displayProductionList();
 }
 
 /**
- * Fills the list of possible productions.
+ * updates the visible list of possible productions.
+ * does NOT recalculate which productions are possible
  */
-void NewManufactureListState::fillProductionList(bool refreshCategories)
+void NewManufactureListState::displayProductionList()
 {
 	std::string searchString = _btnQuickSearch->getText();
-	Unicode::upperCase(searchString);
-
-	if (refreshCategories)
-	{
-		_cbxCategory->onChange(0);
-		_cbxCategory->setSelected(0);
-	}
-
 	_showRequirements = false;
 
 	_lstManufacture->clearList();
-	_possibleProductions.clear();
-	ManufacturingFilterType basicFilter = (ManufacturingFilterType)(_cbxFilter->getSelected());
-	_game->getSavedGame()->getAvailableProductions(_possibleProductions, _game->getMod(), _base, basicFilter);
 	_displayedStrings.clear();
-	// Sort list based on profit or default listOrder
-	// TODO: find a way to show the profitability /hour /engineer
-	if (basicFilter == MANU_FILTER_PROFITABILITY)
-	{
-		std::sort(_possibleProductions.begin(), _possibleProductions.end(),
-			[](const RuleManufacture *first, const RuleManufacture *second)
-			{
-				return first->getProfitability() > second->getProfitability();  // higher profitability first
-			});
-	}
-	else // NOTE: this is not necessary as we reload the available producitions, however we may want to find a way to not always refresh the production list
-	{
-		std::sort(_possibleProductions.begin(), _possibleProductions.end(),
-			[](const RuleManufacture *first, const RuleManufacture *second)
-			{
-				return first->getListOrder() < second->getListOrder(); // lower listOrder first
-			});
-	}
-	ItemContainer *itemContainer (_base->getStorageItems());
+	ItemContainer* itemContainer(_base->getStorageItems());
+	ManufacturingFilterType basicFilter = (ManufacturingFilterType)(_cbxFilter->getSelected());
 	int row = 0;
 	bool hasUnseen = false;
-	for (const auto* manuf : _possibleProductions)
+	for (const auto *manuf : _possibleProductions)
 	{
 		// category
 		if ((manuf->getCategory() != _catStrings[_cbxCategory->getSelected()]) && (_catStrings[_cbxCategory->getSelected()] != "STR_ALL_ITEMS"))
 		{
 			continue;
 		}
-		// filter
-		bool isHidden = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_HIDDEN;
-		if ((basicFilter != MANU_FILTER_HIDDEN && isHidden) || (basicFilter == MANU_FILTER_HIDDEN && !isHidden))
-		{
-			continue;
-		}
-		// new button
+		// Show only new
 		bool isNew = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_NEW;
 		if (_btnShowOnlyNew->getPressed() && !isNew)
 		{
 			continue;
 		}
-		// not profitable
-		if (basicFilter == MANU_FILTER_PROFITABILITY && manuf->getProfitability() <= 0)
+		// hidden
+		bool isHidden = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_HIDDEN;
+		if ((basicFilter != MANU_FILTER_HIDDEN && isHidden) || (basicFilter == MANU_FILTER_HIDDEN && !isHidden))
 		{
-			break; // because the list is sorted descending by profitability, we can stop entirely once we hit a single non-profitable item
+			continue;
 		}
-
 		// quick search
 		if (!searchString.empty())
 		{
 			std::string projectName = tr(manuf->getName());
-			Unicode::upperCase(projectName);
-			if (projectName.find(searchString) == std::string::npos)
+			if (!Unicode::caseFind(projectName, searchString))
 			{
 				continue;
 			}
 		}
+
 		// supplies calculation
 		int productionPossible = 10; // max
 		if (manuf->getManufactureCost() > 0)
 		{
 			int64_t byFunds = _game->getSavedGame()->getFunds() / manuf->getManufactureCost();
-			if (byFunds < 10LL)
-			{
-				int byFundsInt = (int)byFunds;
-				productionPossible = std::min(productionPossible, byFundsInt);
-			}
+			productionPossible = std::min(productionPossible, (int)byFunds);
 		}
-		for (auto& iter : manuf->getRequiredItems())
+		for (auto& [ruleItem, amount] : manuf->getRequiredItems())
 		{
-			productionPossible = std::min(productionPossible, itemContainer->getItem(iter.first) / iter.second);
+			productionPossible = std::min(productionPossible, itemContainer->getItem(ruleItem) / amount);
 		}
 
 		std::ostringstream ss;
 		if (productionPossible <= 0)
 		{
-			if (basicFilter == MANU_FILTER_DEFAULT_SUPPLIES_OK)
-			{
-				continue;
-			}
 			ss << '-';
-		}
-		else if (basicFilter == MANU_FILTER_DEFAULT_NO_SUPPLIES)
-		{
-			continue;
 		}
 		else if (productionPossible < 10)
 		{
@@ -519,37 +494,113 @@ void NewManufactureListState::fillProductionList(bool refreshCategories)
 		_lstManufacture->scrollTo(_lstScroll);
 		_lstScroll = 0;
 	}
+}
 
-	if (refreshCategories)
+/**
+ * recalculates the list of possible productions.
+ */
+void NewManufactureListState::recalculateProductionList()
+{
+	_showRequirements = false;
+	_lstManufacture->clearList();
+	_possibleProductions.clear();
+	_displayedStrings.clear();
+
+	ManufacturingFilterType basicFilter = (ManufacturingFilterType)(_cbxFilter->getSelected());
+	ItemContainer* itemContainer(_base->getStorageItems());
+	_game->getSavedGame()->getAvailableProductions(_possibleProductions, _game->getMod(), _base, basicFilter);
+	// Sort list based on profit or default listOrder
+	if (basicFilter == MANU_FILTER_PROFITABILITY)
 	{
-		_catStrings.clear();
-		_catStrings.push_back("STR_ALL_ITEMS");
+		std::stable_sort(_possibleProductions.begin(), _possibleProductions.end(),
+				  [&](const RuleManufacture* first, const RuleManufacture* second)
+				  {
+					  return first->getProfitability() > second->getProfitability(); // higher profitability first
+				  });
+	}
 
-		for (size_t r = 0; r < _lstManufacture->getTexts(); ++r)
+	std::vector<RuleManufacture *> productions = {};
+	productions.reserve(_possibleProductions.size());
+	for (auto* manuf : _possibleProductions)
+	{
+		// filter
+		bool isHidden = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_HIDDEN;
+		if ((basicFilter != MANU_FILTER_HIDDEN && isHidden) || (basicFilter == MANU_FILTER_HIDDEN && !isHidden))
 		{
-			RuleManufacture *info = _game->getMod()->getManufacture(_displayedStrings[r]);
-			if (!info)
-			{
-				continue;
-			}
-			bool addCategory = true;
-			for (size_t x = 0; x < _catStrings.size(); ++x)
-			{
-				if (info->getCategory().c_str() == _catStrings[x])
-				{
-					addCategory = false;
-					break;
-				}
-			}
-			if (addCategory)
-			{
-				_catStrings.push_back(info->getCategory().c_str());
-			}
+			continue;
+		}
+		// new button
+		bool isNew = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_NEW;
+		if (_btnShowOnlyNew->getPressed() && !isNew) // TODO also make this only re-draw the visuals, not underlying vector of possible manufs
+		{
+			continue;
+		}
+		// not profitable
+		if (basicFilter == MANU_FILTER_PROFITABILITY && manuf->getProfitability() <= 0)
+		{
+			break; // because the list is sorted descending by profitability, we can stop entirely once we hit a single non-profitable item
 		}
 
-		_cbxCategory->setOptions(_catStrings, true);
-		_cbxCategory->onChange((ActionHandler)&NewManufactureListState::cbxCategoryChange);
+		// supplies calculation
+		int productionPossible = 10; // max
+		if (manuf->getManufactureCost() > 0)
+		{
+			int64_t byFunds = _game->getSavedGame()->getFunds() / manuf->getManufactureCost();
+			productionPossible = std::min(productionPossible, (int)byFunds);
+		}
+		for (auto& [ruleItem, amount] : manuf->getRequiredItems())
+		{
+			productionPossible = std::min(productionPossible, itemContainer->getItem(ruleItem) / amount);
+		}
+
+		if (productionPossible <= 0 && basicFilter == MANU_FILTER_DEFAULT_SUPPLIES_OK)
+		{
+			continue;
+		}
+		if (productionPossible > 0 && basicFilter == MANU_FILTER_DEFAULT_NO_SUPPLIES)
+		{
+			continue;
+		}
+
+		productions.push_back(manuf);
 	}
+	productions.shrink_to_fit();
+	_possibleProductions = productions;
+
+	// refresh category options
+	std::string selected = ""; // save current selected option
+	if (Options::manufactureKeepCategories)
+	{
+		selected = _catStrings[_cbxCategory->getSelected()];
+	}
+
+	_catStrings.clear();
+	_catStrings.push_back("STR_ALL_ITEMS");
+	for (const auto& info : _possibleProductions)
+	{
+		if (std::find(_catStrings.begin(), _catStrings.end(), info->getCategory().c_str()) == _catStrings.end())
+		{
+			_catStrings.push_back(info->getCategory().c_str());
+		}
+	}
+	if (Options::manufactureKeepCategories)
+	{
+		auto it = std::find(_catStrings.begin(), _catStrings.end(), selected);
+		if (it != _catStrings.end())
+		{
+			_cbxCategory->setSelected(it - _catStrings.begin());
+		}
+		else
+		{
+			_cbxCategory->setSelected(0);
+		}
+	}
+	else
+	{
+		_cbxCategory->setSelected(0);
+	}
+
+	_cbxCategory->setOptions(_catStrings, true); // setOptions also sets the selected row as the current value
 }
 
 }

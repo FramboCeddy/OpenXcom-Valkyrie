@@ -19,6 +19,8 @@
  */
 #include "../Engine/TouchState.h"
 #include <vector>
+#include <string>
+#include <SDL_stdinc.h>
 
 namespace OpenXcom
 {
@@ -32,6 +34,7 @@ class TextEdit;
 class TextList;
 class RuleManufacture;
 class ComboBox;
+class Action;
 
 /**
  * Screen which list possible productions.
@@ -40,7 +43,6 @@ class NewManufactureListState : public TouchState
 {
 private:
 	Base *_base;
-	bool _showRequirements, _refreshCategories, _doInit;
 	TextButton *_btnOk;
 	ToggleTextButton *_btnShowOnlyNew;
 	TextEdit *_btnQuickSearch;
@@ -53,6 +55,7 @@ private:
 	std::vector<RuleManufacture *> _possibleProductions;
 	std::vector<std::string> _catStrings;
 	std::vector<std::string> _displayedStrings;
+	bool _showRequirements, _refreshCategories, _doInit;
 	Uint8 _colorNormal, _colorNew;
 	Uint8 _colorHidden, _colorFacilityRequired;
 
@@ -62,7 +65,7 @@ public:
 	/// Initializes state.
 	void init() override;
 	/// Handler for clicking the OK button.
-	void btnOkClick(Action * action);
+	void btnOkClick(Action *action);
 	/// Handlers for Quick Search.
 	void btnQuickSearchToggle(Action *action);
 	void btnQuickSearchApply(Action *action);
@@ -79,8 +82,10 @@ public:
 	void btnShowOnlyNewClick(Action *action);
 	/// Handler for clicking the [Mark All As Seen] button.
 	void btnMarkAllAsSeenClick(Action *action);
-	/// Fills the list of possible productions.
-	void fillProductionList(bool refreshCategories);
+	/// Display the list of possible productions.
+	void displayProductionList();
+	/// Recalculates the list of possible productions.
+	void recalculateProductionList();
 };
 
 }
