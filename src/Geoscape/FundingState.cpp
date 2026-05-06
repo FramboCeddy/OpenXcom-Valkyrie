@@ -360,7 +360,7 @@ void FundingState::btnSwitchClick(Action* action)
 	_fundingCountryOrder = FC_NONE;
 
 	calculateFundingOrSatisfaction(_satisfaction);
-	updateList();
+	sortList();
 }
 
 void FundingState::calculateFundingOrSatisfaction(bool satisfaction)
@@ -386,20 +386,20 @@ void FundingState::calculateFundingOrSatisfaction(bool satisfaction)
 
 		for (auto* country : *_game->getSavedGame()->getCountries())
 		{
-			_fundingCountryList.push_back(FundingCountry(
+			_fundingCountryList.emplace_back(
 				tr(country->getRules()->getType()),
 				(int)country->getSatisfaction(),
-				(int)country->calculateCurrentSatisfaction(xcomTotal, alienTotal)));
+				(int)country->calculateCurrentSatisfaction(xcomTotal, alienTotal));
 		}
 	}
 	else // funding
 	{
 		for (auto* country : *_game->getSavedGame()->getCountries())
 		{
-			_fundingCountryList.push_back(FundingCountry(
+			_fundingCountryList.emplace_back(
 				tr(country->getRules()->getType()),
 				country->getFunding().back(),
-				country->getFunding().size() > 1 ? country->getFunding().back() - country->getFunding().at(country->getFunding().size() - 2) : 0));
+				country->getFunding().size() > 1 ? country->getFunding().back() - country->getFunding().at(country->getFunding().size() - 2) : 0);
 		}
 	}
 }
