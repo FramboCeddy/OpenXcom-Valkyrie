@@ -336,7 +336,7 @@ public:
 	RuleBaseFacilityFunctions getFutureBaseFunc(BaseAreaSubset skip) const;
 	RuleBaseFacilityFunctions getInherentFutureBaseFunc() const { return _provideBaseFunc; }
 	/// Checks if it is possible to build another facility of a given type.
-	bool isMaxAllowedLimitReached(RuleBaseFacility *rule) const;
+	bool isMaxAllowedLimitReached(const RuleBaseFacility *rule) const;
 
 	/// Gets the summary of all recovery rates provided by the base.
 	BaseSumDailyRecovery getSumRecoveryPerDay() const;

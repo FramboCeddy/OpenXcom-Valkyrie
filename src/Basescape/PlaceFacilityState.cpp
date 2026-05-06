@@ -384,7 +384,7 @@ void PlaceFacilityState::viewClick(Action *)
 			{
 				_base->getStorageItems()->removeItem(item.first, item.second.first);
 			}
-			if (!_game->isShiftPressed())
+			if (!_game->isShiftPressed() || _base->isMaxAllowedLimitReached(_rule))
 			{
 				_game->popState();
 			}

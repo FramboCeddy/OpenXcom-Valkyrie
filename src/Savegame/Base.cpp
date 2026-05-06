@@ -2493,18 +2493,19 @@ RuleBaseFacilityFunctions Base::getFutureBaseFunc(BaseAreaSubset skip) const
 * Checks if it is possible to build another facility of a given type.
 * @return True if limit is reached (i.e. can't build anymore).
 */
-bool Base::isMaxAllowedLimitReached(RuleBaseFacility *rule) const
+bool Base::isMaxAllowedLimitReached(const RuleBaseFacility *rule) const
 {
 	if (rule->getMaxAllowedPerBase() == 0)
+	{
 		return false;
+	}
 
 	int total = 0;
-
 	for (const auto* bf : _facilities)
 	{
 		if (bf->getRules()->getType() == rule->getType())
 		{
-			total++;
+			++total;
 		}
 	}
 
