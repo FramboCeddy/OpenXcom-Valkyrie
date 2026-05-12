@@ -24,20 +24,25 @@ namespace OpenXcom
 
 class BattleUnit;
 class Game;
+class Action;
+class State;
+class RuleItem;
 
 /**
  * Displays a view of units movement.
  */
 class ScannerView : public InteractiveSurface
 {
-	Game * _game;
+	Game *_game;
+	BattleUnit *_unit;
+	const RuleItem *_item;
+	int _frame;
+
 	/// Handle clicking
 	void mouseClick (Action *action, State *state) override;
-	BattleUnit *_unit;
-	int _frame;
 public:
 	/// Create the ScannerView
-	ScannerView (int w, int h, int x, int y, Game * game, BattleUnit *unit);
+	ScannerView (int w, int h, int x, int y, Game *game, BattleUnit *unit, const RuleItem *item);
 	/// Draw the scanner view
 	void draw() override;
 	void animate();

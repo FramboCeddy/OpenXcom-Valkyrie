@@ -26,6 +26,7 @@ class Surface;
 class Timer;
 class ScannerView;
 struct BattleAction;
+class RuleItem;
 
 /**
  * The Scanner User Interface.
@@ -36,6 +37,8 @@ class ScannerState : public State
 	Surface *_scan;
 	ScannerView *_scannerView;
 	BattleAction *_action;
+	const RuleItem *_item;
+
 	/// Updates scanner interface.
 	void update();
 	Timer *_timerAnimate;
@@ -43,7 +46,7 @@ class ScannerState : public State
 	void animate();
 public:
 	/// Creates the ScannerState.
-	ScannerState(BattleAction *action);
+	ScannerState(BattleAction *action, const RuleItem *item);
 	~ScannerState();
 	/// Handler for right-clicking anything.
 	void handle(Action *action) override;

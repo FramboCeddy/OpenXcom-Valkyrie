@@ -454,7 +454,7 @@ void ActionMenuState::handleAction()
 			if (_action->spendTU(&_action->result))
 			{
 				_game->popState();
-				_game->pushState (new ScannerState(_action));
+				_game->pushState(new ScannerState(_action, weapon));
 			}
 			else
 			{

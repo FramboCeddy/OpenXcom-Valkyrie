@@ -29,6 +29,10 @@
 #include "../Mod/Mod.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
+#include <SDL_events.h>
+#include "../Engine/State.h"
+#include "../Engine/Surface.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {
@@ -38,7 +42,7 @@ namespace OpenXcom
  * @param game Pointer to the core game.
  * @param action Pointer to an action.
  */
-ScannerState::ScannerState (BattleAction *action) : _action(action)
+ScannerState::ScannerState(BattleAction* action, const RuleItem* item) : _action(action), _item(item)
 {
 	if (Options::maximizeInfoScreens)
 	{
@@ -48,7 +52,7 @@ ScannerState::ScannerState (BattleAction *action) : _action(action)
 	}
 	_bg = new InteractiveSurface(320, 200);
 	_scan = new Surface(320, 200);
-	_scannerView = new ScannerView(152, 152, 56, 24, _game, _action->actor);
+	_scannerView = new ScannerView(152, 152, 56, 24, _game, _action->actor, _item);
 
 	if (_game->getScreen()->getDY() > 50)
 	{

@@ -2248,6 +2248,8 @@ void StatsForNerdsState::initItemList()
 	addInteger(ss, itemRule->getMoraleRecovery(), "moraleRecovery");
 	addFloatAsPercentage(ss, itemRule->getPainKillerRecovery(), "painKillerRecovery", 1.0f);
 
+	addBoolean(ss, itemRule->isDirectionalScan(), "directionalScan");
+
 	addVectorOfResearch(ss, itemRule->getRequirements(), "requires");
 	addVectorOfResearch(ss, itemRule->getBuyRequirements(), "requiresBuy");
 	addVectorOfStrings(ss, mod->getBaseFunctionNames(itemRule->getRequiresBuyBaseFunc()), "requiresBuyBaseFunc");

@@ -25,6 +25,11 @@
 #include "../Savegame/Tile.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
+#include "Position.h"
+#include "../Engine/InteractiveSurface.h"
+#include "../Engine/State.h"
+#include "../Engine/Surface.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {
@@ -38,7 +43,7 @@ namespace OpenXcom
  * @param game Pointer to the core game.
  * @param unit The current unit.
  */
-ScannerView::ScannerView (int w, int h, int x, int y, Game * game, BattleUnit *unit) : InteractiveSurface(w, h, x, y), _game(game), _unit(unit), _frame(0)
+ScannerView::ScannerView(int w, int h, int x, int y, Game* game, BattleUnit* unit, const RuleItem* item) : InteractiveSurface(w, h, x, y), _game(game), _unit(unit), _frame(0), _item(item)
 {
 	_redraw = true;
 }
@@ -49,7 +54,7 @@ ScannerView::ScannerView (int w, int h, int x, int y, Game * game, BattleUnit *u
 void ScannerView::draw()
 {
 	SurfaceSet *set = _game->getMod()->getSurfaceSet("DETBLOB.DAT");
-	Surface *surface = 0;
+	Surface *surface = nullptr;
 
 	clear();
 
@@ -61,16 +66,30 @@ void ScannerView::draw()
 			for (int z = 0; z < _game->getSavedGame()->getSavedBattle()->getMapSizeZ(); z++)
 			{
 				Tile *t = _game->getSavedGame()->getSavedBattle()->getTile(Position(x,y,z) + Position(_unit->getPosition().x, _unit->getPosition().y, 0));
-				if (t && t->getUnit() && t->getUnit()->getMotionPoints())
+				if (!t)
 				{
-					int frame = (t->getUnit()->getMotionPoints() / 5);
-					if (frame >= 0)
+					continue;
+				}
+				// only scan the 'quadrant' we are looking at
+				if (_item->isDirectionalScan() && !_unit->checkViewSector(t->getPosition()))
+				{
+					continue;
+				}
+				if (!t->getUnit() || !t->getUnit()->getMotionPoints())
+				{
+					continue;
+				}
+
+				int frame = (t->getUnit()->getMotionPoints() / 5);
+				if (frame >= 0)
+				{
+					t->getUnit()->setScannedTurn(_game->getSavedGame()->getSavedBattle()->getTurn());
+					if (frame > 5)
 					{
-						t->getUnit()->setScannedTurn(_game->getSavedGame()->getSavedBattle()->getTurn());
-						if (frame > 5) frame = 5;
-						surface = set->getFrame(frame + _frame);
-						surface->blitNShade(this, ((9+x)*8)-4, ((9+y)*8)-4, 0);
+						frame = 5;
 					}
+					surface = set->getFrame(frame + _frame);
+					surface->blitNShade(this, ((9+x)*8)-4, ((9+y)*8)-4, 0);
 				}
 			}
 		}

@@ -484,6 +484,8 @@ private:
 	ModScript::BattleItemScripts::Container _battleItemScripts;
 	ScriptValues<RuleItem> _scriptValues;
 
+	bool _directionalScan = false;
+
 	/// Load RuleItemUseCost from yaml.
 	void loadCost(RuleItemUseCost& a, const YAML::YamlNodeReader& reader, const std::string& name) const;
 	/// Load RuleItemUseCost as bool from yaml.
@@ -1043,6 +1045,8 @@ public:
 	const typename Script::Container &getScript() const { return _battleItemScripts.get<Script>(); }
 	/// Get all script values.
 	const ScriptValues<RuleItem> &getScriptValuesRaw() const { return _scriptValues; }
+	/// Gets whether the motion scanner is directional
+	bool isDirectionalScan() const { return _directionalScan; }
 };
 
 }
