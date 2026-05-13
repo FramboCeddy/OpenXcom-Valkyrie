@@ -174,7 +174,7 @@ void StartState::think()
 	case LOADING_SUCCESSFUL:
 		CrossPlatform::flashWindow();
 		Log(LOG_INFO) << "OpenXcom started successfully!";
-		_game->setState(new GoToMainMenuState(true));
+		_game->setState(new GoToMainMenuState(false)); // FIXME: re-enable updates once it correctly checks for a Valkyrie version
 		if (_oldMaster != Options::getActiveMaster() && Options::playIntro)
 		{
 			_game->pushState(new CutsceneState("intro"));
