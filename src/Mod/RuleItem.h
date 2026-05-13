@@ -473,7 +473,7 @@ private:
 
 	int _targetMatrix;
 	bool _convertToCivilian;
-	bool _LOSRequired, _underwaterOnly, _landOnly, _psiReqiured, _manaRequired;
+	bool _LOSRequired, _underwaterOnly, _landOnly, _psiRequired, _manaRequired;
 	int _meleePower, _specialType, _vaporColor, _vaporDensity, _vaporProbability;
 	int _vaporColorSurface, _vaporDensitySurface, _vaporProbabilitySurface;
 	std::vector<int> _customItemPreviewIndex;

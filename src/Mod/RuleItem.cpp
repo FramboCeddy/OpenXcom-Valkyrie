@@ -179,7 +179,7 @@ RuleItem::RuleItem(const std::string &type, int listOrder) :
 	_maxRange(200), _minRange(0), _dropoff(2), _bulletSpeed(0), _explosionSpeed(0), _shotgunPellets(0), _shotgunBehaviorType(0), _shotgunSpread(100), _shotgunChoke(100),
 	_spawnUnitFaction(FACTION_NONE), _zombieUnitFaction(FACTION_HOSTILE),
 	_targetMatrix(7), _convertToCivilian(false),
-	_LOSRequired(false), _underwaterOnly(false), _landOnly(false), _psiReqiured(false), _manaRequired(false),
+	_LOSRequired(false), _underwaterOnly(false), _landOnly(false), _psiRequired(false), _manaRequired(false),
 	_meleePower(0), _specialType(-1), _vaporColor(-1), _vaporDensity(0), _vaporProbability(15),
 	_vaporColorSurface(-1), _vaporDensitySurface(0), _vaporProbabilitySurface(15),
 	_kneelBonus(-1), _oneHandedPenalty(-1),
@@ -387,7 +387,7 @@ void RuleItem::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript&
 
 		if (_battleType == BT_PSIAMP)
 		{
-			_psiReqiured = true;
+			_psiRequired = true;
 			_dropoff = 1;
 			_confAimed.range = 0;
 			_accuracyMulti.setPsiAttack();
@@ -395,7 +395,7 @@ void RuleItem::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript&
 		}
 		else
 		{
-			_psiReqiured = false;
+			_psiRequired = false;
 		}
 
 		if (_battleType == BT_PROXIMITYGRENADE)
@@ -428,6 +428,11 @@ void RuleItem::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript&
 		}
 		_meleeType = *mod->getDamageType(DT_MELEE);
 		_meleeTypeSet = true;
+
+		if (_battleType == BT_SCANNER)
+		{
+			_maxRange = 9; // else 200
+		}
 	}
 
 	if (const auto& type = reader["damageType"])
@@ -675,7 +680,7 @@ void RuleItem::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript&
 	reader.tryRead("powerRangeReduction", _powerRangeReduction);
 	reader.tryRead("powerRangeThreshold", _powerRangeThreshold);
 
-	reader.tryRead("psiRequired", _psiReqiured);
+	reader.tryRead("psiRequired", _psiRequired);
 	reader.tryRead("manaRequired", _manaRequired);
 	_scriptValues.load(reader, parsers.getShared());
 
@@ -2587,7 +2592,7 @@ bool RuleItem::isLandOnly() const
  */
 bool RuleItem::isPsiRequired() const
 {
-	return _psiReqiured;
+	return _psiRequired;
 }
 
 /**

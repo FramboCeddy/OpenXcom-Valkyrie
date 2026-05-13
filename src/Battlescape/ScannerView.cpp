@@ -59,9 +59,10 @@ void ScannerView::draw()
 	clear();
 
 	this->lock();
-	for (int x = -9; x < 10; x++)
+	int range = _item->getMaxRange();
+	for (int x = -range; x <= range; ++x)
 	{
-		for (int y = -9; y < 10; y++)
+		for (int y = -range; y <= range; ++y)
 		{
 			for (int z = 0; z < _game->getSavedGame()->getSavedBattle()->getMapSizeZ(); z++)
 			{
@@ -89,7 +90,7 @@ void ScannerView::draw()
 						frame = 5;
 					}
 					surface = set->getFrame(frame + _frame);
-					surface->blitNShade(this, ((9+x)*8)-4, ((9+y)*8)-4, 0);
+					surface->blitNShade(this, ((9+x)*8)-4, ((9+y)*8)-4, 0); // TODO: a way to scale the blips so a range > 9 shows on the scanner view
 				}
 			}
 		}

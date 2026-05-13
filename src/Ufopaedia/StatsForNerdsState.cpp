@@ -1934,7 +1934,7 @@ void StatsForNerdsState::initItemList()
 	addIntegerPercent(ss, oneHandedPenaltyCurrent, "oneHandedPenalty", oneHandedPenaltyDefault); // not raw!
 
 	addInteger(ss, itemRule->getMinRange(), "minRange");
-	addInteger(ss, itemRule->getMaxRange(), "maxRange", 200);
+	addInteger(ss, itemRule->getMaxRange(), "maxRange", itemRule->getBattleType() == BT_SCANNER ? 9 : 200);
 	int aimRangeDefault = itemBattleType == BT_PSIAMP ? 0 : 200;
 	addInteger(ss, itemRule->getAimRange(), "aimRange", aimRangeDefault);
 	addInteger(ss, itemRule->getAutoRange(), "autoRange", 7);
