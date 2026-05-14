@@ -2027,6 +2027,7 @@ void StatsForNerdsState::initItemList()
 			addDamageType(ss, rule->ResistType, "damageType", damageTypeDefault);
 			addInteger(ss, itemRule->getPower(), "power");
 			addFloat(ss, itemRule->getPowerRangeReductionRaw(), "powerRangeReduction");
+			addFloat(ss, itemRule->getPowerMinRangeThresholdRaw(), "powerMinRangeThreshold");
 			addFloat(ss, itemRule->getPowerRangeThresholdRaw(), "powerRangeThreshold");
 			addRuleStatBonus(ss, *itemRule->getDamageBonusRaw(), "damageBonus");
 			if (!_showDebug)

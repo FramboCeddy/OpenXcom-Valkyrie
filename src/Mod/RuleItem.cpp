@@ -679,6 +679,7 @@ void RuleItem::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript&
 
 	reader.tryRead("powerRangeReduction", _powerRangeReduction);
 	reader.tryRead("powerRangeThreshold", _powerRangeThreshold);
+	reader.tryRead("powerMinRangeThreshold", _powerMinRangeThreshold);
 
 	reader.tryRead("psiRequired", _psiRequired);
 	reader.tryRead("manaRequired", _manaRequired);
@@ -1334,8 +1335,18 @@ int RuleItem::getPower() const
  */
 float RuleItem::getPowerRangeReduction(float range) const
 {
-	range -= _powerRangeThreshold * TilesToVexels;
-	return (_powerRangeReduction * VexelsToTiles) * (range > 0 ? range : 0);
+	if (range > _powerRangeThreshold * TilesToVexels)
+	{
+		return _powerRangeReduction * VexelsToTiles * (range - _powerRangeThreshold * TilesToVexels);
+	}
+	else if (range < _powerMinRangeThreshold * TilesToVexels)
+	{
+		return _powerRangeReduction * VexelsToTiles * (_powerMinRangeThreshold * TilesToVexels - range);
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 /**

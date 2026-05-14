@@ -47,3 +47,5 @@ en-GB:
   woundStatyReduction: "Wound based stat loss"
   moraleGainOnPanic: "Morale gained on panic"
   directionalScan: "Directional scan"
+  powerMinRangeThreshold: "Power red. min range"
+  powerRangeThreshold: "Power red. max range"

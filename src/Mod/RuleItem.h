@@ -405,6 +405,7 @@ private:
 	int _power, _powerForAnimation;
 	float _powerRangeReduction;
 	float _powerRangeThreshold;
+	float _powerMinRangeThreshold = 0.0f;
 	std::vector<std::vector<std::string>> _compatibleAmmoNames = std::vector<std::vector<std::string>>(AmmoSlotMax);
 	std::vector<const RuleItem*> _compatibleAmmo[AmmoSlotMax];
 	std::unordered_map<const RuleItem*, int> _compatibleAmmoSlots;
@@ -686,6 +687,7 @@ public:
 	float getPowerRangeReduction(float range) const;
 	float getPowerRangeReductionRaw() const { return _powerRangeReduction; }
 	float getPowerRangeThresholdRaw() const { return _powerRangeThreshold; }
+	float getPowerMinRangeThresholdRaw() const { return _powerMinRangeThreshold; }
 	/// Gets amount of psi accuracy dropped for range in voxels.
 	float getPsiAccuracyRangeReduction(float range) const;
 
