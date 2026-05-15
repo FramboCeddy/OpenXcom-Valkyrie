@@ -35,6 +35,9 @@
 #include "ManufactureInfoState.h"
 #include "../Savegame/SavedGame.h"
 #include "../Mod/RuleInterface.h"
+#include "../Engine/Action.h"
+#include "../Engine/InteractiveSurface.h"
+#include <string>
 
 namespace OpenXcom
 {
@@ -101,6 +104,10 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 	_btnCancel->onKeyboardPress((ActionHandler)&ManufactureStartState::btnCancelClick, Options::keyCancel);
 
 	bool productionPossible = _item->haveEnoughMoneyForOneMoreUnit(_game->getSavedGame()->getFunds());
+	if (!_item->haveEnoughMoneyForOneMoreUnit(_game->getSavedGame()->getFunds()))
+	{
+		_txtCost->setSecondaryColor(241); // FIXME: Red in default palette but should be more dynamic for custom palettes
+	}
 	// check available workspace later
 	//int availableWorkSpace = _base->getFreeWorkshops();
 	//productionPossible &= (availableWorkSpace > 0);
@@ -131,6 +138,10 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 		s2 << count;
 		productionPossible &= (count >= iter.second);
 		_lstRequiredItems->addRow(3, tr(iter.first->getType()).c_str(), s1.str().c_str(), s2.str().c_str());
+		if (count < iter.second)
+		{
+			_lstRequiredItems->setCellColor(row, 0, 241);
+		}
 		_lstRequiredItems->setCellColor(row, 1, _lstRequiredItems->getSecondaryColor());
 		_lstRequiredItems->setCellColor(row, 2, _lstRequiredItems->getSecondaryColor());
 		row++;
@@ -144,6 +155,10 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 		s2 << count;
 		productionPossible &= (count >= iter.second);
 		_lstRequiredItems->addRow(3, tr(iter.first->getType()).c_str(), s1.str().c_str(), s2.str().c_str());
+		if (count < iter.second)
+		{
+			_lstRequiredItems->setCellColor(row, 0, 241);
+		}
 		_lstRequiredItems->setCellColor(row, 1, _lstRequiredItems->getSecondaryColor());
 		_lstRequiredItems->setCellColor(row, 2, _lstRequiredItems->getSecondaryColor());
 		row++;
@@ -186,27 +201,31 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 			}
 		}
 	}
-	if (!hasVanillaOutput && !_item->getProducedItems().empty())
+	if ((Options::showProducedQtyInBase || !hasVanillaOutput) && !_item->getProducedItems().empty())
 	{
 		// separator line
 		_lstRequiredItems->addRow(1, tr("STR_UNITS_PRODUCED").c_str());
 		_lstRequiredItems->setCellColor(row, 0, _lstRequiredItems->getSecondaryColor());
 		row++;
-
 		// produced items
-		for (auto& iter : _item->getProducedItems())
+		for (auto& [ruleItem, producedAmount] : _item->getProducedItems())
 		{
-			std::ostringstream s1;
-			s1 << Unicode::TOK_COLOR_FLIP << iter.second;
-			_lstRequiredItems->addRow(2, tr(iter.first->getType()).c_str(), s1.str().c_str());
+			int itemsInStores = _base->getStorageItems()->getItem(ruleItem);
+			for (const auto& craft : *_base->getCrafts())
+			{
+				itemsInStores += craft->getItems()->getItem(ruleItem);
+			}
+			_lstRequiredItems->addRow(3, tr(ruleItem->getType()).c_str(), std::to_string(producedAmount).c_str(), std::to_string(itemsInStores).c_str());
+			_lstRequiredItems->setCellColor(row, 1, _lstRequiredItems->getSecondaryColor());
+			_lstRequiredItems->setCellColor(row, 2, _lstRequiredItems->getSecondaryColor());
 			row++;
 		}
 	}
 
 	_txtRequiredItemsTitle->setVisible(hasRequirements);
 	_txtItemNameColumn->setVisible(hasRequirements);
-	_txtUnitRequiredColumn->setVisible(hasRequirements);
-	_txtUnitAvailableColumn->setVisible(hasRequirements);
+	_txtUnitRequiredColumn->setVisible(hasRequirements || Options::showProducedQtyInBase);
+	_txtUnitAvailableColumn->setVisible(hasRequirements || Options::showProducedQtyInBase);
 	_lstRequiredItems->setVisible(row);
 
 	_btnStart->setText(tr("STR_START_PRODUCTION"));
