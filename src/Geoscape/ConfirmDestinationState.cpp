@@ -46,6 +46,13 @@
 #include "../Engine/Options.h"
 #include "../Engine/Sound.h"
 #include "../Ufopaedia/Ufopaedia.h"
+#include "../Engine/Action.h"
+#include "../Engine/InteractiveSurface.h"
+#include "../Savegame/MovingTarget.h"
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace OpenXcom
 {
@@ -144,26 +151,41 @@ ConfirmDestinationState::ConfirmDestinationState(std::vector<Craft*> crafts, Tar
 	if (Options::oxceShowETAMode > 0 && _target)
 	{
 		MovingTarget* mt = dynamic_cast<MovingTarget*>(_target);
-		if (Options::oxceShowETAMode == 1 && mt && mt->getSpeed() > 0)
+		// needs Option 2 or a static-like target
+		if (Options::oxceShowETAMode > 1 || !mt || mt->getSpeed() == 0)
 		{
-			// don't show ETA for moving targets (i.e. UFOs and crafts)
-		}
-		else
-		{
-			int speed = _crafts.front()->getCraftStats().speedMax;
-			int distance = XcomDistance(_crafts.front()->getDistance(_target));
-			int etaInHoursHelper = (distance + (speed / 2)) / speed;
-			int days = etaInHoursHelper / 24;
-			int hours = etaInHoursHelper % 24;
-			std::ostringstream ssStatus;
-			if (days > 0) ssStatus << tr("STR_DAY_SHORT").arg(days);
-			if (hours > 0 || days == 0)
-			{
-				if (days > 0) ssStatus << "/";
-				ssStatus << tr("STR_HOUR_SHORT").arg(hours);
-			}
 			_txtETA->setAlign(ALIGN_CENTER);
-			_txtETA->setText(tr("STR_ETA").arg(ssStatus.str()));
+			Craft* craft = _crafts.front();
+			int speed = craft->getCraftStats().speedMax;
+			int distance = XcomDistance(craft->getDistance(_target));
+			double maxFlightDistance = craft->getFuel() / (6.0 * craft->getFuelConsumption(speed, 0)) * Nautical(speed); // in radians
+
+			// distance to point and point back to base requires more fuel than we currently have
+			if (craft->getDistance(_target) + _target->getDistance(craft->getBase()) > maxFlightDistance)
+			{
+				_txtETA->setText(tr("STR_OUT_OF_RANGE"));
+				_txtETA->setColor(_txtETA->getSecondaryColor());
+			}
+			else
+			{
+				int etaInHours = (distance + (speed / 2)) / speed;
+				int days = etaInHours / 24;
+				int hours = etaInHours % 24;
+				std::ostringstream ssStatus;
+				if (days > 0)
+				{
+					ssStatus << tr("STR_DAY_SHORT").arg(days);
+				}
+				if (hours > 0 || days == 0)
+				{
+					if (days > 0)
+					{
+						ssStatus << "/";
+					}
+					ssStatus << tr("STR_HOUR_SHORT").arg(hours);
+				}
+				_txtETA->setText(tr("STR_ETA").arg(ssStatus.str()));
+			}
 		}
 	}
 }
