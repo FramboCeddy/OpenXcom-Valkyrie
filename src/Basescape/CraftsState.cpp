@@ -132,13 +132,22 @@ void CraftsState::init()
 void CraftsState::initList(size_t scrl)
 {
 	_lstCrafts->clearList();
-	for (const auto* craft : *_base->getCrafts())
+	for (auto* craft : *_base->getCrafts())
 	{
-		std::ostringstream ss, ss2, ss3;
+		std::ostringstream ss, ss2, ss3, ss4;
 		ss << craft->getNumWeapons() << "/" << craft->getRules()->getWeapons();
 		ss2 << craft->getNumTotalSoldiers();
 		ss3 << craft->getNumTotalVehicles();
-		_lstCrafts->addRow(5, craft->getName(_game->getLanguage()).c_str(), tr(craft->getStatus()).c_str(), ss.str().c_str(), ss2.str().c_str(), ss3.str().c_str());
+
+		if (craft->getStatus() == "STR_READY" && !craft->arePilotsOnboard(_game->getMod()))
+		{
+			ss4 << tr("STR_PILOT_MISSING");
+		}
+		else
+		{
+			ss4 << tr(craft->getStatus());
+		}
+		_lstCrafts->addRow(5, craft->getName(_game->getLanguage()).c_str(), ss4.str().c_str(), ss.str().c_str(), ss2.str().c_str(), ss3.str().c_str());
 	}
 
 	if (scrl)
