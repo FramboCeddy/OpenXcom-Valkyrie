@@ -513,10 +513,10 @@ void NewManufactureListState::recalculateProductionList()
 	if (basicFilter == MANU_FILTER_PROFITABILITY)
 	{
 		std::stable_sort(_possibleProductions.begin(), _possibleProductions.end(),
-				  [&](const RuleManufacture* first, const RuleManufacture* second)
-				  {
-					  return first->getProfitability() > second->getProfitability(); // higher profitability first
-				  });
+			[&](const RuleManufacture* first, const RuleManufacture* second)
+			{
+				return first->getProfitability() > second->getProfitability(); // higher profitability first
+			});
 	}
 
 	std::vector<RuleManufacture *> productions = {};
@@ -526,12 +526,6 @@ void NewManufactureListState::recalculateProductionList()
 		// filter
 		bool isHidden = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_HIDDEN;
 		if ((basicFilter != MANU_FILTER_HIDDEN && isHidden) || (basicFilter == MANU_FILTER_HIDDEN && !isHidden))
-		{
-			continue;
-		}
-		// new button
-		bool isNew = _game->getSavedGame()->getManufactureRuleStatus(manuf->getName()) == RuleManufacture::MANU_STATUS_NEW;
-		if (_btnShowOnlyNew->getPressed() && !isNew) // TODO also make this only re-draw the visuals, not underlying vector of possible manufs
 		{
 			continue;
 		}
