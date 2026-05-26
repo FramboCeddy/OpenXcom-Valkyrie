@@ -331,8 +331,8 @@ struct CreateShadowWithoutCache
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-Globe::Globe(Game* game, int cenX, int cenY, int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _cenX(cenX), _cenY(cenY), _rotLon(0.0), _rotLat(0.0), _hoverLon(0.0), _hoverLat(0.0), _craftLon(0.0), _craftLat(0.0), _craftRange(0.0), _game(game), _hover(false), _craft(false), _blink(-1),
-																					_isMouseScrolling(false), _isMouseScrolled(false), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _lonBeforeMouseScrolling(0.0), _latBeforeMouseScrolling(0.0), _mouseScrollingStartTime(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(false)
+Globe::Globe(Game* game, int cenX, int cenY, int width, int height, int x, int y)
+	: InteractiveSurface(width, height, x, y), _cenX(cenX), _cenY(cenY), _game(game)
 {
 	_rules = game->getMod()->getGlobe();
 	_texture = new SurfaceSet(*_game->getMod()->getSurfaceSet("TEXTURE.DAT"));
@@ -1166,75 +1166,101 @@ void Globe::drawRadars()
 	_radars->clear();
 
 	if (!Options::globeRadarLines)
+	{
 		return;
-
-	double tr, range;
-	double lat, lon;
-	std::vector<double> ranges;
+	}
 
 	_radars->lock();
 
 	// Draw craft range
 	if (_craft)
 	{
-		if (_craftRange < M_PI)
+		double craftLat = _craft->getLatitude();
+		double craftLon = _craft->getLongitude();
+		const Base* craftBase = _craft->getBase();
+		// craft is in base so draw range as circle
+		if (AreSame(craftLat, craftBase->getLatitude()) && AreSame(craftLon, craftBase->getLongitude()))
 		{
-			drawGlobeCircle(_craftLat, _craftLon, _craftRange, 64);
-			drawGlobeCircle(_craftLat, _craftLon, _craftRange - 0.025, 64, 2);
+			double craftRange = _craft->getBaseRange();
+			if (craftRange < M_PI)
+			{
+				drawGlobeCircle(craftLat, craftLon, craftRange, 64);
+				drawGlobeCircle(craftLat, craftLon, craftRange - 0.025, 64, 2);
+			}
+		}
+		else
+		{
+			int maxSpeed = _craft->getCraftStats().speedMax;
+			// fuel consumption is per 10 minutes so we mult by 6 to get hours
+			double maxDistance = _craft->getFuel() / (6.0 * _craft->getFuelConsumption(maxSpeed, 0)) * Nautical(maxSpeed); 
+
+			drawGlobeEllipse(maxDistance, 64);
+			drawGlobeEllipse(maxDistance - 0.025, 64, 2);
 		}
 	}
 
+	std::vector<double> ranges;
+	// Draw a base we are hovering and yet to place down
 	if (_hover)
 	{
 		for (auto& facType : _game->getMod()->getBaseFacilitiesList())
 		{
-			range = Nautical(_game->getMod()->getBaseFacility(facType)->getRadarRange());
-			drawGlobeCircle(_hoverLat,_hoverLon,range,48);
-			if (Options::globeAllRadarsOnBaseBuild) ranges.push_back(range);
+			double range = Nautical(_game->getMod()->getBaseFacility(facType)->getRadarRange());
+			drawGlobeCircle(_hoverLat, _hoverLon, range, 48);
+			if (Options::globeAllRadarsOnBaseBuild)
+			{
+				ranges.push_back(range);
+			}
 		}
 	}
 
 	// Draw radars around bases
 	for (auto* xbase : *_game->getSavedGame()->getBases())
 	{
-		lat = xbase->getLatitude();
-		lon = xbase->getLongitude();
+		double lat = xbase->getLatitude();
+		double lon = xbase->getLongitude();
 		// Cheap hack to hide bases when they haven't been placed yet
 		if (( !(AreSame(lon, 0.0) && AreSame(lat, 0.0)) )/* &&
 			!pointBack(xbase->getLongitude(), xbase->getLatitude())*/)
 		{
 			if (_hover && Options::globeAllRadarsOnBaseBuild)
 			{
-				for (size_t j=0; j<ranges.size(); j++) drawGlobeCircle(lat,lon,ranges[j],48);
+				for (size_t j=0; j<ranges.size(); j++)
+				{
+					drawGlobeCircle(lat, lon, ranges[j], 48);
+				}
 			}
 			else
 			{
-				range = 0;
+				double range = 0;
 				for (auto* fac : *xbase->getFacilities())
 				{
 					if (fac->getBuildTime() == 0)
 					{
-						tr = fac->getRules()->getRadarRange();
-						if (tr < MAX_DRAW_RADAR_CIRCLE_RADIUS && tr > range) range = tr;
+						double tr = fac->getRules()->getRadarRange();
+						if (tr < MAX_DRAW_RADAR_CIRCLE_RADIUS && tr > range)
+						{
+							range = tr;
+						}
 					}
 				}
 				range = Nautical(range);
-
-				if (range>0) drawGlobeCircle(lat,lon,range,48);
+				drawGlobeCircle(lat, lon, range, 48);
 			}
-
 		}
 
 		// Draw radars around player craft
 		for (auto* xcraft : *xbase->getCrafts())
 		{
 			if (xcraft->getStatus() != "STR_OUT")
+			{
 				continue;
-			lat = xcraft->getLatitude();
-			lon = xcraft->getLongitude();
-			range = Nautical(xcraft->getCraftStats().radarRange);
+			}
 
-			if (range>0) drawGlobeCircle(lat,lon,range,24);
+			double lat = xcraft->getLatitude();
+			double lon = xcraft->getLongitude();
+			double range = Nautical(xcraft->getCraftStats().radarRange);
+			drawGlobeCircle(lat, lon, range, 24);
 		}
 	}
 
@@ -1249,11 +1275,10 @@ void Globe::drawRadars()
 				{
 					continue;
 				}
-				lat = ufo->getLatitude();
-				lon = ufo->getLongitude();
-				range = Nautical(ufo->getCraftStats().radarRange);
-
-				if (range > 0) drawGlobeCircle(lat, lon, range, 24);
+				double lat = ufo->getLatitude();
+				double lon = ufo->getLongitude();
+				double range = Nautical(ufo->getCraftStats().radarRange);
+				drawGlobeCircle(lat, lon, range, 24);
 			}
 		}
 
@@ -1262,11 +1287,10 @@ void Globe::drawRadars()
 		{
 			if (ab->getDeployment()->getBaseDetectionRange() > 0 && ab->isDiscovered())
 			{
-				lat = ab->getLatitude();
-				lon = ab->getLongitude();
-				range = Nautical(ab->getDeployment()->getBaseDetectionRange());
-
-				if (range > 0) drawGlobeCircle(lat, lon, range, 24);
+				double lat = ab->getLatitude();
+				double lon = ab->getLongitude();
+				double range = Nautical(ab->getDeployment()->getBaseDetectionRange());
+				drawGlobeCircle(lat, lon, range, 24);
 			}
 		}
 	}
@@ -1279,25 +1303,84 @@ void Globe::drawRadars()
  */
 void Globe::drawGlobeCircle(double lat, double lon, double radius, int segments, int frac)
 {
+	// no radius or radius covers the entire globe
+	if (radius <= 0 || radius > M_PI)
+	{
+		return;
+	}
+
 	double x, y, x2 = 0, y2 = 0;
-	double lat1, lon1;
 	double seg = M_PI / (static_cast<double>(segments) / 2);
 	int i = 0;
-	for (double az = 0; az <= M_PI*2+0.01; az+=seg) //48 circle segments
+	for (double az = 0; az <= 2 * M_PI + 0.01; az += seg) //48 circle segments
 	{
 		//calculating sphere-projected circle
-		lat1 = asin(sin(lat) * cos(radius) + cos(lat) * sin(radius) * cos(az));
-		lon1 = lon + atan2(sin(az) * sin(radius) * cos(lat), cos(radius) - sin(lat) * sin(lat1));
+		double lat1 = asin(sin(lat) * cos(radius) + cos(lat) * sin(radius) * cos(az));
+		double lon1 = lon + atan2(sin(az) * sin(radius) * cos(lat), cos(radius) - sin(lat) * sin(lat1));
 		polarToCart(lon1, lat1, &x, &y);
-		if ( AreSame(az, 0.0) ) //first vertex is for initialization only
+		if (AreSame(az, 0.0)) //first vertex is for initialization only
 		{
-			x2=x;
-			y2=y;
+			x2 = x;
+			y2 = y;
 			continue;
 		}
 		if (!pointBack(lon1,lat1) && i % frac == 0)
+		{
 			XuLine(_radars, this, x, y, x2, y2, 6);
-		x2=x; y2=y;
+		}
+		x2 = x;
+		y2 = y;
+		i++;
+	}
+}
+
+/*
+* Draw a globe ellipse to show a craft's range while out on the globe
+* @param radius: the maximum circle radius to search to
+* @param segments: how many segments to divide the ellipse in to
+* @param frac: for fractional drawing of the ellipse (dotted line)
+*/
+void Globe::drawGlobeEllipse(double range, int segments, int frac)
+{
+	// if radius is less than distance to base, we can only fly directly back to base
+	// farthest point from both craft and baseis if they all lie on the same geodesic, meaning c->t + t->b = 2pi - c->b
+	double baseDistance = _craft->getDistanceFromBase();
+	if (range <= baseDistance || range > 2 * M_PI - baseDistance)
+	{
+		return;
+	}
+
+	double craftLat = _craft->getLatitude();
+	double craftLon = _craft->getLongitude();
+	double baseLat = _craft->getBase()->getLatitude();
+	double baseLon = _craft->getBase()->getLongitude();
+
+	// get the bearing from craft to base
+	double By = sin(baseLon - craftLon) * cos(baseLat);
+	double Bx = cos(craftLat) * sin(baseLat) - sin(craftLat) * cos(baseLat) * cos(baseLon - craftLon);
+	double bearingBase = atan2(By, Bx);
+
+	double seg = M_PI / (segments / 2.0);
+	double x, y, x2 = 0, y2 = 0;
+	int i = 0;
+	for (double az = 0; az <= 2 * M_PI + 0.01; az += seg) // 48 circle segments
+	{
+		double distance = atan2(cos(baseDistance) - cos(range), sin(range) - sin(baseDistance) * cos(az - bearingBase));
+		double lat1 = asin(sin(craftLat) * cos(distance) + cos(craftLat) * sin(distance) * cos(az));
+		double lon1 = craftLon + atan2(sin(az) * sin(distance) * cos(craftLat), cos(distance) - sin(craftLat) * sin(lat1));
+		polarToCart(lon1, lat1, &x, &y);
+		if (AreSame(az, 0.0)) // first vertex is for initialization only
+		{
+			x2 = x;
+			y2 = y;
+			continue;
+		}
+		if (!pointBack(lon1, lat1) && i % frac == 0)
+		{
+			XuLine(_radars, this, x, y, x2, y2, 6);
+		}
+		x2 = x;
+		y2 = y;
 		i++;
 	}
 }
@@ -2145,12 +2228,9 @@ void Globe::stopScrolling(Action *action)
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
 }
 
-void Globe::setCraftRange(double lon, double lat, double range)
+void Globe::setCraft(const Craft* craft)
 {
-	_craft = (range > 0.0);
-	_craftLon = lon;
-	_craftLat = lat;
-	_craftRange = range;
+	_craft = craft;
 }
 
 }

@@ -54,15 +54,15 @@ private:
 	static const double ROTATE_LATITUDE;
 
 	RuleGlobe *_rules;
-	Sint16 _cenX, _cenY;
-	double _cenLon, _cenLat, _rotLon, _rotLat, _hoverLon, _hoverLat;
-	double _craftLon, _craftLat, _craftRange;
-	size_t _zoom, _zoomOld, _zoomTexture;
 	SurfaceSet *_texture, *_markerSet;
 	Game *_game;
 	Surface *_markers, *_countries, *_radars;
-	bool _hover, _craft;
-	int _blink;
+	const Craft *_craft = nullptr;
+	size_t _zoom, _zoomOld, _zoomTexture;
+	double _cenLon, _cenLat;
+	double _rotLon = 0.0, _rotLat = 0.0, _hoverLon = 0.0, _hoverLat = 0.0;
+	Sint16 _cenX, _cenY;
+	int _blink = -1;
 	Timer *_blinkTimer, *_rotTimer;
 	std::list<Polygon*> _cacheLand;
 	FastLineClip *_clipper;
@@ -72,12 +72,13 @@ private:
 	///list of dimension of earth on screen per zoom level
 	std::vector<double> _zoomRadius;
 
-	bool _isMouseScrolling, _isMouseScrolled;
-	int _xBeforeMouseScrolling, _yBeforeMouseScrolling;
-	double _lonBeforeMouseScrolling, _latBeforeMouseScrolling;
-	Uint32 _mouseScrollingStartTime;
-	int _totalMouseMoveX, _totalMouseMoveY;
-	bool _mouseMovedOverThreshold;
+	double _lonBeforeMouseScrolling = 0.0, _latBeforeMouseScrolling = 0.0;
+	int _xBeforeMouseScrolling = 0, _yBeforeMouseScrolling = 0;
+	Uint32 _mouseScrollingStartTime = 0;
+	int _totalMouseMoveX = 0, _totalMouseMoveY = 0;
+	bool _isMouseScrolling = false, _isMouseScrolled = false;
+	bool _mouseMovedOverThreshold = false;
+	bool _hover = false;
 
 	/// Sets the globe zoom factor.
 	void setZoom(size_t zoom);
@@ -93,6 +94,8 @@ private:
 	Cord getSunDirection(double lon, double lat) const;
 	/// Draw globe range circle.
 	void drawGlobeCircle(double lat, double lon, double radius, int segments, int frac = 1);
+	/// Draw globe range ellipse.
+	void drawGlobeEllipse(double distance, int segments, int frac = 1);
 	/// Special "transparent" line.
 	void XuLine(Surface* surface, Surface* src, double x1, double y1, double x2, double y2, int shade);
 	/// Draw line on globe surface.
@@ -205,8 +208,8 @@ public:
 	void setNewBaseHoverPos(double lon, double lat);
 	/// Turns on new base hover mode.
 	void setNewBaseHover(bool hover);
-	/// Sets craft range mode.
-	void setCraftRange(double lon, double lat, double range);
+	/// Sets the craft that is currently selected
+	void setCraft(const Craft* craft);
 	/// set the _radarLines variable
 	void toggleRadarLines();
 	/// Update the resolution settings, we just resized the window.

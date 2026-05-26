@@ -985,8 +985,20 @@ void GeoscapeState::time5Seconds()
 				{
 					// Check if some other HK already attacked before us (at the very same moment)
 					int hkDogfights = 0;
-					for (auto* f : _dogfights) if (f->isUfoAttacking()) { hkDogfights++; }
-					for (auto* g : _dogfightsToBeStarted) if (g->isUfoAttacking()) { hkDogfights++; }
+					for (auto* f : _dogfights)
+					{
+						if (f->isUfoAttacking())
+						{
+							hkDogfights++;
+						}
+					}
+					for (auto* g : _dogfightsToBeStarted)
+					{
+						if (g->isUfoAttacking())
+						{
+							hkDogfights++;
+						}
+					}
 
 					// If yes, wait... not more than 1 HK interception allowed at a time.
 					if (hkDogfights >= 1)
@@ -995,8 +1007,22 @@ void GeoscapeState::time5Seconds()
 					}
 
 					// If not, interrupt all other (regular) interceptions to prevent a dead-lock (and other possible side effects)
-					for (auto* f : _dogfights) if (f->getCraft()) { f->getCraft()->setInDogfight(false); f->getCraft()->setInterceptionOrder(0); }
-					for (auto* g : _dogfightsToBeStarted) if (g->getCraft()) { g->getCraft()->setInDogfight(false); g->getCraft()->setInterceptionOrder(0); }
+					for (auto* f : _dogfights)
+					{
+						if (f->getCraft())
+						{
+							f->getCraft()->setInDogfight(false);
+							f->getCraft()->setInterceptionOrder(0);
+						}
+					}
+					for (auto* g : _dogfightsToBeStarted)
+					{
+						if (g->getCraft())
+						{
+							g->getCraft()->setInDogfight(false);
+							g->getCraft()->setInterceptionOrder(0);
+						}
+					}
 					Collections::deleteAll(_dogfights);
 					Collections::deleteAll(_dogfightsToBeStarted);
 					_minimizedDogfights = 0;

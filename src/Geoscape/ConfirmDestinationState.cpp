@@ -157,7 +157,6 @@ ConfirmDestinationState::ConfirmDestinationState(std::vector<Craft*> crafts, Tar
 			_txtETA->setAlign(ALIGN_CENTER);
 			Craft* craft = _crafts.front();
 			int speed = craft->getCraftStats().speedMax;
-			int distance = XcomDistance(craft->getDistance(_target));
 			double maxFlightDistance = craft->getFuel() / (6.0 * craft->getFuelConsumption(speed, 0)) * Nautical(speed); // in radians
 
 			// distance to point and point back to base requires more fuel than we currently have
@@ -168,6 +167,7 @@ ConfirmDestinationState::ConfirmDestinationState(std::vector<Craft*> crafts, Tar
 			}
 			else
 			{
+				int distance = XcomDistance(craft->getDistance(_target));
 				int etaInHours = (distance + (speed / 2)) / speed;
 				int days = etaInHours / 24;
 				int hours = etaInHours % 24;
