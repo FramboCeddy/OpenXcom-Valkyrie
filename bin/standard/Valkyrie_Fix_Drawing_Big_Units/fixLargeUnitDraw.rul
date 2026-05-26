@@ -1,4 +1,11 @@
 extraSprites:
+  - type: SNAKEMAN.PCK
+    width: 256
+    height: 680
+    subX: 32
+    subY: 40
+    files:
+      0: UNITS/SNAKEMAN.PNG
   - type: CYBER.PCK
     width: 256
     height: 280
