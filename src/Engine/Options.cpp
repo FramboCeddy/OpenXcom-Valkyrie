@@ -571,17 +571,17 @@ void createControlsOXCE()
 
 void createOptionsVALK()
 {
-	_info.push_back(OptionInfo(OPTION_VALK, "manufactureKeepCategories", &manufactureKeepCategories, false, "STR_MANUFACTURE_KEEP_CATEGORIES", "HIDDEN"));
-	_info.push_back(OptionInfo(OPTION_VALK, "showDefeatScore", &showDefeatScore, false, "STR_SHOW_DEFEAT_SCORE", "HIDDEN"));
-	_info.push_back(OptionInfo(OPTION_VALK, "defenseValueMean", &defenseValueMean, false, "STR_DEFENSE_VALUE_MEAN", "HIDDEN"));
-	_info.push_back(OptionInfo(OPTION_VALK, "showProducedQtyInBase", &showProducedQtyInBase, false, "STR_SHOW_PRODUCED_QTY_IN_BASE", "HIDDEN"));
 }
 
 void createAdvancedOptionsVALK()
 {
+	_info.push_back(OptionInfo(OPTION_VALK, "showDefeatScore", &showDefeatScore, false, "STR_SHOW_DEFEAT_SCORE", "STR_GENERAL"));
 	_info.push_back(OptionInfo(OPTION_VALK, "techTreeCensorCost", &techTreeCensorCost, false, "STR_TECHTREE_CENSOR_COST", "STR_GENERAL"));
 	_info.push_back(OptionInfo(OPTION_VALK, "giveReenabledResearch", &giveReenabledResearch, false, "STR_GIVE_REENABLED_RESEARCH", "STR_GENERAL"));
 
+	_info.push_back(OptionInfo(OPTION_VALK, "manufactureKeepCategories", &manufactureKeepCategories, false, "STR_MANUFACTURE_KEEP_CATEGORIES", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "showProducedQtyInBase", &showProducedQtyInBase, false, "STR_SHOW_PRODUCED_QTY_IN_BASE", "STR_BASESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "defenseValueMean", &defenseValueMean, false, "STR_DEFENSE_VALUE_MEAN", "STR_BASESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "craftRepairsLast", &craftRepairsLast, false, "STR_CRAFT_REPAIRS_LAST", "STR_BASESCAPE"));
 
 	_info.push_back(OptionInfo(OPTION_VALK, "visualSmokeDensity", &visualSmokeDensity, false, "STR_VISUAL_SMOKE_DENSITY", "STR_BATTLESCAPE"));

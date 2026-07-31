@@ -8,7 +8,7 @@ en-US:
   STR_INVISIBLE_WALLS_ACTIVATED: "Walls and objects made invisible. {NEWLINE}Ctrl+y to disable."
   STR_INVISIBLE_WALLS_DEACTIVATED: "Walls and objects made visible."
   STR_LEGWOUNDS_PREVENT_SPRINTING: "Leg wounds prevent sprinting."
-  
+
   STR_CENSORED: "***"
   STR_HIDE_SPOILERS: "Hide spoilers"
 
@@ -23,6 +23,14 @@ en-US:
   STR_FUNDING_BUTTON: "FUNDING"
 
   # Advanced Options
+  STR_SHOW_DEFEAT_SCORE: "Show Defeat Score"
+  STR_SHOW_DEFEAT_SCORE_DESC: "Shows the minimum score required to not lose on score."
+  STR_MANUFACTURE_KEEP_CATEGORIES: "Manufacture Keeps Categories Selected"
+  STR_MANUFACTURE_KEEP_CATEGORIES_DESC: "Manufacture keeps the currently selected category active while switching filters."
+  STR_SHOW_PRODUCED_QTY_IN_BASE: "Show Store Quantity For Manufacturing"
+  STR_SHOW_PRODUCED_QTY_IN_BASE_DESC: "Shows the current storage quantity of the items produced by the manufacturing project."
+  STR_DEFENSE_VALUE_MEAN: "Show Defense Value Mean"
+  STR_DEFENSE_VALUE_MEAN_DESC: "Shows the base's defense value as the mean value damage * probability."
   STR_VISUAL_SMOKE_DENSITY: "Visual Smoke Density"
   STR_VISUAL_SMOKE_DENSITY_DESC: "Displays the density of smoke visually through a different graphical representation."
   STR_EUCLID_DISTANCE_ACCURACY: "Euclidean Distance for Accuracy"
