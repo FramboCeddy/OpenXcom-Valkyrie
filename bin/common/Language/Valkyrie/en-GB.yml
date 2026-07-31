@@ -7,6 +7,7 @@ en-GB:
 
   STR_INVISIBLE_WALLS_ACTIVATED: "Walls and objects made invisible. {NEWLINE}Ctrl+y to disable."
   STR_INVISIBLE_WALLS_DEACTIVATED: "Walls and objects made visible."
+  STR_LEGWOUNDS_PREVENT_SPRINTING: "Leg wounds prevent sprinting."
 
   STR_CENSORED: "***"
   STR_HIDE_SPOILERS: "Hide spoilers"
@@ -38,6 +39,8 @@ en-GB:
   STR_FORCE_STAT_CAPS_DESC: "Forces the experience gained from a mission to not overlevel a soldier's stats."
   STR_GIVE_REENABLED_RESEARCH: "Give Reenabled Research"
   STR_GIVE_REENABLED_RESEARCH_DESC: "Research topics that were previously researched, then disabled and reenabled are given as completed instead of available."
+  STR_LEGWOUNDS_DISABLE_SPRINTING: "Leg Wounds Disable Sprinting"
+  STR_LEGWOUNDS_DISABLE_SPRINTING_DESC: "Having leg wounds will disable the ability for the unit to sprint."
 
   # Stats For Nerds
   gravPower: "Grav shield power"

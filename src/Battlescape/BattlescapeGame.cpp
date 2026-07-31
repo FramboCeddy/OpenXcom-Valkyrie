@@ -1955,7 +1955,7 @@ void BattlescapeGame::primaryAction(Position pos)
 				_save->getPathfinding()->removePreview();
 			}
 			_currentAction.target = pos;
-			_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, BAM_NORMAL); // precalculate move
+			//_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, BAM_NORMAL); // precalculate move
 
 			_currentAction.strafe = false;
 			_currentAction.run = false;
@@ -1965,7 +1965,15 @@ void BattlescapeGame::primaryAction(Position pos)
 			{
 				if (_save->getPathfinding()->getPath().size() > 1 || isAltPressed)
 				{
-					_currentAction.run = _save->getSelectedUnit()->getArmor()->allowsRunning(_save->getSelectedUnit()->isSmallUnit());
+					if (Options::legWoundsDisableSprinting && (_currentAction.actor->getFatalWound(BODYPART_LEFTLEG) > 0 || _currentAction.actor->getFatalWound(BODYPART_RIGHTLEG) > 0))
+					{
+						_currentAction.run = false;
+						_parentState->warning("STR_LEGWOUNDS_PREVENT_SPRINTING");
+					}
+					else
+					{
+						_currentAction.run = _save->getSelectedUnit()->getArmor()->allowsRunning(_save->getSelectedUnit()->isSmallUnit());
+					}
 				}
 				else
 				{
@@ -1978,10 +1986,10 @@ void BattlescapeGame::primaryAction(Position pos)
 			}
 
 			// recalculate path after setting new move types
-			if (BAM_NORMAL != _currentAction.getMoveType())
-			{
-				_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, _currentAction.getMoveType());
-			}
+			//if (BAM_NORMAL != _currentAction.getMoveType())
+			//{
+			_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, _currentAction.getMoveType());
+			//}
 
 			// if running or shifting, ignore spotted enemies (i.e. don't stop)
 			_currentAction.ignoreSpottedEnemies = (_currentAction.run && Mod::EXTENDED_RUNNING_COST) || isShiftPressed;

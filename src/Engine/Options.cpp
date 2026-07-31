@@ -589,6 +589,7 @@ void createAdvancedOptionsVALK()
 	_info.push_back(OptionInfo(OPTION_VALK, "accuracyForFirstWaypoint", &accuracyForFirstWaypoint, false, "STR_ACCURACY_FOR_FIRST_WAYPOINT", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "forceStatCaps", &forceStatCaps, false, "STR_FORCE_STAT_CAPS", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "recoveryPointsForAmmo", &recoveryPointsForAmmo, false, "STR_RECOVERY_POINTS_FOR_AMMO", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "legWoundsDisableSprinting", &legWoundsDisableSprinting, false, "STR_LEGWOUNDS_DISABLE_SPRINTING", "STR_BATTLESCAPE"));
 }
 
 void createControlsVALK()

@@ -1251,8 +1251,8 @@ void Pathfinding::refreshPath()
 		switchBack = true;
 		_save->getBattleGame()->setTUReserved(BA_AUTOSHOT);
 	}
-
-	const bool running = _ctrlUsed && _unit->getArmor()->allowsRunning(_unit->isSmallUnit()) && (_path.size() > 1 || _altUsed);
+	const bool sprintingDisabled = Options::legWoundsDisableSprinting && (_unit->getFatalWound(BODYPART_LEFTLEG) > 0 || _unit->getFatalWound(BODYPART_RIGHTLEG) > 0);
+	const bool running = _ctrlUsed && !sprintingDisabled && _unit->getArmor()->allowsRunning(_unit->isSmallUnit()) && (_path.size() > 1 || _altUsed);
 	const bool strafing = !running && _ctrlUsed && _unit->getArmor()->allowsStrafing(_unit->isSmallUnit()) && _path.size() == 1;
 	const bool sneaking = !running && _altUsed && _unit->getArmor()->allowsSneaking(_unit->isSmallUnit());
 
