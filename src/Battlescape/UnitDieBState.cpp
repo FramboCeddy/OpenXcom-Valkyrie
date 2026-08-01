@@ -277,9 +277,7 @@ void UnitDieBState::convertUnitToCorpse()
 {
 	Position lastPosition = _unit->getPosition();
 	int size = _unit->getArmor()->getSize();
-	bool dropItems = (_unit->hasInventory() &&
-		(!Options::weaponSelfDestruction ||
-		(_unit->getOriginalFaction() != FACTION_HOSTILE || _unit->getStatus() == STATUS_UNCONSCIOUS)));
+	bool dropItems = _unit->getOriginalFaction() != FACTION_HOSTILE || _unit->getStatus() == STATUS_UNCONSCIOUS;
 
 	if (!_noSound)
 	{
@@ -292,9 +290,31 @@ void UnitDieBState::convertUnitToCorpse()
 	}
 
 	// move inventory from unit to the ground
-	if (dropItems && _unit->getTile())
+	if (_unit->hasInventory() && _unit->getTile())
 	{
-		_parent->getTileEngine()->itemDropInventory(_unit->getTile(), _unit);
+		if (!Options::weaponSelfDestruction || dropItems)
+		{
+			// Drop all items
+			_parent->getTileEngine()->itemDropInventory(_unit->getTile(), _unit);
+		}
+		else
+		{
+			// Only drop items in the keep category
+			auto inv = _unit->getInventory();
+			for (auto item : *inv)
+			{
+				auto cats = item->getRules()->getCategories();
+				for (auto& cat : cats)
+				{
+					if (cat == Mod::SELF_DESTRUCTION_KEEP)
+					{
+						// Drop items who contain the keep category
+						_parent->getTileEngine()->itemDrop(_unit->getTile(), item, item->getRules()->getBattleType() == BT_FLARE);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	// remove unit-tile link

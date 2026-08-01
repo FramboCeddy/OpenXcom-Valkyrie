@@ -184,6 +184,7 @@ int Mod::PANIC_THRESHOLDS[2] = {0, 50};
 int Mod::FUNDING_RANGE[2] = {5, 20};
 std::string Mod::DEBRIEF_MUSIC_GOOD;
 std::string Mod::DEBRIEF_MUSIC_BAD;
+std::string Mod::SELF_DESTRUCTION_KEEP = "";
 int Mod::DIFFICULTY_COEFFICIENT[5];
 int Mod::SELL_PRICE_COEFFICIENT[5];
 int Mod::BUY_PRICE_COEFFICIENT[5];
@@ -268,6 +269,7 @@ void Mod::resetGlobalStatics()
 
 	DEBRIEF_MUSIC_GOOD = "GMMARS";
 	DEBRIEF_MUSIC_BAD = "GMMARS";
+	SELF_DESTRUCTION_KEEP = "";
 
 	Globe::OCEAN_COLOR = Palette::blockOffset(12);
 	Globe::OCEAN_SHADING = true;
@@ -469,7 +471,7 @@ Mod::Mod() :
 	_pilotAccuracyZeroPoint(55), _pilotAccuracyRange(40), _pilotReactionsZeroPoint(55), _pilotReactionsRange(60),
 	_performanceBonusFactor(0.0), _enableNewResearchSorting(false), _displayCustomCategories(0), _shareAmmoCategories(false), _showDogfightDistanceInKm(false), _showFullNameInAlienInventory(false),
 	_alienInventoryOffsetX(80), _alienInventoryOffsetBigUnit(32),
-	_hidePediaInfoButton(false), _extraNerdyPediaInfoType(0), _extraNerdyPediaInfoPercent(false), 
+	_hidePediaInfoButton(false), _extraNerdyPediaInfoType(0), _extraNerdyPediaInfoPercent(false),
 	_giveScoreAlsoForResearchedArtifacts(false), _statisticalBulletConservation(false), _stunningImprovesMorale(false),
 	_tuRecoveryWakeUpNewTurn(100), _shortRadarRange(0), _buildTimeReductionScaling(100),
 	_defeatScore(0), _defeatFunds(0), _countriesIgnoreCouncilPoints(false), _difficultyDemigod(false), _startingTime(6, 1, 1, 1999, 12, 0, 0), _startingDifficulty(0),
@@ -2766,6 +2768,9 @@ void Mod::loadConstants(const YAML::YamlNodeReader &reader)
 			std::swap(FUNDING_RANGE[0], FUNDING_RANGE[1]);
 		}
 	}
+
+	// Add this category to any item you want to always have drop to the ground, even with self-destruction on
+	reader.tryRead("weaponSelfDestructionKeepCategory", SELF_DESTRUCTION_KEEP);
 
 	reader.tryRead("goodDebriefingMusic", DEBRIEF_MUSIC_GOOD);
 	reader.tryRead("badDebriefingMusic", DEBRIEF_MUSIC_BAD);
@@ -6603,7 +6608,7 @@ bool Mod::isDemigod() const
 }
 /**
  * @brief Makes countries' funding decision ignore council points
- * @return 
+ * @return
  */
 bool Mod::getCountriesIgnoreCouncilPoints() const
 {

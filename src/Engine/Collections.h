@@ -132,7 +132,7 @@ public:
 	/**
 	 * Remove items from vector with limit.
 	 * Similar to `std::remove_if` but `std` do not allow modify anything in `func`, this function do allow.
-	 * @param vec Vector from witch remove items
+	 * @param vec Vector from which to remove items
 	 * @param numberToRemove Limit of removal
 	 * @param func Test what should be removed, can modify everything except this vector
 	 * @return Number of values left to remove
@@ -178,7 +178,7 @@ public:
 
 	/**
 	 * Remove items from collection with limit.
-	 * @param list List from witch remove items
+	 * @param list List from which to remove items
 	 * @param numberToRemove Limit of removal
 	 * @param func Test what should be removed, can modify everything except this collection
 	 * @return Number of values left to remove
@@ -211,7 +211,7 @@ public:
 
 	/**
 	 * Remove items from collection.
-	 * @param list List from witch remove items
+	 * @param list List from which to remove items
 	 * @param func Test what should be removed, can modify everything except this collection
 	 * @return Number of values left in collection
 	 */

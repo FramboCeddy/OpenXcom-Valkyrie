@@ -448,6 +448,7 @@ public:
 
 	static std::string DEBRIEF_MUSIC_GOOD;
 	static std::string DEBRIEF_MUSIC_BAD;
+	static std::string SELF_DESTRUCTION_KEEP;
 	static int DIFFICULTY_COEFFICIENT[5];
 	static int SELL_PRICE_COEFFICIENT[5];
 	static int BUY_PRICE_COEFFICIENT[5];
