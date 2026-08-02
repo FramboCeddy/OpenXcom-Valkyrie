@@ -1193,7 +1193,8 @@ bool Pathfinding::previewPath(bool bRemove)
 	}
 	else
 	{
-		_ctrlUsed = Options::strafe && _save->isCtrlPressed(true);
+		bool sprintingDisabled = Options::legWoundsDisableSprinting && (_unit->getFatalWound(BODYPART_LEFTLEG) > 0 || _unit->getFatalWound(BODYPART_RIGHTLEG) > 0);
+		_ctrlUsed = Options::strafe && _save->isCtrlPressed(true) && !sprintingDisabled;
 		_altUsed = Options::strafe && _save->isAltPressed(true);
 	}
 
