@@ -486,6 +486,7 @@ private:
 	ScriptValues<RuleItem> _scriptValues;
 
 	bool _directionalScan = false;
+	bool _staticScan = false;
 
 	/// Load RuleItemUseCost from yaml.
 	void loadCost(RuleItemUseCost& a, const YAML::YamlNodeReader& reader, const std::string& name) const;
@@ -1049,6 +1050,7 @@ public:
 	const ScriptValues<RuleItem> &getScriptValuesRaw() const { return _scriptValues; }
 	/// Gets whether the motion scanner is directional
 	bool isDirectionalScan() const { return _directionalScan; }
+	bool scanStaticTargets() const { return _staticScan; }
 };
 
 }

@@ -67,7 +67,7 @@ void ScannerView::draw()
 			for (int z = 0; z < _game->getSavedGame()->getSavedBattle()->getMapSizeZ(); z++)
 			{
 				Tile *t = _game->getSavedGame()->getSavedBattle()->getTile(Position(x,y,z) + Position(_unit->getPosition().x, _unit->getPosition().y, 0));
-				if (!t)
+				if (!t || !t->getUnit())
 				{
 					continue;
 				}
@@ -76,19 +76,15 @@ void ScannerView::draw()
 				{
 					continue;
 				}
-				if (!t->getUnit() || !t->getUnit()->getMotionPoints())
+				if (!_item->scanStaticTargets() && !t->getUnit()->getMotionPoints())
 				{
 					continue;
 				}
 
-				int frame = (t->getUnit()->getMotionPoints() / 5);
+				int frame = std::min(5, (t->getUnit()->getMotionPoints() / 5));
 				if (frame >= 0)
 				{
 					t->getUnit()->setScannedTurn(_game->getSavedGame()->getSavedBattle()->getTurn());
-					if (frame > 5)
-					{
-						frame = 5;
-					}
 					surface = set->getFrame(frame + _frame);
 					surface->blitNShade(this, ((9+x)*8)-4, ((9+y)*8)-4, 0); // TODO: a way to scale the blips so a range > 9 shows on the scanner view
 				}

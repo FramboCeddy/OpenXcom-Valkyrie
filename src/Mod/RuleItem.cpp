@@ -597,6 +597,7 @@ void RuleItem::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript&
 	reader.tryRead("medikitTargetMatrix", _medikitTargetMatrix);
 	reader.tryRead("medikitBackground", _medikitBackground);
 	reader.tryRead("directionalScan", _directionalScan);
+	reader.tryRead("staticScan", _staticScan);
 
 	reader.tryRead("recoveryPoints", _recoveryPoints);
 	reader.tryRead("armor", _armor);
