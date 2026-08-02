@@ -1797,8 +1797,11 @@ void BattlescapeGame::primaryAction(Position pos)
 			_currentAction.weapon->getRules()->getSprayWaypoints() > 0 &&
 			_save->isCtrlPressed(true) &&
 			_save->isShiftPressed(true) &&
-			_currentAction.waypoints.empty()) // Starts the spray autoshot targeting
+			_currentAction.sprayTargeting == false) // Starts the spray autoshot targeting
 		{
+			// clear waypoints because we might already have a normal mode waypoint
+			_currentAction.waypoints.clear();
+			getMap()->getWaypoints()->clear();
 			_currentAction.sprayTargeting = true;
 			_currentAction.waypoints.push_back(pos);
 			getMap()->getWaypoints()->push_back(pos);
