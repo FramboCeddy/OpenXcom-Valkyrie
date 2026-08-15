@@ -89,7 +89,22 @@ TransfersState::TransfersState(Base *base) : _base(base)
 	{
 		std::ostringstream ss, ss2;
 		ss << transfer->getQuantity();
-		ss2 << transfer->getHours();
+		int daysLeft = transfer->getHours() / 24;
+		int hoursLeft = transfer->getHours() % 24;
+
+		if (daysLeft > 0)
+		{
+			ss2 << tr("STR_DAY_SHORT").arg(daysLeft);
+		}
+		if (hoursLeft > 0)
+		{
+			if (daysLeft > 0)
+			{
+				ss2 << "/";
+			}
+			ss2 << tr("STR_HOUR_SHORT").arg(hoursLeft);
+		}
+
 		_lstTransfers->addRow(3, transfer->getName(_game->getLanguage()).c_str(), ss.str().c_str(), ss2.str().c_str());
 	}
 }
