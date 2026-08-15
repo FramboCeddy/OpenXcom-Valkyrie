@@ -997,11 +997,17 @@ void Inventory::mouseClick(Action *action, State *state)
 						}
 
 						bool canLoad = true;
-						if (item->getAmmoForSlot(slotAmmo) != 0)
+						if (BattleItem* oldAmmo = item->getAmmoForSlot(slotAmmo))
 						{
 							int tuUnload = item->getRules()->getTUUnload(slotAmmo);
 							if (_game->isShiftPressed() && (!_tu || tuUnload))
 							{
+								// Don't quick swap if the ammos are the same with same amount of ammo (as this doesnt change anything)
+								if (_selItem->getRules() == oldAmmo->getRules() && _selItem->getAmmoQuantity() == oldAmmo->getAmmoQuantity())
+								{
+									canLoad = false;
+									_warning->showMessage(_game->getLanguage()->getString("STR_WEAPON_IS_ALREADY_LOADED"));
+								}
 								// Quick-swap check
 								if (!_tu)
 								{
