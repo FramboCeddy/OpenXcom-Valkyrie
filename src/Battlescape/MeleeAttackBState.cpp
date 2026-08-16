@@ -233,31 +233,27 @@ void MeleeAttackBState::performMeleeAttack(int terrainMeleeTilePart)
 	_action.weapon->spendAmmoForAction(BA_HIT, _parent->getSave());
 	_parent->getMap()->setCursorType(CT_NONE);
 
-	Position damagePosition = _voxel;
-	if (_target) // terrainMelee does not set a target
+	Position difference = _unit->getPositionVexels() - _voxel;
+	// we need to reduce the voxel offset because this damagePosition also gets used for LoF voxelcheck
+	// so it must be a low enough difference to not miss on small LoFs
+	if (_unit->isBigUnit() && _target && _target->isBigUnit())
 	{
-		Position difference = _unit->getPositionVexels() - _target->getPositionVexels();
-		// we need to reduce the voxel offset because this damagePosition also gets used for LoF voxelcheck
-		// so it must be a low enough difference to not miss on small LoFs
-		if (_unit->isBigUnit() && _target->isBigUnit())
-		{
-			// This causes the 4 corners to count as a 'diagonal' attack
-			difference.x = difference.x / 32;
-			difference.y = difference.y / 32;
-		}
-		else
-		{
-			// For 2x2 vs 1x1 unit, The 4 corners will be 'diagonal' attacks
-			difference.x = difference.x / 16;
-			difference.y = difference.y / 16;
-		}
-		// offset the damage voxel ever so slightly so that the target knows which side the attack came from
-		damagePosition += difference;
+		// large vs large is 2 tiles 'away'
+		difference.x = difference.x / 32;
+		difference.y = difference.y / 32;
 	}
+	else
+	{
+		// small vs small, large vs small, or terrain melee is 1 tile away
+		difference.x = difference.x / 16;
+		difference.y = difference.y / 16;
+	}
+	difference.z = 0; // I don't think we need the z-difference as we have already selected a target
+	// offset the damage voxel ever so slightly so that the target knows which side the attack came from
+	Position damagePosition = _voxel + difference;
 
 	// make an explosion action
 	_parent->statePushFront(new ExplosionBState(_parent, damagePosition, BattleActionAttack::GetAferShoot(_action, _ammo), 0, true, 0, 0, terrainMeleeTilePart));
-
 
 	_reaction = true;
 }
