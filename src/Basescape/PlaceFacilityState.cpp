@@ -60,7 +60,7 @@ PlaceFacilityState::PlaceFacilityState(Base *base, const RuleBaseFacility *rule,
 	_txtCost = new Text(110, 9, 202, 62);
 	_numCost = new Text(110, 17, 202, 70);
 	_numResources = new Text(110, 25, 202, 87);
-	const size_t resourceTextOffset = 9*std::min((size_t)3, (_origFac == nullptr ? _rule->getBuildCostItems().size() : 0));
+	const size_t resourceTextOffset = 9*std::min((std::size_t)3, (_origFac == nullptr ? _rule->getBuildCostItems().size() : 0));
 	_txtTime = new Text(110, 9, 202, 90+resourceTextOffset);
 	_numTime = new Text(110, 17, 202, 98+resourceTextOffset);
 	_txtMaintenance = new Text(110, 9, 202, 118+resourceTextOffset);
@@ -294,16 +294,26 @@ void PlaceFacilityState::viewClick(Action *)
 		}
 		else
 		{
-			for (const auto& item: _rule->getBuildCostItems())
+			bool areItemsMissing = false;
+			std::ostringstream ss;
+			ss << tr("STR_NOT_ENOUGH_ITEMS").arg(tr("STR_ITEM_REQUIRED")).arg(tr("STR_QUANTITY"));
+			for (const auto& [itemName, itemCosts]: _rule->getBuildCostItems())
 			{
-				int needed = (item.second.first - refundItemsTemp[item.first]) - _base->getStorageItems()->getItem(item.first);
+				const auto& [buildCost, refundCost] = itemCosts;
+				int needed = (buildCost - refundItemsTemp[itemName]) - _base->getStorageItems()->getItem(itemName);
 				if (needed > 0)
 				{
-					_game->popState();
-					_game->pushState(new ErrorMessageState(tr("STR_NOT_ENOUGH_ITEMS").arg(tr(item.first)).arg(needed), _palette, _game->getMod()->getInterface("placeFacility")->getElement("errorMessage")->color, "BACK01.SCR", _game->getMod()->getInterface("placeFacility")->getElement("errorPalette")->color));
-					return;
+					areItemsMissing = true;
+					ss << '\n' << tr(itemName) << ": " << needed;
 				}
 			}
+			if (areItemsMissing)
+			{
+				_game->popState();
+				_game->pushState(new ErrorMessageState(ss.str(), _palette, _game->getMod()->getInterface("placeFacility")->getElement("errorMessage")->color, "BACK01.SCR", _game->getMod()->getInterface("placeFacility")->getElement("errorPalette")->color));
+				return;
+			}
+
 			// Remove any facilities we're building over
 			double reducedBuildTime = 0.0;
 			bool buildingOver = false;
