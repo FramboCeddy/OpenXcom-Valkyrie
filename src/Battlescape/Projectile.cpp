@@ -215,11 +215,6 @@ VoxelType Projectile::calculateThrow(double accuracy)
 	targets.reserve(4);
 	bool forced = false;
 
-	if (_action.type == BA_THROW)
-	{
-		targets.push_back(targetVoxel);
-	}
-	else
 	{
 		BattleUnit *tu = targetTile->getOverlappingUnit(_save);
 		if (Options::forceFire && _save->isCtrlPressed(true) && _save->getSide() == FACTION_PLAYER)
@@ -227,13 +222,33 @@ VoxelType Projectile::calculateThrow(double accuracy)
 			targets.push_back(_action.target.toVoxel() + Position(8, 8, 12));
 			forced = true;
 		}
-		else if (tu && ((_action.actor->getFaction() != FACTION_PLAYER) ||
-			tu->getVisible()))
-		{ //unit
-			targetVoxel.z += tu->getFloatHeight(); //ground level is the base
-			targets.push_back(targetVoxel + Position(0, 0, tu->getHeight()/2 + 1));
-			targets.push_back(targetVoxel + Position(0, 0, 2));
-			targets.push_back(targetVoxel + Position(0, 0, tu->getHeight() - 1));
+		else if (tu && ((_action.actor->getFaction() != FACTION_PLAYER) || tu->getVisible()))
+		{	// unit
+			if (_action.type == BA_THROW)
+			{
+				if (tu->getTile()->getMapData(O_FLOOR))
+				{
+					// throw at the floor first.
+					targets.push_back(targetVoxel);
+					targetVoxel.z += tu->getFloatHeight();
+					targets.push_back(targetVoxel + Position(0, 0, tu->getHeight()/2 + 1));
+					targets.push_back(targetVoxel + Position(0, 0, tu->getHeight() - 1));
+				}
+				else
+				{
+					targetVoxel.z += tu->getFloatHeight();
+					targets.push_back(targetVoxel + Position(0, 0, tu->getHeight()/2 + 1));
+					targets.push_back(targetVoxel + Position(0, 0, 2));
+					targets.push_back(targetVoxel + Position(0, 0, tu->getHeight() - 1));
+				}
+			}
+			else
+			{
+				targetVoxel.z += tu->getFloatHeight(); // ground level is the base
+				targets.push_back(targetVoxel + Position(0, 0, tu->getHeight()/2 + 1));
+				targets.push_back(targetVoxel + Position(0, 0, 2));
+				targets.push_back(targetVoxel + Position(0, 0, tu->getHeight() - 1));
+			}
 		}
 		else if (targetTile->getMapData(O_OBJECT) != 0)
 		{
@@ -267,7 +282,7 @@ VoxelType Projectile::calculateThrow(double accuracy)
 
 	_distance = 0.0f;
 	double curvature;
-	VoxelType test = V_OUTOFBOUNDS;
+	VoxelType test = V_EMPTY;
 	for (const auto& pos : targets)
 	{
 		targetVoxel = pos;
@@ -276,15 +291,16 @@ VoxelType Projectile::calculateThrow(double accuracy)
 			break;
 		}
 	}
-	if (!forced && test == V_OUTOFBOUNDS)
+	if ((_action.type == BA_THROW && test == V_OUTOFBOUNDS) || test == V_EMPTY)
 	{
-		return test; // no line of fire
+		return V_EMPTY; // no line of fire
 	}
 
-	test = V_OUTOFBOUNDS;
+	test = V_EMPTY;
 	int tries = 0;
 	// finally do a line calculation and store this trajectory, make sure it's valid.
-	while (test == V_OUTOFBOUNDS && tries < 100)
+	Position origTargetVoxel = targetVoxel;
+	while (test == V_EMPTY && tries < 100)
 	{
 		++tries;
 		Position deltas = targetVoxel;
@@ -297,18 +313,20 @@ VoxelType Projectile::calculateThrow(double accuracy)
 		}
 		else
 		{
+			targetVoxel = origTargetVoxel; // restore original as arcing shots will move target
 			applyAccuracy(originVoxel, &targetVoxel, accuracy, true, false); //arcing shot deviation
 			deltas = Position(0,0,0);
 		}
 
-
 		test = _save->getTileEngine()->calculateParabolaVoxel(originVoxel, targetVoxel, true, &_trajectory, _action.actor, curvature, deltas);
-		if (forced)
-		{
-			return V_OBJECT; // fake hit
-		}
+
 		Position endPoint = getPositionFromEnd(_trajectory, ItemDropVoxelOffset).toTile();
 		Tile *endTile = _save->getTile(endPoint);
+		// don't allow throws to go out of map
+		if (_action.type == BA_THROW && test == V_OUTOFBOUNDS)
+		{
+			test = V_EMPTY;
+		}
 		// check if the item would land on a tile with a blocking object
 		if (_action.type == BA_THROW
 			&& endTile
@@ -316,7 +334,7 @@ VoxelType Projectile::calculateThrow(double accuracy)
 			&& endTile->getMapData(O_OBJECT)->getTUCost(MT_WALK) == Pathfinding::INVALID_MOVE_COST
 			&& !(endTile->isBigWall() && (endTile->getMapData(O_OBJECT)->getBigWall()<1 || endTile->getMapData(O_OBJECT)->getBigWall()>3)))
 		{
-			test = V_OUTOFBOUNDS;
+			test = V_EMPTY;
 		}
 	}
 	return test;

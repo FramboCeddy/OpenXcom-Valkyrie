@@ -477,7 +477,7 @@ bool ProjectileFlyBState::createNewProjectile()
 	{
 		_projectileImpact = projectile->calculateThrow(BattleUnit::getFiringAccuracy(attack, _parent->getMod()) / accuracyDivider);
 		const RuleItem *ruleItem = _action.weapon->getRules();
-		if (_projectileImpact == V_FLOOR || _projectileImpact == V_UNIT || _projectileImpact == V_OBJECT)
+		if (_projectileImpact != V_OUTOFBOUNDS && _projectileImpact != V_EMPTY)
 		{
 			if (_unit->getFaction() != FACTION_PLAYER && ruleItem->isGrenadeOrProxy())
 			{
@@ -510,7 +510,7 @@ bool ProjectileFlyBState::createNewProjectile()
 	else if (_action.weapon->getArcingShot(_action.type)) // special code for the "spit" trajectory
 	{
 		_projectileImpact = projectile->calculateThrow(BattleUnit::getFiringAccuracy(attack, _parent->getMod()) / accuracyDivider);
-		if (_projectileImpact != V_EMPTY && _projectileImpact != V_OUTOFBOUNDS)
+		if (_projectileImpact != V_EMPTY)
 		{
 			// set the soldier in an aiming position
 			_unit->aim(true);
