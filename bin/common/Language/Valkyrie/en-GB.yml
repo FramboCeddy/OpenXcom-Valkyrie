@@ -49,6 +49,8 @@ en-GB:
   STR_GIVE_REENABLED_RESEARCH_DESC: "Research topics that were previously researched, then disabled and reenabled are given as completed instead of available."
   STR_LEGWOUNDS_DISABLE_SPRINTING: "Leg Wounds Disable Sprinting"
   STR_LEGWOUNDS_DISABLE_SPRINTING_DESC: "Having leg wounds will disable the ability for the unit to sprint."
+  STR_CHANGE_VALUE_BY_MOUSE_WHEEL_CTRL: "Change values with mouse wheel (Ctrl)"
+  STR_CHANGE_VALUE_BY_MOUSE_WHEEL_CTRL_DESC: "Allows you to use the mouse wheel (with ctrl held) to increase/decrease values by this amount."
 
   # Stats For Nerds
   gravPower: "Grav shield power"

@@ -712,8 +712,15 @@ void ManufactureInfoState::onLessEngineer()
  */
 void ManufactureInfoState::handleWheelEngineer(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreEngineer(Options::changeValueByMouseWheel);
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessEngineer(Options::changeValueByMouseWheel);
+	int changeValue = _game->isCtrlPressed() ? Options::oxceManufactureScrollSpeedWithCtrl : Options::oxceManufactureScrollSpeed;
+	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	{
+		moreEngineer(changeValue);
+	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
+	{
+		lessEngineer(changeValue);
+	}
 }
 
 /**
@@ -740,8 +747,15 @@ void ManufactureInfoState::onLessUnit()
  */
 void ManufactureInfoState::handleWheelUnit(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreUnit(Options::changeValueByMouseWheel);
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessUnit(Options::changeValueByMouseWheel);
+	int changeValue = _game->isCtrlPressed() ? Options::changeValueByMouseWheelWithCtrl : Options::changeValueByMouseWheel;
+	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	{
+		moreUnit(changeValue);
+	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
+	{
+		lessUnit(changeValue);
+	}
 }
 
 /**

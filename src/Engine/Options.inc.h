@@ -199,3 +199,4 @@ OPT bool forceStatCaps;
 OPT bool giveReenabledResearch;
 OPT bool showProducedQtyInBase;
 OPT bool legWoundsDisableSprinting;
+OPT int changeValueByMouseWheelWithCtrl;

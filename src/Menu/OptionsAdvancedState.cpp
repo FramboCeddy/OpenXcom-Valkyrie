@@ -346,11 +346,11 @@ void OptionsAdvancedState::lstOptionsClick(Action *action)
 		int *i = setting->asInt();
 
 		int increment = (button == SDL_BUTTON_LEFT) ? 1 : -1; // left-click increases, right-click decreases
-		if (i == &Options::changeValueByMouseWheel || i == &Options::FPS || i == &Options::FPSInactive || i == &Options::oxceWoundedDefendBaseIf)
+		if (i == &Options::FPS || i == &Options::FPSInactive || i == &Options::oxceWoundedDefendBaseIf)
 		{
 			increment *= 10;
 		}
-		else if (i == &Options::oxceResearchScrollSpeedWithCtrl || i == &Options::oxceManufactureScrollSpeedWithCtrl || i == &Options::oxceReactionFireThreshold)
+		else if (i == &Options::changeValueByMouseWheel || i == &Options::changeValueByMouseWheelWithCtrl || i == &Options::oxceResearchScrollSpeedWithCtrl || i == &Options::oxceManufactureScrollSpeedWithCtrl || i == &Options::oxceReactionFireThreshold)
 		{
 			increment *= 5;
 		}
@@ -366,7 +366,7 @@ void OptionsAdvancedState::lstOptionsClick(Action *action)
 			min = 0;
 			max = 3;
 		}
-		else if (i == &Options::changeValueByMouseWheel)
+		else if (i == &Options::changeValueByMouseWheel || i == &Options::changeValueByMouseWheelWithCtrl)
 		{
 			min = 0;
 			max = 100;
