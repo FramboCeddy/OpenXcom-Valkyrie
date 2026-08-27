@@ -3352,11 +3352,12 @@ void TileEngine::hit(BattleActionAttack attack, Position center, int power, cons
  */
 void TileEngine::explode(BattleActionAttack attack, Position center, int power, const RuleDamageType *type, int maxRadius, bool rangeAtack)
 {
-	const Position centetTile = center.toTile();
+	const Position centerTile = center.toTile();
 	int hitSide = 0;
 	int diagonalWall = 0;
 	int power_;
 	std::map<Tile*, int> tilesAffected;
+	std::multimap<BattleUnit*, std::pair<Position, int> > unitsAffected; // multimap to store same unit as different segment hits
 	std::vector<BattleItem*> toRemove;
 	std::pair<std::map<Tile*, int>::iterator, bool> ret;
 
@@ -3378,9 +3379,10 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 		break;
 	case 3:
 		vertdec = 0.5f * type->RadiusReduction;
+		break;
 	}
 
-	Tile *origin = _save->getTile(Position(centetTile));
+	Tile *origin = _save->getTile(Position(centerTile));
 	Tile *dest = nullptr;
 	if (origin->isBigWall()) //pre-calculations for bigwall deflection
 	{
@@ -3401,7 +3403,7 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 			double sin_fi = sin(Deg2Rad(fi));
 			double cos_fi = cos(Deg2Rad(fi));
 
-			origin = _save->getTile(centetTile);
+			origin = _save->getTile(centerTile);
 			dest = origin;
 			double l = 0;
 			int tileX, tileY, tileZ;
@@ -3425,27 +3427,50 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 						toRemove.clear();
 						if (bu)
 						{
-							if (dest->getPosition() == centetTile)
+							// store hits to check which parts we want to exclude from counting multiple times
+							auto [begin, end] = unitsAffected.equal_range(bu);
+							bool noNewInstance = false;
+							Position destPos = dest->getPosition();
+							for (auto it = begin; it != end; ++it)
 							{
-								// direct hit, similar to ground zero but AI will remember attacker, done for compatibility
-								hitUnit(attack, bu, Position(0, 0, 0), damage, type, rangeAtack);
+								const auto& [unit, data] = (*it);
+								const auto& [pos, hitPower] = data;
+								if (pos == destPos)
+								{
+									// we already have this unit part stored,
+									noNewInstance = true;
+								}
+								else if (pos.x == destPos.x && pos.y == destPos.y && pos.z != destPos.z)
+								{
+									// we are above/below a part that is stored
+									if (Options::singleExplosionInstanceHeight)
+									{
+										noNewInstance = true;
+										if (hitPower < power_)
+										{
+											// we need to update our map
+											(*it).second = {dest->getPosition(), power_};
+										}
+									}
+								}
+								else if ((pos.x != destPos.x || pos.y != destPos.y) && pos.z == destPos.z)
+								{
+									// different position on same elevation
+									if (Options::singleExplosionInstanceLarge)
+									{
+										if (hitPower < power_)
+										{
+											// we need to update our map
+											(*it).second = {dest->getPosition(), power_};
+										}
+										noNewInstance = true;
+									}
+								}
 							}
-							else if (
-									(
-										Position::distance2dSq(dest->getPosition(), centetTile) < 4
-										&& dest->getPosition().z == centetTile.z
-									)
-									|| dest->getPosition().z > centetTile.z
-								)
+							if (!noNewInstance)
 							{
-								// ground zero effect is in effect, or unit is above explosion
-								hitUnit(attack, bu, Position(0, 0, -1), damage, type, rangeAtack);
-							}
-							else
-							{
-								// directional damage relative to explosion position.
-								// units above the explosion will be hit in the legs, units lateral to or below will be hit in the torso
-								hitUnit(attack, bu, centetTile + Position(0, 0, 5) - dest->getPosition(), damage, type, rangeAtack);
+								// we didnt find or update the map, so add this part of the unit
+								unitsAffected.insert({bu, {destPos, power_}});
 							}
 
 							// Affect all items and units in inventory
@@ -3480,9 +3505,9 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 
 				l += 1.0;
 
-				tileX = int(floor(centetTile.x + 0.5 + l * sin_te * cos_fi));
-				tileY = int(floor(centetTile.y + 0.5 + l * cos_te * cos_fi));
-				tileZ = int(floor(centetTile.z + 0.5 + l * sin_fi));
+				tileX = int(floor(centerTile.x + 0.5 + l * sin_te * cos_fi));
+				tileY = int(floor(centerTile.y + 0.5 + l * cos_te * cos_fi));
+				tileZ = int(floor(centerTile.z + 0.5 + l * sin_fi));
 
 				origin = dest;
 				dest = _save->getTile(Position(tileX, tileY, tileZ));
@@ -3532,6 +3557,33 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 		}
 	}
 
+	// do damage to stored parts of units
+	for (const auto& [bu, data] : unitsAffected)
+	{
+		const auto& [pos, powerHit] = data;
+		// we also need to turn power into damage first
+		const int damage = type->getRandomDamage(powerHit);
+
+		if (pos == centerTile)
+		{
+			// direct hit, similar to ground zero but AI will remember attacker, done for compatibility
+			hitUnit(attack, bu, Position(0, 0, 0), damage, type, rangeAtack);
+		}
+		else if ((Position::distance2dSq(pos, centerTile) < 4
+				&& pos.z == centerTile.z)
+				|| pos.z > centerTile.z)
+		{
+			// ground zero effect is in effect, or unit is above explosion
+			hitUnit(attack, bu, Position(0, 0, -1), damage, type, rangeAtack);
+		}
+		else
+		{
+			// directional damage relative to explosion position.
+			// units above the explosion will be hit in the legs, units lateral to or below will be hit in the torso
+			hitUnit(attack, bu, centerTile + Position(0, 0, 5) - pos, damage, type, rangeAtack);
+		}
+	}
+
 	// now detonate the tiles affected by explosion
 	if (type->ToTile > 0.0f)
 	{
@@ -3547,12 +3599,12 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 				applyGravity(j);
 		}
 	}
-	calculateLighting(LL_AMBIENT, centetTile, maxRadius + 1, true); // roofs could have been destroyed and fires could have been started
-	calculateFOV(centetTile, maxRadius + 1, true, true);
-	if (attack.attacker && Position::distance2d(centetTile, attack.attacker->getPosition()) > maxRadius + 1)
+	calculateLighting(LL_AMBIENT, centerTile, maxRadius + 1, true); // roofs could have been destroyed and fires could have been started
+	calculateFOV(centerTile, maxRadius + 1, true, true);
+	if (attack.attacker && Position::distance2d(centerTile, attack.attacker->getPosition()) > maxRadius + 1)
 	{
 		// unit is away from blast but its visibility can be affected by scripts.
-		calculateFOV(centetTile, 1, false);
+		calculateFOV(centerTile, 1, false);
 	}
 }
 

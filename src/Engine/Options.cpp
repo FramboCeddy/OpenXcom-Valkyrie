@@ -591,6 +591,8 @@ void createAdvancedOptionsVALK()
 	_info.push_back(OptionInfo(OPTION_VALK, "forceStatCaps", &forceStatCaps, false, "STR_FORCE_STAT_CAPS", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "recoveryPointsForAmmo", &recoveryPointsForAmmo, false, "STR_RECOVERY_POINTS_FOR_AMMO", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "legWoundsDisableSprinting", &legWoundsDisableSprinting, false, "STR_LEGWOUNDS_DISABLE_SPRINTING", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "singleExplosionInstanceHeight", &singleExplosionInstanceHeight, false, "STR_SINGLE_EXPLOSION_INSTANCE_HEIGHT", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "singleExplosionInstanceLarge", &singleExplosionInstanceLarge, false, "STR_SINGLE_EXPLOSION_INSTANCE_LARGE", "STR_BATTLESCAPE"));
 }
 
 void createControlsVALK()

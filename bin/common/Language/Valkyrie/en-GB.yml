@@ -51,6 +51,10 @@ en-GB:
   STR_LEGWOUNDS_DISABLE_SPRINTING_DESC: "Having leg wounds will disable the ability for the unit to sprint."
   STR_CHANGE_VALUE_BY_MOUSE_WHEEL_CTRL: "Change values with mouse wheel (Ctrl)"
   STR_CHANGE_VALUE_BY_MOUSE_WHEEL_CTRL_DESC: "Allows you to use the mouse wheel (with ctrl held) to increase/decrease values by this amount."
+  STR_SINGLE_EXPLOSION_INSTANCE_HEIGHT: "Single Explosion Instance (height)"
+  STR_SINGLE_EXPLOSION_INSTANCE_HEIGHT_DESC: "Only count a single damage instance from explosions overlapping both elevations of a unit standing inbetween two tiles will"
+  STR_SINGLE_EXPLOSION_INSTANCE_LARGE: "Single Explosion Instance (large)"
+  STR_SINGLE_EXPLOSION_INSTANCE_LARGE_DESC: "Only count a single damage instance from explosions overlapping multiple tiles of a large unit. Note: This can make large units a lot more resilient to explosions."
 
   # Stats For Nerds
   gravPower: "Grav shield power"

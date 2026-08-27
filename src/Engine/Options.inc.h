@@ -200,3 +200,5 @@ OPT bool giveReenabledResearch;
 OPT bool showProducedQtyInBase;
 OPT bool legWoundsDisableSprinting;
 OPT int changeValueByMouseWheelWithCtrl;
+OPT bool singleExplosionInstanceHeight;
+OPT bool singleExplosionInstanceLarge;
