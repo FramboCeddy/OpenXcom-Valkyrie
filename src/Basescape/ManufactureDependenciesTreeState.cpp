@@ -23,6 +23,7 @@
 #include "../Mod/RuleBaseFacility.h"
 #include "../Mod/RuleItem.h"
 #include "../Mod/RuleManufacture.h"
+#include "../Mod/RuleSoldierTransformation.h"
 #include "../Engine/LocalizedText.h"
 #include "../Engine/Options.h"
 #include "../Interface/TextButton.h"
@@ -176,7 +177,20 @@ void ManufactureDependenciesTreeState::initList()
 		}
 	}
 
-	if (firstLevel.empty() && facilitiesLevel.empty())
+	std::vector<const RuleSoldierTransformation*> transformLevel;
+	for (const auto &transform : _game->getMod()->getSoldierTransformationList())
+	{
+		RuleSoldierTransformation* transformRule = _game->getMod()->getSoldierTransformation(transform);
+		for (const auto& [requiredItem, amount] : transformRule->getRequiredItems())
+		{
+			if (requiredItem == _selectedItem)
+			{
+				transformLevel.push_back(transformRule);
+			}
+		}
+	}
+
+	if (firstLevel.empty() && facilitiesLevel.empty() && transformLevel.empty())
 	{
 		_lstTopics->addRow(1, tr("STR_NO_DEPENDENCIES").c_str());
 		_lstTopics->setRowColor(row, _lstTopics->getSecondaryColor());
@@ -195,6 +209,19 @@ void ManufactureDependenciesTreeState::initList()
 		if (_showAll || _game->getSavedGame()->isResearched(fac->getRequirements()))
 		{
 			_lstTopics->addRow(1, tr(fac->getType()).c_str());
+		}
+		else
+		{
+			_lstTopics->addRow(1, "***");
+		}
+		++row;
+	}
+	// then list soldier transforms
+	for (auto* trans : transformLevel)
+	{
+		if (_showAll || _game->getSavedGame()->isResearched(trans->getRequiredResearch()))
+		{
+			_lstTopics->addRow(1, tr(trans->getName()).c_str());
 		}
 		else
 		{
