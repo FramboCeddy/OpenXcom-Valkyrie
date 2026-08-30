@@ -1637,11 +1637,13 @@ void SavedBattleGame::nextAnimFrame()
 /**
  * Turns on debug mode.
  */
-void SavedBattleGame::setDebugMode()
+void SavedBattleGame::setDebugMode(bool change)
 {
-	revealMap();
-
-	_debugMode = true;
+	_debugMode = change;
+	if (_debugMode)
+	{
+		revealMap();
+	}
 }
 
 void SavedBattleGame::revealMap()

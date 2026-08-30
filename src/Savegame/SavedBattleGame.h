@@ -426,7 +426,7 @@ public:
 	/// Increase animation frame.
 	void nextAnimFrame();
 	/// Sets debug mode.
-	void setDebugMode();
+	void setDebugMode(bool change = true);
 	void revealMap();
 	/// Gets debug mode.
 	bool getDebugMode() const;

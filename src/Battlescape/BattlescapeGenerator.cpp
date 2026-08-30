@@ -236,6 +236,8 @@ void BattlescapeGenerator::setMissionSite(MissionSite *mission)
  */
 void BattlescapeGenerator::nextStage()
 {
+	// disable debug mode
+	_save->setDebugMode(false);
 	// check if the unit is available in the next stage
 	auto isUnitStillActive = [](const BattleUnit* u)
 	{
