@@ -43,7 +43,8 @@ namespace OpenXcom
  * @param game Pointer to the core game.
  * @param unit The current unit.
  */
-ScannerView::ScannerView(int w, int h, int x, int y, Game* game, BattleUnit* unit, const RuleItem* item) : InteractiveSurface(w, h, x, y), _game(game), _unit(unit), _frame(0), _item(item)
+ScannerView::ScannerView(int w, int h, int x, int y, Game* game, BattleUnit* unit, const RuleItem* item)
+	: InteractiveSurface(w, h, x, y), _game(game), _unit(unit), _item(item)
 {
 	_redraw = true;
 }
@@ -60,14 +61,19 @@ void ScannerView::draw()
 
 	this->lock();
 	int range = _item->getMaxRange();
+	Position scanPos = Position(_unit->getPosition().x, _unit->getPosition().y, 0);
 	for (int x = -range; x <= range; ++x)
 	{
 		for (int y = -range; y <= range; ++y)
 		{
 			for (int z = 0; z < _game->getSavedGame()->getSavedBattle()->getMapSizeZ(); z++)
 			{
-				Tile *t = _game->getSavedGame()->getSavedBattle()->getTile(Position(x,y,z) + Position(_unit->getPosition().x, _unit->getPosition().y, 0));
-				if (!t || !t->getUnit())
+				Tile *t = _game->getSavedGame()->getSavedBattle()->getTile(Position(x,y,z) + scanPos);
+				if (!t || !t->getUnit() || t->getUnit() == _unit)
+				{
+					continue;
+				}
+				if (t->getUnit()->getArmor()->isScanImmune())
 				{
 					continue;
 				}
@@ -81,20 +87,15 @@ void ScannerView::draw()
 					continue;
 				}
 
-				int frame = std::min(5, (t->getUnit()->getMotionPoints() / 5));
-				if (frame >= 0)
-				{
-					t->getUnit()->setScannedTurn(_game->getSavedGame()->getSavedBattle()->getTurn());
-					surface = set->getFrame(frame + _frame);
-					surface->blitNShade(this, ((9+x)*8)-4, ((9+y)*8)-4, 0); // TODO: a way to scale the blips so a range > 9 shows on the scanner view
-				}
+				int frame = std::clamp(t->getUnit()->getMotionPoints() / 5, 0, 5);
+				t->getUnit()->setScannedTurn(_game->getSavedGame()->getSavedBattle()->getTurn());
+				surface = set->getFrame(frame + _frame);
+				surface->blitNShade(this, ((9+x)*8)-4, ((9+y)*8)-4, 0); // TODO: a way to scale the blips so a range > 9 shows on the scanner view
 			}
 		}
 	}
-
 	// the arrow of the direction the unit is pointed
 	surface = set->getFrame(7 + _unit->getDirection());
-
 	surface->blitNShade(this, (9*8)-4, (9*8)-4, 0);
 	this->unlock();
 
@@ -106,7 +107,7 @@ void ScannerView::draw()
  * @param action Pointer to an action.
  * @param state State that the action handlers belong to.
  */
-void ScannerView::mouseClick (Action *, State *)
+void ScannerView::mouseClick(Action *, State *)
 {
 }
 
@@ -115,11 +116,8 @@ void ScannerView::mouseClick (Action *, State *)
  */
 void ScannerView::animate()
 {
-	_frame++;
-	if (_frame > 1)
-	{
-		_frame = 0;
-	}
+	++_frame;
+	_frame = _frame % 2;
 	_redraw = true;
 }
 

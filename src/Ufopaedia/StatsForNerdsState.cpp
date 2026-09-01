@@ -2817,6 +2817,7 @@ void StatsForNerdsState::initArmorList()
 	addBoolean(ss, armorRule->getBleedImmune(), "bleedImmune", bleedImmuneDefault); // not considering alienBleeding option!
 	addBoolean(ss, armorRule->getPainImmune(), "painImmune", painImmuneDefault);
 	addBoolean(ss, armorRule->getZombiImmune(), "zombiImmune", zombiImmuneDefault);
+	addBoolean(ss, armorRule->isScanImmune(), "scanImmune");
 	addBoolean(ss, armorRule->getIgnoresMeleeThreat(), "ignoresMeleeThreat", ignoresMeleeThreatDefault);
 	addBoolean(ss, armorRule->getCreatesMeleeThreat(), "createsMeleeThreat", createsMeleeThreatDefault);
 

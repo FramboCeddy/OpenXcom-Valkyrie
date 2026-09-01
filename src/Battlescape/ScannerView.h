@@ -36,7 +36,7 @@ class ScannerView : public InteractiveSurface
 	Game *_game;
 	BattleUnit *_unit;
 	const RuleItem *_item;
-	int _frame;
+	int _frame = 0;
 
 	/// Handle clicking
 	void mouseClick (Action *action, State *state) override;

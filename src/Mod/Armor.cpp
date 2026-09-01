@@ -262,6 +262,7 @@ void Armor::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript &pa
 	reader.tryRead("meleeOriginVoxelVerticalOffset", _meleeOriginVoxelVerticalOffset);
 	reader.tryRead("group", _group);
 	reader.tryRead("listOrder", _listOrder);
+	reader.tryRead("scanImmune", _scanImmune);
 }
 
 /**

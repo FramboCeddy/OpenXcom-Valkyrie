@@ -196,6 +196,7 @@ private:
 	int _meleeOriginVoxelVerticalOffset;
 	int _group;
 	int _listOrder;
+	bool _scanImmune = false;
 public:
 	/// Creates a blank armor ruleset.
 	Armor(const std::string &type, int listOrder);
@@ -492,6 +493,8 @@ public:
 	int getFloatHeight() const;
 	/// Gets a unit's offset for melee attacks.
 	int getMeleeOriginVoxelVerticalOffset() const { return _meleeOriginVoxelVerticalOffset; }
+	/// will this unit show up on scanners
+	bool isScanImmune() const {return _scanImmune; }
 
 	/// Gets the armor type group.
 	int getGroup() const { return _group; }

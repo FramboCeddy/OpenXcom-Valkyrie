@@ -67,3 +67,4 @@ en-US:
   directionalScan: "Directional scan"
   powerMinRangeThreshold: "Power red. min range"
   powerRangeThreshold: "Power red. max range"
+  scanImmune: "Immune to scanners?"
