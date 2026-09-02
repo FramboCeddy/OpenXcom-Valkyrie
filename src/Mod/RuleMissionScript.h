@@ -33,11 +33,24 @@ class RuleMissionScript
 {
 private:
 	std::string _type, _varName;
-	int _firstMonth, _lastMonth, _label, _executionOdds, _targetBaseOdds, _minDifficulty, _maxDifficulty, _maxRuns, _avoidRepeats, _delay, _randomDelay;
-	int _minScore, _maxScore;
-	int64_t _minFunds, _maxFunds;
+	int _firstMonth = 0;
+	int _lastMonth = -1;
+	int _label = 0;
+	int _executionOdds = 100;
+	int _targetBaseOdds = 0;
+	int _minDifficulty = 0;
+	int _maxDifficulty = 4;
+	int _maxRuns = -1;
+	int _avoidRepeats = 0;
+	int _delay = 0;
+	int _randomDelay = 0;
+	int _minScore = INT_MIN;
+	int _maxScore = INT_MAX;
+	int64_t _minFunds = INT64_MIN;
+	int64_t _maxFunds = INT64_MAX;
 	std::string _missionVarName, _missionMarkerName;
-	int _counterMin, _counterMax;
+	int _counterMin = 0;
+	int _counterMax = -1;
 	std::vector<int> _conditionals;
 	std::vector<std::string> _adhocMissionScriptTags;
 	std::vector<std::pair<size_t, WeightedOptions*> > _regionWeights, _missionWeights, _raceWeights;
@@ -50,7 +63,8 @@ private:
 	std::map<std::string, bool> _xcomBaseInCountryTriggers;
 	std::map<std::string, bool> _pactCountryTriggers;
 
-	bool _useTable, _siteType;
+	bool _useTable = false;
+	bool _siteType = false;
 
 public:
 	/// Creates a new mission script.

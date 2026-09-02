@@ -27,9 +27,7 @@ namespace OpenXcom
  * Each script element is independent, and the saved game will probe the list of these each month to determine what's going to happen.
  * Arc scripts are executed just before the mission scripts and unlock research topics that can then be used by mission scripts.
  */
-RuleArcScript::RuleArcScript(const std::string& type) :
-	_type(type), _firstMonth(0), _lastMonth(-1), _executionOdds(100), _maxArcs(-1), _minDifficulty(0), _maxDifficulty(4),
-	_minScore(INT_MIN), _maxScore(INT_MAX), _minFunds(INT64_MIN), _maxFunds(INT64_MAX)
+RuleArcScript::RuleArcScript(const std::string& type) : _type(type)
 {
 }
 

@@ -32,11 +32,19 @@ private:
 	std::string _type;
 	std::vector<std::string> _sequentialArcs;
 	WeightedOptions _randomArcs;
-	int _firstMonth, _lastMonth, _executionOdds, _maxArcs, _minDifficulty, _maxDifficulty;
-	int _minScore, _maxScore;
-	int64_t _minFunds, _maxFunds;
+	int _firstMonth = 0;
+	int _lastMonth = -1;
+	int _executionOdds = 100;
+	int _maxArcs = -1;
+	int _minDifficulty = 0;
+	int _maxDifficulty = 4;
+	int _minScore = INT_MIN;
+	int _maxScore = INT_MAX;
+	int64_t _minFunds = INT64_MIN;
+	int64_t _maxFunds = INT64_MAX;
 	std::string _missionVarName, _missionMarkerName;
-	int _counterMin, _counterMax;
+	int _counterMin = 0;
+	int _counterMax = -1;
 
 	std::map<std::string, bool> _researchTriggers;
 	std::map<std::string, bool> _itemTriggers;
