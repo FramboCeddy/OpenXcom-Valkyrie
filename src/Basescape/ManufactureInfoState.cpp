@@ -349,6 +349,11 @@ void ManufactureInfoState::btnOkClick(Action *)
 		}
 		_production->setFallback(true);
 	}
+	else
+	{
+		_production->setFallback(false);
+	}
+
 	exitState();
 }
 
