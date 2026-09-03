@@ -2150,6 +2150,7 @@ void BattlescapeGame::requestEndTurn(bool askForConfirmation)
 		if (soldiersWithFatalWounds > 0)
 		{
 			// confirm end of turn/mission
+			_parentState->getGame()->getCursor()->setVisible(true); // cursor was not visible if BA_LAUNCH was last action
 			_parentState->getGame()->pushState(new ConfirmEndMissionState(_save, soldiersWithFatalWounds, this));
 			_endConfirmationHandled = true;
 		}
