@@ -1563,7 +1563,7 @@ interfaces:
         color: 241   # pink
       - id: numbers
         color: 208   # white
-        color2: 208 
+        color2: 208
       - id: button
         color: 246   # purple
       - id: barTUs
@@ -2226,14 +2226,19 @@ interfaces:
         color: 192
       - id: barFrontArmor
         color: 80
+        color2: 80 # indestructible armor %
       - id: barLeftArmor
         color: 80
+        color2: 80
       - id: barRightArmor
         color: 80
+        color2: 80
       - id: barRearArmor
         color: 80
+        color2: 80
       - id: barUnderArmor
         color: 80
+        color2: 80
       - id: button
         color: 64
       # required

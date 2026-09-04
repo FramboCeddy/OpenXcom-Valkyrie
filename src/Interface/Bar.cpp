@@ -171,17 +171,9 @@ void Bar::setSecondValueOnTop(bool onTop)
 void Bar::draw()
 {
 	Surface::draw();
-	SDL_Rect square;
+	SDL_Rect square = {0, 0, (Uint16)((_scale * _max) + 1), (Uint16)getHeight()};
 
-	square.x = 0;
-	square.y = 0;
-	square.w = (Uint16)(_scale * _max) + 1;
-	square.h = getHeight();
-
-	if (_borderColor)
-		drawRect(&square, _borderColor);
-	else
-		drawRect(&square, _color + 4);
+	drawRect(&square, _borderColor ? _borderColor : _color + 4);
 
 	square.y++;
 	square.w--;
@@ -213,6 +205,17 @@ void Bar::draw()
 void Bar::setBorderColor(Uint8 bc)
 {
 	_borderColor = bc;
+}
+
+void Bar::drawThresholdLine(int percentage, Uint8 color)
+{
+	if (percentage <= 0 || percentage >= 100)
+	{
+		return;
+	}
+	draw();
+	Sint16 x = _max * percentage / 100;
+	drawLine(x, 1, x, (Sint16)(getHeight() - 2), color);
 }
 
 }

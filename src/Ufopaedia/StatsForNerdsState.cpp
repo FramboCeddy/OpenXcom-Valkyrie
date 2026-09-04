@@ -2856,7 +2856,7 @@ void StatsForNerdsState::initArmorList()
 	addInteger(ss, armorRule->getCamouflageAtDay(), "camouflageAtDay");
 	addInteger(ss, armorRule->getCamouflageAtDark(), "camouflageAtDark");
 	addInteger(ss, armorRule->getAntiCamouflageAtDay(), "antiCamouflageAtDay");
-	addInteger(ss, armorRule->getAntiCamouflageAtDark(), "antiCamouflageAtDark");
+	addInteger(ss, armorRule->getMinimumArmorPercent(), "minimumArmorPercent");
 
 	addRuleStatBonus(ss, *armorRule->getPsiDefenceRaw(), "psiDefence");
 	addRuleStatBonus(ss, *armorRule->getMeleeDodgeRaw(), "meleeDodge");

@@ -67,3 +67,4 @@ en-GB:
   powerMinRangeThreshold: "Power red. min range"
   powerRangeThreshold: "Power red. max range"
   scanImmune: "Immune to scanners?"
+  minArmorPercent: "Indestructible armor %"

@@ -114,6 +114,8 @@ void Armor::load(const YAML::YamlNodeReader& node, Mod *mod, const ModScript &pa
 	reader.tryRead("leftArmorDiff", _leftArmorDiff);
 	reader.tryRead("rearArmor", _rearArmor);
 	reader.tryRead("underArmor", _underArmor);
+	reader.tryRead("minimumArmorPercent", _minimumArmorPercent);
+	_minimumArmorPercent = std::clamp(_minimumArmorPercent, 0, 100);
 	reader.tryRead("drawingRoutine", _drawingRoutine);
 	reader.tryRead("drawBubbles", _drawBubbles);
 	reader.tryRead("movementType", _movementType);

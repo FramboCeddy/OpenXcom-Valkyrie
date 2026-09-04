@@ -69,6 +69,8 @@ public:
 	void draw() override;
 	/// set the outline color for the bar.
 	void setBorderColor(Uint8 bc) override;
+	/// draws a line over the bar at a certain percentage fill.
+	void drawThresholdLine(int percentage, Uint8 color);
 };
 
 }

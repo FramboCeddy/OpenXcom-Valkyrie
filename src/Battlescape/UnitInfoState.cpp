@@ -681,6 +681,31 @@ void UnitInfoState::init()
 	_numUnderArmor->setText(ss.str());
 	_barUnderArmor->setMax(_unit->getMaxArmor(SIDE_UNDER));
 	_barUnderArmor->setValue(_unit->getArmor(SIDE_UNDER));
+
+	int minArmor = _unit->getArmor()->getMinimumArmorPercent();
+	switch (Mod::SHOW_MIN_ARMOR_STYLE)
+	{
+		case 0:
+		default:
+			// don't show
+		break;
+		case 1:
+			// show line
+			_barFrontArmor->drawThresholdLine(minArmor, _barFrontArmor->getSecondaryColor());
+			_barLeftArmor->drawThresholdLine(minArmor, _barLeftArmor->getSecondaryColor());
+			_barRightArmor->drawThresholdLine(minArmor, _barRightArmor->getSecondaryColor());
+			_barRearArmor->drawThresholdLine(minArmor, _barRearArmor->getSecondaryColor());
+			_barUnderArmor->drawThresholdLine(minArmor, _barUnderArmor->getSecondaryColor());
+		break;
+		case 2:
+			// show filled in
+			_barFrontArmor->setValue2(_unit->getArmor(SIDE_FRONT) * minArmor / 100);
+			_barLeftArmor->setValue2(_unit->getArmor(SIDE_LEFT) * minArmor / 100);
+			_barRightArmor->setValue2(_unit->getArmor(SIDE_RIGHT) * minArmor / 100);
+			_barRearArmor->setValue2(_unit->getArmor(SIDE_REAR) * minArmor / 100);
+			_barUnderArmor->setValue2(_unit->getArmor(SIDE_UNDER) * minArmor / 100);
+		break;
+	}
 }
 
 

@@ -207,6 +207,7 @@ bool Mod::EXTENDED_FORCE_SPAWN;
 int Mod::EXTENDED_SMOKE_OFFSET;
 int Mod::REGION_ACTIVITY_DIVIDER_ALIEN = 20;
 int Mod::REGION_ACTIVITY_DIVIDER_XCOM = 10;
+int Mod::SHOW_MIN_ARMOR_STYLE = 0;
 
 extern std::string OXCE_CURRENCY_SYMBOL;
 
@@ -266,6 +267,7 @@ void Mod::resetGlobalStatics()
 	PANIC_THRESHOLDS[1] = 50;
 	FUNDING_RANGE[0] = 5;
 	FUNDING_RANGE[1] = 20;
+	SHOW_MIN_ARMOR_STYLE = 0;
 
 	DEBRIEF_MUSIC_GOOD = "GMMARS";
 	DEBRIEF_MUSIC_BAD = "GMMARS";
@@ -3321,7 +3323,7 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	reader.tryRead("bughuntRank", _bughuntRank);
 	reader.tryRead("bughuntLowMorale", _bughuntLowMorale);
 	reader.tryRead("bughuntTimeUnitsLeft", _bughuntTimeUnitsLeft);
-
+	reader.tryRead("showMinimumArmorStyle", Mod::SHOW_MIN_ARMOR_STYLE);
 
 	if (const auto& nodeMana = loadDocInfoHelper("mana"))
 	{

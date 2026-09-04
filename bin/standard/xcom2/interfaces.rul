@@ -2352,14 +2352,19 @@ interfaces: #done
         color: 192
       - id: barFrontArmor
         color: 80
+        color2: 80 # indestructible armor %
       - id: barLeftArmor
         color: 80
+        color2: 80
       - id: barRightArmor
         color: 80
+        color2: 80
       - id: barRearArmor
         color: 80
+        color2: 80
       - id: barUnderArmor
         color: 80
+        color2: 80
       # required
       - id: text
         color: 48

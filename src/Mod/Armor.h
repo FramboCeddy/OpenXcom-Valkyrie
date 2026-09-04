@@ -124,6 +124,7 @@ private:
 
 	bool _infiniteSupply;
 	int _frontArmor, _sideArmor, _leftArmorDiff, _rearArmor, _underArmor, _drawingRoutine;
+	int _minimumArmorPercent = 0;
 	bool _drawBubbles;
 	MovementType _movementType;
 	SpecialAbility _specab;
@@ -231,6 +232,8 @@ public:
 	int getUnderArmor() const;
 	/// Gets the armor level of armor side.
 	int getArmor(UnitSide side) const;
+	/// Gets the minimum amount of armor that can't get destroyed.
+	int getMinimumArmorPercent() const { return _minimumArmorPercent; }
 	/// Gets the Geoscape corpse item.
 	const RuleItem* getCorpseGeoscape() const;
 	/// Gets the Battlescape corpse item.
