@@ -3962,8 +3962,13 @@ void StatsForNerdsState::initCraftWeaponList()
 			addSingleString(ss, ss2.str(), "_damageRangeBasic", "", false);
 
 			// (damage / standard reload * 60) * (accuracy / 100) * (50-100% damage spread)
-			int avgDPM = craftWeaponRule->getDamage() * craftWeaponRule->getAccuracy() * 60 * 3 / 4 / craftWeaponRule->getStandardReload() / 100;
-			addInteger(ss, avgDPM, "_averageDPM");
+			std::ostringstream ss3;
+			for (const auto& reloadTime : {craftWeaponRule->getCautiousReload(), craftWeaponRule->getStandardReload(), craftWeaponRule->getAggressiveReload()})
+			{
+				int avgDPM = craftWeaponRule->getDamage() * craftWeaponRule->getAccuracy() * 60 * 3 / 4 / reloadTime / 100;
+				ss3 << avgDPM << '/';
+			}
+			addSingleString(ss, ss3.str().substr(0, ss3.str().size() - 1), "_averageDPM", "", false);
 
 			// (damage * ammoMax) * (accuracy / 100) * (50-100% damage spread)
 			int avgTotalDamage = craftWeaponRule->getDamage() * craftWeaponRule->getAmmoMax() * craftWeaponRule->getAccuracy() * 3 / 4 / 100;
