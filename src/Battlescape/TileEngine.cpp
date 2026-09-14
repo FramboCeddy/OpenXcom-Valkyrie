@@ -3472,19 +3472,6 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 								// we didnt find or update the map, so add this part of the unit
 								unitsAffected.insert({bu, {destPos, power_}});
 							}
-
-							// Affect all items and units in inventory
-							const int itemDamage = bu->getOverKillDamage();
-							if (itemDamage > 0)
-							{
-								for (auto* bi : *bu->getInventory())
-								{
-									if (!hitUnit(attack, bi->getUnit(), Position(0, 0, 0), itemDamage, type, rangeAtack) && type->getItemFinalDamage(itemDamage) > bi->getRules()->getArmor())
-									{
-										toRemove.push_back(bi);
-									}
-								}
-							}
 						}
 						// Affect all items and units on ground
 						for (auto* bi : *dest->getInventory())
@@ -3525,7 +3512,8 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 					Pathfinding::vectorToDirection(origin->getPosition() - dest->getPosition(), dir);
 					if (dir != -1 && dir %2) power_ -= 0.5f * type->RadiusReduction; // diagonal movement costs an extra 50% for fire.
 				}
-				if (l > 0.5) {
+				if (l > 0.5)
+				{
 					if ( l > 1.5)
 					{
 						power_ -= verticalBlockage(origin, dest, type->ResistType, false) * 2;
@@ -3550,7 +3538,6 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 						}
 						power_ -= verticalBlockage(origin, dest, type->ResistType, skipObject) * 2;
 						power_ -= horizontalBlockage(origin, dest, type->ResistType, skipObject) * 2;
-
 					}
 				}
 			}
@@ -3564,25 +3551,44 @@ void TileEngine::explode(BattleActionAttack attack, Position center, int power, 
 		// we also need to turn power into damage first
 		const int damage = type->getRandomDamage(powerHit);
 
+		Position relPos = {0, 0, 0};
 		if (pos == centerTile)
 		{
 			// direct hit, similar to ground zero but AI will remember attacker, done for compatibility
-			hitUnit(attack, bu, Position(0, 0, 0), damage, type, rangeAtack);
+			relPos = {0, 0, 0};
 		}
-		else if ((Position::distance2dSq(pos, centerTile) < 4
-				&& pos.z == centerTile.z)
-				|| pos.z > centerTile.z)
+		else if ((Position::distance2dSq(pos, centerTile) < 4 && pos.z == centerTile.z) || pos.z > centerTile.z)
 		{
 			// ground zero effect is in effect, or unit is above explosion
-			hitUnit(attack, bu, Position(0, 0, -1), damage, type, rangeAtack);
+			relPos = {0, 0, -1};
 		}
 		else
 		{
 			// directional damage relative to explosion position.
 			// units above the explosion will be hit in the legs, units lateral to or below will be hit in the torso
-			hitUnit(attack, bu, centerTile + Position(0, 0, 5) - pos, damage, type, rangeAtack);
+			relPos = centerTile + Position(0, 0, 5) - pos;
+		}
+		hitUnit(attack, bu, relPos, damage, type, rangeAtack);
+
+		// Affect all items and units in inventory
+		const int itemDamage = bu->getOverKillDamage();
+		if (itemDamage > 0)
+		{
+			toRemove.clear(); // we can re-use this vector
+			for (auto* bi : *bu->getInventory())
+			{
+				if (!hitUnit(attack, bi->getUnit(), Position(0, 0, 0), itemDamage, type, rangeAtack) && type->getItemFinalDamage(itemDamage) > bi->getRules()->getArmor())
+				{
+					toRemove.push_back(bi);
+				}
+			}
+			for (auto* bi : toRemove)
+			{
+				_save->removeItem(bi);
+			}
 		}
 	}
+	unitsAffected.clear();
 
 	// now detonate the tiles affected by explosion
 	if (type->ToTile > 0.0f)
@@ -5952,13 +5958,13 @@ Position TileEngine::getOriginVoxel(BattleAction &action, Tile *tile)
 
 		case BattleActionOrigin::LEFT:
 			originVoxel.x += dirXshift[direction] * unitSize;
-			originVoxel.y += dirXshift[direction] * unitSize;
+			originVoxel.y += dirYshift[direction] * unitSize;
 			break;
 
 		case BattleActionOrigin::RIGHT:
 			direction = (direction + 4) % 8; // set opposite direction
 			originVoxel.x += dirXshift[direction] * unitSize;
-			originVoxel.y += dirXshift[direction] * unitSize;
+			originVoxel.y += dirYshift[direction] * unitSize;
 			break;
 		};
 	}
