@@ -331,8 +331,8 @@ PathfindingStep Pathfinding::getTUCost(Position startPosition, int direction, co
 		else if (bam != BAM_MISSILE && movementType == MT_FLY)
 		{
 			// 2 or more voxels poking into this tile = no go
-			BattleUnit* overlaping = destinationTile[i]->getOverlappingUnit(_save, TUO_IGNORE_SMALL);
-			if (overlaping && overlaping != unit)
+			BattleUnit* overlapping = destinationTile[i]->getOverlappingUnit(_save, TUO_IGNORE_SMALL);
+			if (overlapping && overlapping != unit && overlapping->getVisible())
 			{
 				return {{INVALID_MOVE_COST, 0}};
 			}
