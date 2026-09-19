@@ -79,7 +79,7 @@ void RuleBaseFacility::load(const YAML::YamlNodeReader& node, Mod *mod)
 
 	reader.tryRead("ufopediaType", _ufopediaType);
 
-	mod->loadUnorderedNames(_type, _requires, reader["requires"]);
+	mod->loadUnorderedNames(_type, _requireNames, reader["requires"]);
 
 	mod->loadBaseFunction(_type, _requiresBaseFunc, reader["requiresBaseFunc"]);
 	mod->loadBaseFunction(_type, _provideBaseFunc, reader["provideBaseFunc"]);
@@ -195,6 +195,8 @@ void RuleBaseFacility::load(const YAML::YamlNodeReader& node, Mod *mod)
  */
 void RuleBaseFacility::afterLoad(const Mod* mod)
 {
+	mod->linkRule(_requires, _requireNames);
+
 	mod->verifySpriteOffset(_type, _spriteShape, "BASEBITS.PCK");
 	mod->verifySpriteOffset(_type, _spriteFacility, "BASEBITS.PCK");
 	mod->verifySoundOffset(_type, _fireSound, "GEO.CAT");
@@ -299,16 +301,6 @@ const std::string& RuleBaseFacility::getUfopediaType() const
 const std::string& RuleBaseFacility::getType() const
 {
 	return _type;
-}
-
-/**
- * Gets the list of research required to
- * build this base facility.
- * @return A list of research IDs.
- */
-const std::vector<std::string> &RuleBaseFacility::getRequirements() const
-{
-	return _requires;
 }
 
 /**

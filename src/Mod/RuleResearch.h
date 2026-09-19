@@ -22,6 +22,7 @@
 #include "../Engine/Yaml.h"
 #include "RuleBaseFacilityFunctions.h"
 #include "ModScript.h"
+#include "../Savegame/WeightedOptions.h"
 #include <utility>
 #include "../Engine/Script.h"
 
@@ -53,7 +54,8 @@ enum class ResearchStatus : int
 class RuleResearch
 {
  private:
-	std::string _name, _lookup, _cutscene, _spawnedItem, _spawnedEvent;
+	std::string _name, _lookupName, _cutscene, _spawnedItem, _spawnedEvent;
+	WeightedOptions _events;
 	std::vector<std::string> _spawnedItemList;
 	std::vector<std::string> _decreaseCounter, _increaseCounter;
 
@@ -63,6 +65,7 @@ class RuleResearch
 	ScriptValues<RuleResearch> _scriptValues;
 	std::vector<std::pair<std::string, std::vector<std::string> > > _getOneFreeProtectedName;
 	std::vector<std::pair<const RuleResearch*, std::vector<const RuleResearch*> > > _getOneFreeProtected;
+	const RuleResearch* _lookup = nullptr;
 	std::string _neededItemName;
 	const RuleItem* _neededItem = nullptr;
 
@@ -75,6 +78,7 @@ class RuleResearch
 	bool _sequentialGetOneFree = false;
 	bool _needItem = false;
 	bool _destroyItem = false;
+	bool _returnsItem = false;
 	bool _unlockFinalMission = false;
 
 public:
@@ -98,12 +102,18 @@ public:
 	const std::vector<const RuleResearch*> &getDependencies() const;
 	/// Checks if this ResearchProject gives free topics in sequential order (or random order).
 	bool sequentialGetOneFree() const;
+
 	/// Gets the Item needed for this research.
 	const RuleItem* getNeededItem() const { return _neededItem; }
 	/// Checks if this ResearchProject needs a corresponding Item to be researched.
 	bool needItem() const;
 	/// Checks if this ResearchProject consumes the corresponding Item when research completes.
 	bool destroyItem() const;
+	/// Checks if this ResearchProject returns the corresponding Item when research completes.
+	bool returnItem() const { return _returnsItem; }
+	/// Checks if this ResearchProject hold reserched item during research.
+	bool isHoldingNeededItem() const { return _needItem && (_destroyItem || _returnsItem); }
+
 	/// Check if this ResearchProject is unlocking final mission, it can be only one!
 	bool unlockFinalMission() const { return _unlockFinalMission; }
 	/// Check if this ResearchProject is repeatable, i.e. is never marked as discovered.
@@ -121,7 +131,7 @@ public:
 	/// Gets the list(s) of ResearchProjects granted at random for free by this research (if a defined prerequisite is met).
 	const std::vector<std::pair<const RuleResearch*, std::vector<const RuleResearch*> > > &getGetOneFreeProtected() const;
 	/// Gets what to look up in the ufopedia.
-	const std::string &getLookup() const;
+	const RuleResearch* getLookup() const { return _lookup; }
 	/// Gets the requirements for this ResearchProject.
 	const std::vector<const RuleResearch*> &getRequirements() const;
 	/// Gets the base requirements for this ResearchProject.
@@ -142,6 +152,9 @@ public:
 	const std::vector<std::string>& getDecreaseCounter() const { return _decreaseCounter; }
 	/// Gets the name of custom counter variables to increase when this topic is researched.
 	const std::vector<std::string>& getIncreaseCounter() const { return _increaseCounter; }
+	/// Gets geoscape event rule name to spawn after (each) research completion
+	std::string chooseEvent() const { return _events.choose(); }
+	const WeightedOptions& getEventsRaw() const { return _events; }
 };
 
 }

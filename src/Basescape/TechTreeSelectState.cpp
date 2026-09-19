@@ -25,6 +25,7 @@
 #include "../Mod/RuleArcScript.h"
 #include "../Mod/RuleEventScript.h"
 #include "../Mod/RuleMissionScript.h"
+#include "../Mod/RuleResearch.h"
 #include "../Engine/LocalizedText.h"
 #include "../Engine/Options.h"
 #include "../Interface/TextButton.h"
@@ -171,7 +172,7 @@ void TechTreeSelectState::initLists()
 			{
 				for (auto& trigger : arcScript->getResearchTriggers())
 				{
-					tmpList.insert(trigger.first);
+					tmpList.insert(trigger.first->getName());
 				}
 			}
 		}
@@ -185,7 +186,7 @@ void TechTreeSelectState::initLists()
 			{
 				for (auto& trigger : eventScript->getResearchTriggers())
 				{
-					tmpList.insert(trigger.first);
+					tmpList.insert(trigger.first->getName());
 				}
 			}
 		}
@@ -199,7 +200,7 @@ void TechTreeSelectState::initLists()
 			{
 				for (auto& trigger : missionScript->getResearchTriggers())
 				{
-					tmpList.insert(trigger.first);
+					tmpList.insert(trigger.first->getName());
 				}
 			}
 		}

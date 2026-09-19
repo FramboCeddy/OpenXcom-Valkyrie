@@ -30,6 +30,7 @@ class Mod;
 class Base;
 class Position;
 class RuleItem;
+class RuleResearch;
 struct VerticalLevel;
 enum BasePlacementErrors : int;
 namespace YAML
@@ -49,13 +50,14 @@ private:
 	std::vector<std::string> _leavesBehindOnSellNames;
 	std::vector<std::string> _buildOverFacilitiesNames;
 	std::vector<VerticalLevel> _verticalLevels;
-	std::vector<std::string> _requires;
 	std::vector<const RuleBaseFacility*> _leavesBehindOnSell;
 	std::vector<const RuleBaseFacility*> _buildOverFacilities;
 	std::vector<Position> _storageTiles;
 	std::map<std::string, std::pair<int, int> > _buildCostItems;
 	std::string _ufopediaType;
 	std::string _type;
+	std::vector<std::string> _requireNames;
+	std::vector<const RuleResearch*> _requires;
 	std::string _ammoItemName;
 	std::string _mapName;
 	std::string _destroyedFacilityName;
@@ -111,7 +113,7 @@ public:
 	/// Gets the facility's type.
 	const std::string& getType() const;
 	/// Gets the facility's requirements.
-	const std::vector<std::string> &getRequirements() const;
+	const std::vector<const RuleResearch*> &getRequirements() const { return _requires; }
 	/// Gets the facility's required function in base to build.
 	RuleBaseFacilityFunctions getRequireBaseFunc() const { return _requiresBaseFunc; }
 	/// Gets the functions that facility provide in base.

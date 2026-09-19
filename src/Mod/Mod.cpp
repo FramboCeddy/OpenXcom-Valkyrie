@@ -60,6 +60,7 @@
 #include "RuleCraftWeapon.h"
 #include "RuleItemCategory.h"
 #include "RuleItem.h"
+#include "RuleVoiceSet.h"
 #include "RuleWeaponSet.h"
 #include "RuleUfo.h"
 #include "RuleTerrain.h"
@@ -193,6 +194,7 @@ int Mod::DIFFICULTY_BASED_ITEM_LEVEL_DELAY[5] = {0, 0, 0, 0, 0};
 int Mod::UNIT_RESPONSE_SOUNDS_FREQUENCY[4];
 int Mod::PEDIA_FACILITY_RENDER_PARAMETERS[4];
 bool Mod::EXTENDED_ITEM_RELOAD_COST;
+bool Mod::EXTENDED_IGNORE_OVERWEIGHT_RULE;
 bool Mod::EXTENDED_INVENTORY_SLOT_SORTING;
 bool Mod::EXTENDED_RUNNING_COST;
 int Mod::EXTENDED_MOVEMENT_COST_ROUNDING;
@@ -330,6 +332,7 @@ void Mod::resetGlobalStatics()
 	PEDIA_FACILITY_RENDER_PARAMETERS[3] = 0; // pedia facility Y offset
 
 	EXTENDED_ITEM_RELOAD_COST = false;
+	EXTENDED_IGNORE_OVERWEIGHT_RULE = false;
 	EXTENDED_INVENTORY_SLOT_SORTING = false;
 	EXTENDED_RUNNING_COST = false;
 	EXTENDED_MOVEMENT_COST_ROUNDING = 0;
@@ -450,6 +453,7 @@ Mod::Mod() :
 	_maxViewDistance(20), _maxDarknessToSeeUnits(9), _maxStaticLightDistance(16), _maxDynamicLightDistance(24), _enhancedLighting(0),
 	_costHireEngineer(0), _costHireScientist(0),
 	_costEngineer(0), _costScientist(0), _timePersonnel(0), _hireByCountryOdds(0), _hireByRegionOdds(0), _initialFunding(0),
+	_globalTransferCostMult(1), _globalTransferCostDiv(1),
 	_aiUseDelayBlaster(3), _aiUseDelayFirearm(0), _aiUseDelayGrenade(3), _aiUseDelayProxy(999), _aiUseDelayMelee(0), _aiUseDelayPsionic(0), _aiUseDelayMedikit(999),
 	_aiFireChoiceIntelCoeff(5), _aiFireChoiceAggroCoeff(5), _aiExtendedFireModeChoice(false), _aiRespectMaxRange(false), _aiDestroyBaseFacilities(false),
 	_aiPickUpWeaponsMoreActively(false), _aiPickUpWeaponsMoreActivelyCiv(false),
@@ -479,7 +483,7 @@ Mod::Mod() :
 	_defeatScore(0), _defeatFunds(0), _countriesIgnoreCouncilPoints(false), _difficultyDemigod(false), _startingTime(6, 1, 1, 1999, 12, 0, 0), _startingDifficulty(0),
 	_baseDefenseMapFromLocation(0), _disableUnderwaterSounds(false), _enableUnitResponseSounds(false), _pediaReplaceCraftFuelWithRangeType(-1),
 	_facilityListOrder(0), _craftListOrder(0), _itemCategoryListOrder(0), _itemListOrder(0), _armorListOrder(0), _alienRaceListOrder(0),
-	_researchListOrder(0),  _manufactureListOrder(0), _soldierBonusListOrder(0), _transformationListOrder(0), _ufopaediaListOrder(0), _invListOrder(0), _soldierListOrder(0),
+	_researchListOrder(0),  _manufactureListOrder(0), _soldierBonusListOrder(0), _transformationListOrder(0), _ufopaediaListOrder(0), _invListOrder(0), _soldierListOrder(0), _voiceSetsListOrder(0),
 	_modCurrent(0), _statePalette(0)
 {
 	_muteMusic = new Music();
@@ -689,6 +693,10 @@ Mod::~Mod()
 		delete pair.second;
 	}
 	for (auto& pair : _items)
+	{
+		delete pair.second;
+	}
+	for (auto& pair : _voiceSets)
 	{
 		delete pair.second;
 	}
@@ -2347,6 +2355,12 @@ void Mod::loadAll()
 	afterLoadHelper("countries", this, _countries, &RuleCountry::afterLoad);
 	afterLoadHelper("crafts", this, _crafts, &RuleCraft::afterLoad);
 	afterLoadHelper("events", this, _events, &RuleEvent::afterLoad);
+	afterLoadHelper("voiceSets", this, _voiceSets, &RuleVoiceSet::afterLoad);
+	afterLoadHelper("missionScripts", this, _missionScripts, &RuleMissionScript::afterLoad);
+	afterLoadHelper("eventScripts", this, _eventScripts, &RuleEventScript::afterLoad);
+	afterLoadHelper("arcScripts", this, _arcScripts, &RuleArcScript::afterLoad);
+	afterLoadHelper("soldierTransformation", this, _soldierTransformation, &RuleSoldierTransformation::afterLoad);
+	afterLoadHelper("ufopaediaArticles", this, _ufopaediaArticles, &ArticleDefinition::afterLoad);
 
 	for (auto& a : _armors)
 	{
@@ -2403,6 +2417,30 @@ void Mod::loadAll()
 		}
 	}
 
+	// afterLoad() for Mod.h members
+	linkRule(_psiUnlockResearch, _psiUnlockResearchName);
+	linkRule(_fakeUnderwaterBaseUnlockResearch, _fakeUnderwaterBaseUnlockResearchName);
+	linkRule(_newBaseUnlockResearch, _newBaseUnlockResearchName);
+	linkRule(_hireScientistsUnlockResearch, _hireScientistsUnlockResearchName);
+	linkRule(_hireEngineersUnlockResearch, _hireEngineersUnlockResearchName);
+	linkRule(_manaUnlockResearch, _manaUnlockResearchName);
+
+	// refresh _psiRequirements for psiStrengthEval
+	for (const auto& facType : _facilitiesIndex)
+	{
+		RuleBaseFacility *rule = getBaseFacility(facType);
+		if (rule->getPsiLaboratories() > 0)
+		{
+			_psiRequirements = rule->getRequirements();
+			break;
+		}
+	}
+	// override the default (used when you want to separate screening and training)
+	if (_psiUnlockResearch)
+	{
+		_psiRequirements.clear();
+		_psiRequirements.push_back(_psiUnlockResearch);
+	}
 
 	// check unique listOrder
 	{
@@ -2493,7 +2531,8 @@ void Mod::loadAll()
 		}
 	}
 
-	Log(LOG_INFO) << "Loading ended.";
+	auto size = _voxelData.size();
+	Log(LOG_INFO) << "Loading ended. s: " << size << ", e: " << size / 16 << ", m: " << size / 16 - 1; // size, entries, max ID
 
 	sortLists();
 	modResources();
@@ -2784,6 +2823,7 @@ void Mod::loadConstants(const YAML::YamlNodeReader &reader)
 		}
 	}
 	reader.tryRead("extendedItemReloadCost", EXTENDED_ITEM_RELOAD_COST);
+	reader.tryRead("extendedIgnoreOverweightRule", EXTENDED_IGNORE_OVERWEIGHT_RULE);
 	reader.tryRead("extendedInventorySlotSorting", EXTENDED_INVENTORY_SLOT_SORTING);
 	reader.tryRead("extendedRunningCost", EXTENDED_RUNNING_COST);
 	reader.tryRead("extendedMovementCostRounding", EXTENDED_MOVEMENT_COST_ROUNDING);
@@ -2925,6 +2965,14 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 		if (rule != 0)
 		{
 			rule->load(ruleReader, this, parsers);
+		}
+	}
+	for (const auto& ruleReader : iterateRules("voiceSets", "type"))
+	{
+		RuleVoiceSet* rule = loadRule(ruleReader, &_voiceSets, &_voiceSetsIndex, "type", RuleListOrderedFactory<RuleVoiceSet>{ _voiceSetsListOrder, 100 });
+		if (rule != 0)
+		{
+			rule->load(ruleReader, this);
 		}
 	}
 	for (const auto& ruleReader : iterateRules("weaponSets", "type"))
@@ -3259,13 +3307,18 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	reader.tryRead("hireByCountryOdds", _hireByCountryOdds);
 	reader.tryRead("hireByRegionOdds", _hireByRegionOdds);
 	reader.tryRead("initialFunding", _initialFunding);
+	if (const auto& nodeTransferCosts = loadDocInfoHelper("transferCosts"))
+	{
+		nodeTransferCosts.tryRead("globalCostMult", _globalTransferCostMult);
+		nodeTransferCosts.tryRead("globalCostDiv", _globalTransferCostDiv);
+	}
 	reader.tryRead("alienFuel", _alienFuel);
 	reader.tryRead("fontName", _fontName);
-	reader.tryRead("psiUnlockResearch", _psiUnlockResearch);
-	reader.tryRead("fakeUnderwaterBaseUnlockResearch", _fakeUnderwaterBaseUnlockResearch);
-	reader.tryRead("newBaseUnlockResearch", _newBaseUnlockResearch);
-	reader.tryRead("hireScientistsUnlockResearch", _hireScientistsUnlockResearch);
-	reader.tryRead("hireEngineersUnlockResearch", _hireEngineersUnlockResearch);
+	reader.tryRead("psiUnlockResearch", _psiUnlockResearchName);
+	reader.tryRead("fakeUnderwaterBaseUnlockResearch", _fakeUnderwaterBaseUnlockResearchName);
+	reader.tryRead("newBaseUnlockResearch", _newBaseUnlockResearchName);
+	reader.tryRead("hireScientistsUnlockResearch", _hireScientistsUnlockResearchName);
+	reader.tryRead("hireEngineersUnlockResearch", _hireEngineersUnlockResearchName);
 	loadBaseFunction("mod", _hireScientistsRequiresBaseFunc, reader["hireScientistsRequiresBaseFunc"]);
 	loadBaseFunction("mod", _hireEngineersRequiresBaseFunc, reader["hireEngineersRequiresBaseFunc"]);
 	reader.tryRead("destroyedFacility", _destroyedFacility);
@@ -3329,7 +3382,7 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	{
 		nodeMana.tryRead("enabled", _manaEnabled);
 		nodeMana.tryRead("battleUI", _manaBattleUI);
-		nodeMana.tryRead("unlockResearch", _manaUnlockResearch);
+		nodeMana.tryRead("unlockResearch", _manaUnlockResearchName);
 		nodeMana.tryRead("trainingPrimary", _manaTrainingPrimary);
 		nodeMana.tryRead("trainingSecondary", _manaTrainingSecondary);
 
@@ -3608,23 +3661,6 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 		{
 			loadConstants(constants.useIndex());
 		}
-	}
-
-	// refresh _psiRequirements for psiStrengthEval
-	for (const auto& facType : _facilitiesIndex)
-	{
-		RuleBaseFacility *rule = getBaseFacility(facType);
-		if (rule->getPsiLaboratories() > 0)
-		{
-			_psiRequirements = rule->getRequirements();
-			break;
-		}
-	}
-	// override the default (used when you want to separate screening and training)
-	if (!_psiUnlockResearch.empty())
-	{
-		_psiRequirements.clear();
-		_psiRequirements.push_back(_psiUnlockResearch);
 	}
 
 	if (const auto& arrayReader = reader["aimAndArmorMultipliers"])
@@ -4266,6 +4302,26 @@ RuleItem *Mod::getItem(const std::string &id, bool error) const
 const std::vector<std::string> &Mod::getItemsList() const
 {
 	return _itemsIndex;
+}
+
+/**
+ * Returns the rules for the specified voice set.
+ * @param type Voice set type.
+ * @return Rules for the voice set.
+ */
+RuleVoiceSet* Mod::getVoiceSet(const std::string& type, bool error) const
+{
+	return getRule(type, "VoiceSet", _voiceSets, error);
+}
+
+/**
+ * Returns the list of all voice sets
+ * provided by the mod.
+ * @return List of voice sets.
+ */
+const std::vector<std::string> &Mod::getVoiceSetsList() const
+{
+	return _voiceSetsIndex;
 }
 
 /**
@@ -5126,6 +5182,10 @@ void Mod::sortLists()
 	sortIndex(_manufactureIndex, _manufacture, compareRule<RuleManufacture>(this));
 	sortIndex(_soldierTransformationIndex, _soldierTransformation, compareRule<RuleSoldierTransformation>(this));
 	sortIndex(_invsIndex, _invs, compareRule<RuleInventory>(this));
+	sortIndex(_soldiersIndex, _soldiers, compareRule<RuleSoldier>(this));
+	sortIndex(_aliensIndex, _alienRaces, compareRule<AlienRace>(this));
+	sortIndex(_voiceSetsIndex, _voiceSets, compareRule<RuleVoiceSet>(this));
+
 	// special cases
 	sortIndex(_craftWeaponsIndex, _craftWeapons, compareRule<RuleCraftWeapon>(this));
 	sortIndex(_armorsIndex, _armors, compareRule<Armor>(this));
@@ -5133,14 +5193,12 @@ void Mod::sortLists()
 	_ufopaediaSections[UFOPAEDIA_NOT_AVAILABLE] = 0;
 	sortIndex(_ufopaediaIndex, _ufopaediaArticles, compareRule<ArticleDefinition>(this));
 	std::sort(_ufopaediaCatIndex.begin(), _ufopaediaCatIndex.end(), compareSection(this));
-	sortIndex(_soldiersIndex, _soldiers, compareRule<RuleSoldier>(this));
-	sortIndex(_aliensIndex, _alienRaces, compareRule<AlienRace>(this));
 }
 
 /**
  * Gets the research-requirements for Psi-Lab (it's a cache for psiStrengthEval)
  */
-const std::vector<std::string> &Mod::getPsiRequirements() const
+const std::vector<const RuleResearch*> &Mod::getPsiRequirements() const
 {
 	return _psiRequirements;
 }

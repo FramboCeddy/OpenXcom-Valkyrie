@@ -33,8 +33,11 @@ class ModScript;
 class SoldierNamePool;
 class StatString;
 class RuleItem;
+class RuleResearch;
 class RuleSkill;
 class Armor;
+class RuleVoiceSet;
+class Soldier;
 
 /**
  * Represents the creation data for an X-COM unit.
@@ -65,8 +68,10 @@ public:
 
 private:
 	std::string _type;
+	std::string _prefix;
 	YAML::YamlString _spawnedSoldier;
-	std::vector<std::string> _requires;
+	std::vector<std::string> _requireNames;
+	std::vector<const RuleResearch*> _requires;
 	RuleBaseFacilityFunctions _requiresBuyBaseFunc;
 	std::string _requiresBuyCountry;
 	std::string _armorName;
@@ -86,13 +91,17 @@ private:
 	std::vector<std::string> _rankStrings;
 	std::vector<std::string> _skillNames;
 	std::vector<const RuleSkill*> _skills;
+	std::vector<std::string> _voiceSetNamesMale, _voiceSetNamesFemale;
+	std::vector<const RuleVoiceSet*> _voiceSetsMale, _voiceSetsFemale;
+	std::map<std::string, std::vector<std::string> > _voiceSetNames;
+	std::map<std::string, std::vector<const RuleVoiceSet*> > _voiceSets;
 	ScriptValues<RuleSoldier> _scriptValues;
 
 	typedef std::pair<size_t, std::pair<int, int> > expGroup;
 	std::vector<expGroup> _experienceImprovement = {
 		{11, {2, 6}},
 		{6, {1, 4}},
-		{3, {1, 3}}, 
+		{3, {1, 3}},
 		{1, {0, 1}}, };
 
 	int _listOrder;
@@ -145,6 +154,8 @@ public:
 	void afterLoad(const Mod* mod);
 	/// Gets the soldier's type.
 	const std::string& getType() const;
+	/// Gets the soldier's name prefix.
+	const std::string& getPrefix() const { return _prefix; }
 	/// Gets the spawned soldier template.
 	const YAML::YamlString& getSpawnedSoldierTemplate() const { return _spawnedSoldier; }
 	/// Gets the soldier type group.
@@ -154,7 +165,7 @@ public:
 	/// Gets the list/sort order of the soldier's type.
 	int getListOrder() const;
 	/// Gets the soldier's requirements.
-	const std::vector<std::string> &getRequirements() const;
+	const std::vector<const RuleResearch*> &getRequirements() const { return _requires; }
 	/// Gets the base functions required to hire this soldier type.
 	RuleBaseFacilityFunctions getRequiresBuyBaseFunc() const { return _requiresBuyBaseFunc; }
 	/// Gets the allied country name required to hire this soldier type.
@@ -235,6 +246,21 @@ public:
 	const std::vector<int> &getMaleAnnoyedSounds() const { return _annoyedSoundMale; }
 	/// Gets the soldier's female "annoyed" sounds.
 	const std::vector<int> &getFemaleAnnoyedSounds() const { return _annoyedSoundFemale; }
+
+	/// Gets the list of defined male voice sets.
+	const std::vector<const RuleVoiceSet*> &getVoiceSetsMaleRaw() const { return _voiceSetsMale; }
+	/// Gets a random male voice set.
+	const RuleVoiceSet* getRandomVoiceSetMale() const;
+	/// Gets the list of defined female voice sets.
+	const std::vector<const RuleVoiceSet*> &getVoiceSetsFemaleRaw() const { return _voiceSetsFemale; }
+	/// Gets a random female voice set.
+	const RuleVoiceSet* getRandomVoiceSetFemale() const;
+
+	/// Gets the list of defined voice sets.
+	const std::map<std::string, std::vector<const RuleVoiceSet*> > &getVoiceSetsRaw() const { return _voiceSets; }
+	/// Gets a random voice set.
+	const RuleVoiceSet* getRandomVoiceSet(const Soldier* s) const;
+
 	/// Gets the pool list for soldier names.
 	const std::vector<SoldierNamePool*> &getNames() const;
 	/// Gets the total weight of all the soldier name pools.

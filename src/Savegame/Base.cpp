@@ -1337,9 +1337,32 @@ void Base::removeResearch(ResearchProject * project)
 {
 	_scientists += project->getAssigned();
 	const RuleResearch *ruleResearch = project->getRules();
-	if (!project->isFinished() && ruleResearch->needItem() && ruleResearch->destroyItem())
+	if (ruleResearch->isHoldingNeededItem())
 	{
-		getStorageItems()->addItem(ruleResearch->getNeededItem(), 1);
+		if (!project->isFinished())
+		{
+				getStorageItems()->addItem(ruleResearch->getNeededItem(), 1);
+		}
+		else
+		{
+			// handle interrogation
+			if (ruleResearch->returnItem())
+			{
+				getStorageItems()->addItem(ruleResearch->getNeededItem(), 1);
+			}
+			else if (Options::retainCorpses && ruleResearch->destroyItem())
+			{
+				auto* ruleUnit = _mod->getUnit(ruleResearch->getName(), false); // research & item & unit should have same name to work correctly
+				if (ruleUnit)
+				{
+					auto* ruleCorpse = ruleUnit->getArmor()->getCorpseGeoscape();
+					if (ruleCorpse && ruleCorpse->isRecoverable() && ruleCorpse->isCorpseRecoverable())
+					{
+						getStorageItems()->addItem(ruleCorpse);
+					}
+				}
+			}
+		}
 	}
 
 	Collections::deleteIf(_research, 1,
@@ -1490,9 +1513,9 @@ int Base::getUsedContainment(int prisonType, bool onlyExternal) const
 	for (const auto* proj : _research)
 	{
 		const RuleResearch *projRules = proj->getRules();
-		if (projRules->needItem() && projRules->destroyItem())
+		if (projRules->isHoldingNeededItem())
 		{
-			rule = _mod->getItem(projRules->getName(), false); // don't use getNeededItem()
+			rule = projRules->getNeededItem();
 			if (rule && rule->isAlien() && rule->getPrisonType() == prisonType)
 			{
 				++total;
@@ -2098,14 +2121,14 @@ void Base::cleanupPrisons(int prisonType)
 		[&](ResearchProject* project)
 		{
 			const RuleResearch* projRules = project->getRules();
-			if (projRules->needItem() && projRules->destroyItem())
+			if (projRules->isHoldingNeededItem())
 			{
-				RuleItem* rule = _mod->getItem(projRules->getName(), false); // don't use getNeededItem()
+				const RuleItem* rule = projRules->getNeededItem();
 				if (rule && rule->isAlien() && rule->getPrisonType() == prisonType)
 				{
 					_scientists += project->getAssigned();
 					project->setAssigned(0);
-					getStorageItems()->addItem(projRules->getNeededItem(), 1);
+					getStorageItems()->addItem(rule, 1);
 					return true;
 				}
 			}

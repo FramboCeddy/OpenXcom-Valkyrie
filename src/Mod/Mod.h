@@ -56,6 +56,7 @@ class RuleCraft;
 class RuleCraftWeapon;
 class RuleItemCategory;
 class RuleItem;
+class RuleVoiceSet;
 class RuleWeaponSet;
 struct RuleDamageType;
 class RuleUfo;
@@ -172,6 +173,7 @@ private:
 	std::map<std::string, RuleCraftWeapon*> _craftWeapons;
 	std::map<std::string, RuleItemCategory*> _itemCategories;
 	std::map<std::string, RuleItem*> _items;
+	std::map<std::string, RuleVoiceSet*> _voiceSets;
 	std::map<std::string, RuleWeaponSet*> _weaponSets;
 	std::map<std::string, RuleUfo*> _ufos;
 	std::map<std::string, RuleTerrain*> _terrains;
@@ -216,7 +218,8 @@ private:
 	RuleConverter *_converter;
 	ModScriptGlobal *_scriptGlobal;
 
-	std::string _manaUnlockResearch;
+	std::string _manaUnlockResearchName;
+	const RuleResearch* _manaUnlockResearch = nullptr;
 	std::string _loseMoney, _loseRating, _loseDefeat;
 
 	double _performanceBonusFactor;
@@ -231,6 +234,7 @@ private:
 	int _maxStaticLightDistance, _maxDynamicLightDistance, _enhancedLighting;
 	int _costHireEngineer, _costHireScientist;
 	int _costEngineer, _costScientist, _timePersonnel, _hireByCountryOdds, _hireByRegionOdds, _initialFunding;
+	int _globalTransferCostMult, _globalTransferCostDiv;
 
 	int _aiUseDelayBlaster, _aiUseDelayFirearm, _aiUseDelayGrenade, _aiUseDelayProxy, _aiUseDelayMelee, _aiUseDelayPsionic, _aiUseDelayMedikit;
 	int _aiFireChoiceIntelCoeff, _aiFireChoiceAggroCoeff;
@@ -267,8 +271,19 @@ private:
 
 	std::pair<std::string, int> _alienFuel;
 	RuleResearch* _finalResearch = nullptr;
-	std::string _fontName, _psiUnlockResearch, _fakeUnderwaterBaseUnlockResearch, _newBaseUnlockResearch;
-	std::string _hireScientistsUnlockResearch, _hireEngineersUnlockResearch;
+	std::string _fontName;
+
+	std::string _psiUnlockResearchName;
+	const RuleResearch* _psiUnlockResearch = nullptr;
+	std::string _fakeUnderwaterBaseUnlockResearchName;
+	const RuleResearch* _fakeUnderwaterBaseUnlockResearch = nullptr;
+	std::string _newBaseUnlockResearchName;
+	const RuleResearch* _newBaseUnlockResearch = nullptr;
+	std::string _hireScientistsUnlockResearchName;
+	const RuleResearch* _hireScientistsUnlockResearch = nullptr;
+	std::string _hireEngineersUnlockResearchName;
+	const RuleResearch* _hireEngineersUnlockResearch = nullptr;
+
 	RuleBaseFacilityFunctions _hireScientistsRequiresBaseFunc, _hireEngineersRequiresBaseFunc;
 
 	std::string _destroyedFacility;
@@ -300,7 +315,7 @@ private:
 	std::map<std::string, int> _ufopaediaSections;
 	std::vector<std::string> _countriesIndex, _extraGlobeLabelsIndex, _regionsIndex, _facilitiesIndex, _craftsIndex, _craftWeaponsIndex, _itemCategoriesIndex, _itemsIndex, _invsIndex, _ufosIndex;
 	std::vector<std::string> _aliensIndex, _enviroEffectsIndex, _startingConditionsIndex, _deploymentsIndex, _armorsIndex, _ufopaediaIndex, _ufopaediaCatIndex, _researchIndex, _manufactureIndex;
-	std::vector<std::string> _skillsIndex, _soldiersIndex, _soldierTransformationIndex, _soldierBonusIndex;
+	std::vector<std::string> _skillsIndex, _soldiersIndex, _soldierTransformationIndex, _soldierBonusIndex, _voiceSetsIndex;
 	std::vector<std::string> _alienMissionsIndex, _terrainIndex, _customPalettesIndex, _arcScriptIndex, _eventScriptIndex, _eventIndex, _missionScriptIndex, _adhocScriptIndex;
 	std::vector<std::vector<int> > _alienItemLevels;
 	std::vector<std::array<SDL_Color, TransparenciesOpacityLevels>> _transparencies;
@@ -310,7 +325,7 @@ private:
 
 	std::vector<int> _councilPoints = {0, 400};
 
-	std::vector<std::string> _psiRequirements; // it's a cache for psiStrengthEval
+	std::vector<const RuleResearch*> _psiRequirements; // it's a cache for psiStrengthEval
 	std::vector<const Armor*> _armorsForSoldiersCache;
 	std::vector<const RuleItem*> _armorStorageItemsCache;
 	std::vector<const RuleItem*> _craftWeaponStorageItemsCache;
@@ -329,7 +344,7 @@ private:
 	size_t _soundOffsetGeo = 0;
 
 	int _facilityListOrder, _craftListOrder, _itemCategoryListOrder, _itemListOrder, _armorListOrder, _alienRaceListOrder, _researchListOrder, _manufactureListOrder;
-	int _soldierBonusListOrder, _transformationListOrder, _ufopaediaListOrder, _invListOrder, _soldierListOrder;
+	int _soldierBonusListOrder, _transformationListOrder, _ufopaediaListOrder, _invListOrder, _soldierListOrder, _voiceSetsListOrder;
 
 	bool _inventoryOverlapsPaperdoll;
 	bool _aiExtendedFireModeChoice, _aiRespectMaxRange, _aiDestroyBaseFacilities;
@@ -468,6 +483,7 @@ public:
 	static int SHOW_MIN_ARMOR_STYLE;
 
 	static bool EXTENDED_ITEM_RELOAD_COST;
+	static bool EXTENDED_IGNORE_OVERWEIGHT_RULE;
 	static bool EXTENDED_INVENTORY_SLOT_SORTING;
 	static bool EXTENDED_RUNNING_COST;
 	static bool EXTENDED_HWP_LOAD_ORDER;
@@ -649,6 +665,10 @@ public:
 		{
 			rule = getCommendation(name, true);
 		}
+		else if constexpr (std::is_same_v<T, RuleVoiceSet>)
+		{
+			rule = getVoiceSet(name, true);
+		}
 		else
 		{
 			static_assert(sizeof(T) == 0, "Unsupported type to link");
@@ -719,6 +739,10 @@ public:
 	RuleItem *getItem(const std::string &id, bool error = false) const;
 	/// Gets the available items.
 	const std::vector<std::string> &getItemsList() const;
+	/// Gets the ruleset for a voice set type.
+	RuleVoiceSet* getVoiceSet(const std::string& type, bool error = false) const;
+	/// Gets the available voice sets.
+	const std::vector<std::string> &getVoiceSetsList() const;
 	/// Gets the ruleset for a weapon set type.
 	RuleWeaponSet* getWeaponSet(const std::string& type, bool error = false) const;
 	/// Gets the ruleset for a UFO type.
@@ -809,13 +833,13 @@ public:
 	/// Gets the cost of hiring an engineer.
 	int getHireEngineerCost() const;
 	/// Gets the research topic required for hiring new engineers.
-	const std::string &getHireEngineersUnlockResearch() const { return _hireEngineersUnlockResearch; }
+	const RuleResearch* getHireEngineersUnlockResearch() const { return _hireEngineersUnlockResearch; }
 	/// Gets the base functions required for hiring new engineers.
 	RuleBaseFacilityFunctions getHireEngineersRequiresBaseFunc() const { return _hireEngineersRequiresBaseFunc; }
 	/// Gets the cost of hiring a scientist.
 	int getHireScientistCost() const;
 	/// Gets the research topic required for hiring new scientists.
-	const std::string &getHireScientistsUnlockResearch() const { return _hireScientistsUnlockResearch; }
+	const RuleResearch* getHireScientistsUnlockResearch() const { return _hireScientistsUnlockResearch; }
 	/// Gets the base functions topic required for hiring new scientists.
 	RuleBaseFacilityFunctions getHireScientistsRequiresBaseFunc() const { return _hireScientistsRequiresBaseFunc; }
 	/// Gets the monthly cost of an engineer.
@@ -828,6 +852,11 @@ public:
 	int getHireByCountryOdds() const { return _hireByCountryOdds; }
 	/// Gets the odds of hiring soldiers by region.
 	int getHireByRegionOdds() const { return _hireByRegionOdds; }
+
+	/// Gets the global transfer cost multiplier.
+	int getGlobalTransferCostMultiplier() const { return _globalTransferCostMult; }
+	/// Gets the global transfer cost divider.
+	int getGlobalTransferCostDivider() const { return _globalTransferCostDiv; }
 
 	/// Gets first turn when AI can use Blaster launcher.
 	int getAIUseDelayBlaster() const  {return _aiUseDelayBlaster;}
@@ -930,7 +959,7 @@ public:
 	/// Is the mana trained as a secondary skill (e.g. like strength)?
 	bool isManaTrainingSecondary() const { return _manaTrainingSecondary; }
 	/// Gets the mana unlock research topic (default empty)?
-	const std::string &getManaUnlockResearch() const { return _manaUnlockResearch; }
+	const RuleResearch* getManaUnlockResearch() const { return _manaUnlockResearch; }
 
 	/// How much missing mana will act as "fatal wounds" and prevent the soldier from going into battle.
 	int getManaWoundThreshold() const { return _manaMissingWoundThreshold; }
@@ -950,9 +979,9 @@ public:
 	const std::string &getLoseDefeatCutscene() const { return _loseDefeat; }
 
 	/// Gets the research topic required for building XCOM bases on fakeUnderwater globe textures.
-	const std::string &getFakeUnderwaterBaseUnlockResearch() const { return _fakeUnderwaterBaseUnlockResearch; }
+	const RuleResearch* getFakeUnderwaterBaseUnlockResearch() const { return _fakeUnderwaterBaseUnlockResearch; }
 	/// Gets the research topic required for building XCOM bases.
-	const std::string &getNewBaseUnlockResearch() const { return _newBaseUnlockResearch; }
+	const RuleResearch* getNewBaseUnlockResearch() const { return _newBaseUnlockResearch; }
 
 	/// Gets the threshold for defining a glancing hit on a ufo during interception
 	int getUfoGlancingHitThreshold() const { return _ufoGlancingHitThreshold; }
@@ -1090,7 +1119,7 @@ public:
 	/// Gets the list of StatStrings.
 	const std::vector<StatString *> &getStatStrings() const;
 	/// Gets the research-requirements for Psi-Lab (it's a cache for psiStrengthEval)
-	const std::vector<std::string> &getPsiRequirements() const;
+	const std::vector<const RuleResearch*> &getPsiRequirements() const;
 	/// Returns the sorted list of inventories.
 	const std::vector<std::string> &getInvsList() const;
 	/// Generates a new soldier.

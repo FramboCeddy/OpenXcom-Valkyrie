@@ -1012,8 +1012,7 @@ void Map::drawTerrain(Surface *surface)
 				}
 
 				// draw an item on top of the floor (if any)
-				BattleItem* item = tile->getTopItem();
-				if (item)
+				if (BattleItem* item = tile->getTopItem())
 				{
 					itemSprite.draw(item, screenPosition.x, screenPosition.y + tile->getTerrainLevel(), tileShade);
 					if (_anyIndicator)
@@ -1057,8 +1056,7 @@ void Map::drawTerrain(Surface *surface)
 				if (_projectile && _projectileInFOV)
 				{
 					tmpSurface = nullptr;
-					BattleItem* item = _projectile->getItem();
-					if (item) // projectile is a thrown item
+					if (BattleItem* item = _projectile->getItem()) // projectile is a thrown item
 					{
 						Position voxelPos = _projectile->getPosition();
 						if (voxelPos.x / 16 >= itX && voxelPos.x / 16 <= itX + 1 &&
@@ -1807,7 +1805,7 @@ void Map::persistToggles()
  * @param original tile/item/unit shade
  */
 
-int Map::reShade(Tile *tile)
+int Map::reShade(Tile *tile) const
 {
 	// when modders just don't know where to stop...
 	if (_debugVisionMode > 0)
@@ -1847,6 +1845,25 @@ int Map::reShade(Tile *tile)
 
 	// hybrid night vision (global)
 	return std::min(+NIGHT_VISION_MAX_SHADE, tile->getShade());
+}
+
+int Map::reShadeMinimap(int maxShade) const
+{
+	if (_debugVisionMode > 0)
+	{
+		if (_debugVisionMode == 1)
+		{
+			return maxShade / 2;
+		}
+		return 0;
+	}
+
+	if (_nvColor == 0)
+	{
+		return maxShade;
+	}
+
+	return std::min(+NIGHT_VISION_MAX_SHADE / 2, maxShade);
 }
 
 /**

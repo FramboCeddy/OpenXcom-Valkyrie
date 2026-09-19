@@ -93,6 +93,8 @@ void ResearchInfoState::buildUi()
 	_surfaceScientists = new InteractiveSurface(230, 140, 45, 30);
 	_surfaceScientists->onMouseClick((ActionHandler)&ResearchInfoState::handleWheel, 0);
 
+	touchComponentsCreate(_txtTitle, false, -45, +30, true);
+
 	// Set palette
 	setInterface("allocateResearch");
 
@@ -109,10 +111,14 @@ void ResearchInfoState::buildUi()
 	add(_btnMore, "button1", "allocateResearch");
 	add(_btnLess, "button1", "allocateResearch");
 
+	touchComponentsAdd("button3", "allocateResearch", _window);
+
 	centerAllSurfaces();
 
 	// Set up objects
 	setWindowBackground(_window, "allocateResearch");
+
+	touchComponentsConfigure();
 
 	_txtTitle->setBig();
 
@@ -129,7 +135,7 @@ void ResearchInfoState::buildUi()
 	if (_rule)
 	{
 		_base->addResearch(_project);
-		if (_rule->needItem() && _rule->destroyItem())
+		if (_rule->isHoldingNeededItem())
 		{
 			_base->getStorageItems()->removeItem(_rule->getNeededItem(), 1);
 		}
@@ -177,6 +183,16 @@ ResearchInfoState::~ResearchInfoState()
 {
 	delete _timerLess;
 	delete _timerMore;
+}
+
+/**
+ * Resets stuff when coming back from other screens.
+ */
+void ResearchInfoState::init()
+{
+	State::init();
+
+	touchComponentsRefresh();
 }
 
 /**
@@ -232,7 +248,7 @@ void ResearchInfoState::handleWheel(Action *action)
  */
 void ResearchInfoState::morePress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerMore->start();
+	if (_game->isLeftClick(action, true)) _timerMore->start();
 }
 
 /**
@@ -241,7 +257,7 @@ void ResearchInfoState::morePress(Action *action)
  */
 void ResearchInfoState::moreRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (_game->isLeftClick(action, true))
 	{
 		_timerMore->setInterval(250);
 		_timerMore->stop();
@@ -255,10 +271,10 @@ void ResearchInfoState::moreRelease(Action *action)
  */
 void ResearchInfoState::moreClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (_game->isRightClick(action, true))
 		moreByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
-		moreByValue(1);
+	if (_game->isLeftClick(action, true))
+		moreByValue(_game->getScrollStep());
 }
 
 /**
@@ -267,7 +283,7 @@ void ResearchInfoState::moreClick(Action *action)
  */
 void ResearchInfoState::lessPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerLess->start();
+	if (_game->isLeftClick(action, true)) _timerLess->start();
 }
 
 /**
@@ -276,7 +292,7 @@ void ResearchInfoState::lessPress(Action *action)
  */
 void ResearchInfoState::lessRelease(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (_game->isLeftClick(action, true))
 	{
 		_timerLess->setInterval(250);
 		_timerLess->stop();
@@ -290,10 +306,10 @@ void ResearchInfoState::lessRelease(Action *action)
  */
 void ResearchInfoState::lessClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	if (_game->isRightClick(action, true))
 		lessByValue(INT_MAX);
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
-		lessByValue(1);
+	if (_game->isLeftClick(action, true))
+		lessByValue(_game->getScrollStep());
 }
 
 /**
@@ -302,7 +318,7 @@ void ResearchInfoState::lessClick(Action *action)
 void ResearchInfoState::more()
 {
 	_timerMore->setInterval(50);
-	moreByValue(1);
+	moreByValue(_game->getScrollStep());
 }
 
 /**
@@ -329,7 +345,7 @@ void ResearchInfoState::moreByValue(int change)
 void ResearchInfoState::less()
 {
 	_timerLess->setInterval(50);
-	lessByValue(1);
+	lessByValue(_game->getScrollStep());
 }
 
 /**

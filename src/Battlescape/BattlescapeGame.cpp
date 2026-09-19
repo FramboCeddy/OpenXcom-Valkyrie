@@ -546,7 +546,7 @@ void BattlescapeGame::endTurn()
 				if (!tile && unit && item->getFuseTimer() != -1 && !_allEnemiesNeutralized)
 				{
 					int explodeAnyway = rule->getExplodeInventory(getMod());
-					if (explodeAnyway >= 2 || (explodeAnyway == 1 && item->getSlot()->getType() != INV_HAND))
+					if (explodeAnyway >= 2 || (explodeAnyway == 1 && item->getSlot() && item->getSlot()->getType() != INV_HAND))
 					{
 						tile = unit->getTile();
 					}
@@ -813,6 +813,10 @@ void BattlescapeGame::checkForCasualties(const RuleDamageType *damageType, Battl
 						if (!victim->isCosmetic())
 						{
 							bu->getStatistics()->kills.push_back(new BattleUnitKills(killStat));
+							if (killStat.status == STATUS_DEAD)
+							{
+								bu->addKillCount();
+							}
 							if (victim->getFaction() == FACTION_HOSTILE)
 							{
 								bu->getStatistics()->slaveKills++;
@@ -1730,6 +1734,11 @@ void BattlescapeGame::primaryAction(Position pos)
 
 	if (_currentAction.targeting && _save->getSelectedUnit())
 	{
+		if (_currentAction.type != BA_THROW && _currentAction.weapon && _currentAction.weapon->getRules()->isOutOfRange(_currentAction.actor->distance3dToPositionSq(pos)))
+		{
+			_parentState->warning("STR_OUT_OF_RANGE");
+			return;
+		}
 		if (_currentAction.type == BA_LAUNCH)
 		{
 			int maxWaypoints = _currentAction.weapon->getCurrentWaypoints();
@@ -1958,7 +1967,7 @@ void BattlescapeGame::primaryAction(Position pos)
 				_save->getPathfinding()->removePreview();
 			}
 			_currentAction.target = pos;
-			//_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, BAM_NORMAL); // precalculate move
+			_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, BAM_NORMAL); // precalculate move
 
 			_currentAction.strafe = false;
 			_currentAction.run = false;
@@ -1989,10 +1998,10 @@ void BattlescapeGame::primaryAction(Position pos)
 			}
 
 			// recalculate path after setting new move types
-			//if (BAM_NORMAL != _currentAction.getMoveType())
-			//{
-			_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, _currentAction.getMoveType());
-			//}
+			if (BAM_NORMAL != _currentAction.getMoveType())
+			{
+				_save->getPathfinding()->calculate(_currentAction.actor, _currentAction.target, _currentAction.getMoveType());
+			}
 
 			// if running or shifting, ignore spotted enemies (i.e. don't stop)
 			_currentAction.ignoreSpottedEnemies = (_currentAction.run && Mod::EXTENDED_RUNNING_COST) || isShiftPressed;
@@ -2439,7 +2448,7 @@ void BattlescapeGame::spawnFromPrimedItems()
  */
 void BattlescapeGame::removeSummonedPlayerUnits()
 {
-	std::vector<Unit*> resummonAsCivilians;
+	std::vector<const Unit*> resummonAsCivilians;
 
 	auto buIt = _save->getUnits()->begin();
 	while (buIt != _save->getUnits()->end())
@@ -2509,35 +2518,35 @@ void BattlescapeGame::tallySummonedVIPs()
 		{
 			if (unit->getStatus() == STATUS_DEAD)
 			{
-				_save->addLostVIP(unit->getValue());
+				_save->addLostVIP(unit->getValueVIP());
 			}
 			else if (escapeType == ESCAPE_EXIT)
 			{
 				if (unit->isInExitArea(END_POINT))
-					_save->addSavedVIP(unit->getValue());
+					_save->addSavedVIP(unit->getValueVIP());
 				else
-					_save->addLostVIP(unit->getValue());
+					_save->addLostVIP(unit->getValueVIP());
 			}
 			else if (escapeType == ESCAPE_ENTRY)
 			{
 				if (unit->isInExitArea(START_POINT))
-					_save->addSavedVIP(unit->getValue());
+					_save->addSavedVIP(unit->getValueVIP());
 				else
-					_save->addLostVIP(unit->getValue());
+					_save->addLostVIP(unit->getValueVIP());
 			}
 			else if (escapeType == ESCAPE_EITHER)
 			{
 				if (unit->isInExitArea(START_POINT) || unit->isInExitArea(END_POINT))
-					_save->addSavedVIP(unit->getValue());
+					_save->addSavedVIP(unit->getValueVIP());
 				else
-					_save->addLostVIP(unit->getValue());
+					_save->addLostVIP(unit->getValueVIP());
 			}
 			else //if (escapeType == ESCAPE_NONE)
 			{
 				if (unit->isInExitArea(START_POINT))
-					_save->addSavedVIP(unit->getValue()); // waiting in craft, saved even if aborted
+					_save->addSavedVIP(unit->getValueVIP()); // waiting in craft, saved even if aborted
 				else
-					_save->addWaitingOutsideVIP(unit->getValue()); // waiting outside, lost if aborted
+					_save->addWaitingOutsideVIP(unit->getValueVIP()); // waiting outside, lost if aborted
 			}
 		}
 	}
@@ -3385,7 +3394,7 @@ void BattlescapeGame::autoEndBattle()
 		if (end)
 		{
 			_save->setSelectedUnit(0);
-			cancelCurrentAction(true);
+			cancelAllActions();
 			requestEndTurn(askForConfirmation);
 		}
 	}

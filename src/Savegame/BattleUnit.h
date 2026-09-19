@@ -153,9 +153,10 @@ private:
 	std::vector<int> _selectUnitSound, _startMovingSound, _selectWeaponSound, _annoyedSound;
 	std::vector<int> _loftempsSet;
 	std::vector<std::pair<Uint8, Uint8> > _recolor;
-	Armor *_armor;
+	const Armor *_armor;
 	Soldier *_geoscapeSoldier;
-	Unit *_unitRules;
+	const Unit *_unitRules;
+	const RuleVoiceSet* _unitVoiceSet = nullptr;
 	std::string _type;
 	std::string _rank;
 	std::string _race;
@@ -170,7 +171,8 @@ private:
 	SpecialAbility _specab;
 	int _standHeight, _kneelHeight, _floatHeight;
 	int _lastReloadSound;
-	int _value, _moveSound;
+	int _valueKilled, _valueCaptured, _valueCapturedResearched, _valueCivilian, _valueCivilianKilledByXcom, _valueVIP;
+	int _moveSound;
 	int _intelligence, _aggression;
 	int _maxViewDistanceAtDark, _maxViewDistanceAtDay;
 	int _maxViewDistanceAtDarkSquared;
@@ -234,11 +236,11 @@ public:
 	/// Creates a BattleUnit from solder.
 	BattleUnit(const Mod *mod, Soldier *soldier, int depth, const RuleStartingCondition* sc);
 	/// Creates a BattleUnit from unit.
-	BattleUnit(const Mod *mod, Unit *unit, UnitFaction faction, int id, const RuleEnviroEffects* enviro, Armor *armor, StatAdjustment *adjustment, int depth, const RuleStartingCondition* sc);
+	BattleUnit(const Mod *mod, const Unit *unit, UnitFaction faction, int id, const RuleEnviroEffects* enviro, const Armor *armor, StatAdjustment *adjustment, int depth, const RuleStartingCondition* sc);
 	/// Updates BattleUnit's armor and related attributes (after a change/transformation of armor).
-	void updateArmorFromSoldier(const Mod *mod, Soldier *soldier, Armor *ruleArmor, int depth, bool nextStage, const RuleStartingCondition* sc);
+	void updateArmorFromSoldier(const Mod *mod, Soldier *soldier, const Armor *ruleArmor, int depth, bool nextStage, const RuleStartingCondition* sc);
 	/// Updates BattleUnit's armor and related attributes (after a change/transformation of armor).
-	void updateArmorFromNonSoldier(const Mod* mod, Armor* newArmor, int depth, bool nextStage, const RuleStartingCondition* sc);
+	void updateArmorFromNonSoldier(const Mod* mod, const Armor* newArmor, int depth, bool nextStage, const RuleStartingCondition* sc);
 	/// Cleans up the BattleUnit.
 	~BattleUnit();
 	/// Loads the unit from YAML.
@@ -437,6 +439,8 @@ public:
 	AIModule *getAIModule() const;
 	/// Set AI Module.
 	void setAIModule(AIModule *ai);
+	/// Increases the AI walk abort counter.
+	void increaseAIWalkAbortCounter();
 	/// Gets weight value as hostile unit.
 	AIAttackWeight getAITargetWeightAsHostile(const Mod *mod) const;
 	/// Gets weight value as civilian unit when consider by aliens.
@@ -587,8 +591,13 @@ public:
 	int getKneelHeight() const;
 	/// Get the unit's loft ID.
 	int getLoftemps(int entry = 0) const;
-	/// Get the unit's value.
-	int getValue() const;
+	/// Get the unit's value. Used for score at debriefing.
+	int getValueKilled() const { return _valueKilled; }
+	int getValueCaptured() const { return _valueCaptured; }
+	int getValueCapturedResearched() const { return _valueCapturedResearched; }
+	int getValueCivilian() const { return _valueCivilian; }
+	int getValueCivilianKilledByXcom() const { return _valueCivilianKilledByXcom; }
+	int getValueVIP() const { return _valueVIP; }
 	/// Get the reload sound (of the last reloaded weapon).
 	int getReloadSound() const { return _lastReloadSound; }
 	/// Get the unit's death sounds.
@@ -718,7 +727,12 @@ public:
 	/// Get this unit's original faction
 	UnitFaction getOriginalFaction() const;
 	/// Get alien/HWP unit.
-	Unit *getUnitRules() const { return _unitRules; }
+	const Unit *getUnitRules() const { return _unitRules; }
+	/// Get unit voice set.
+	const RuleVoiceSet* getUnitVoiceSet() const { return _unitVoiceSet; }
+	/// Set unit voice set. Propagate to geoscape soldier if possible.
+	void setUnitAndSoldierVoiceSet(const RuleVoiceSet* voiceSet);
+
 	/// get the vector of units we've seen this turn.
 	std::vector<BattleUnit *> &getUnitsSpottedThisTurn();
 	/// get the vector of units we've seen this turn.
@@ -897,4 +911,3 @@ public:
 };
 
 } //namespace OpenXcom
-

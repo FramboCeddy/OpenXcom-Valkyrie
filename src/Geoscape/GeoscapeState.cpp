@@ -2077,7 +2077,7 @@ void GeoscapeState::time30Minutes()
 		if (ge->isOver())
 		{
 			bool interrupted = false;
-			if (!ge->getRules().getInterruptResearch().empty())
+			if (ge->getRules().getInterruptResearch())
 			{
 				if (_game->getSavedGame()->isResearched(ge->getRules().getInterruptResearch(), false))
 				{
@@ -2498,32 +2498,17 @@ void GeoscapeState::time1Day()
 			xbase->removeResearch(project);
 			project = nullptr;
 
-			// 3b. handle interrogation
-			if (Options::retainCorpses && research->needItem() && research->destroyItem())
-			{
-				auto* ruleUnit = mod->getUnit(research->getName(), false); // don't use getNeededItem()
-				if (ruleUnit)
-				{
-					auto* ruleCorpse = ruleUnit->getArmor()->getCorpseGeoscape();
-					if (ruleCorpse && ruleCorpse->isRecoverable() && ruleCorpse->isCorpseRecoverable())
-					{
-						xbase->getStorageItems()->addItem(ruleCorpse);
-					}
-				}
-			}
-			// 3bb. add core research to research diary (before the getonefrees)
+			// 3b. add core research to research diary (before the getonefrees)
 			addResearchDiaryEntryForBase(research, DiscoverySourceType::BASE, xbase, nullptr);
-			RuleResearch* lookupResearch = mod->getResearch(research->getLookup(), true);
-			if (lookupResearch)
+			if (const RuleResearch* lookupResearch = research->getLookup())
 				addResearchDiaryEntryForBase(lookupResearch, DiscoverySourceType::BASE, xbase, nullptr);
 			// 3c. handle getonefrees (topic+lookup)
 			if ((bonus = saveGame->selectGetOneFree(research)))
 			{
 				addResearchDiaryEntryForBase(bonus, DiscoverySourceType::FREE_FROM, nullptr, research);
 				saveGame->addFinishedResearch(bonus, mod, xbase);
-				if (!bonus->getLookup().empty())
+				if (const RuleResearch* bonusLookup = bonus->getLookup())
 				{
-					RuleResearch* bonusLookup = mod->getResearch(bonus->getLookup(), true);
 					addResearchDiaryEntryForBase(bonusLookup, DiscoverySourceType::FREE_FROM, nullptr, research);
 					saveGame->addFinishedResearch(bonusLookup, mod, xbase);
 				}
@@ -2531,16 +2516,15 @@ void GeoscapeState::time1Day()
 			// 3d. determine and remember if the ufopedia article should pop up again or not
 			// Note: because different topics may lead to the same lookup
 			const RuleResearch *newResearch = research;
-			std::string name = research->getLookup().empty() ? research->getName() : research->getLookup();
-			if (saveGame->isResearched(name, false))
+			if (saveGame->isResearched(research->getLookup() ? research->getLookup() : research, false))
 			{
 				newResearch = 0;
 			}
 			// 3e. handle core research (topic+lookup)
 			saveGame->addFinishedResearch(research, mod, xbase);
-			if (!research->getLookup().empty())
+			if (research->getLookup())
 			{
-				saveGame->addFinishedResearch(mod->getResearch(research->getLookup(), true), mod, xbase);
+				saveGame->addFinishedResearch(research->getLookup(), mod, xbase);
 			}
 			// 3e. handle cutscene
 			if (!research->getCutscene().empty())
@@ -3614,7 +3598,7 @@ void GeoscapeState::handleBaseDefense(Base *base, Ufo *ufo)
 /**
  * Determine the alien missions to start this month.
  */
-void GeoscapeState::determineAlienMissions(bool isNewMonth, const RuleEvent* eventRules)
+void GeoscapeState::determineAlienMissions(bool isNewMonth, const RuleEvent* p_eventRules)
 {
 	SavedGame *save = _game->getSavedGame();
 	AlienStrategy &strategy = save->getAlienStrategy();
@@ -3794,21 +3778,22 @@ void GeoscapeState::determineAlienMissions(bool isNewMonth, const RuleEvent* eve
 			int arcsEnabled = 0;
 			// level four condition check: check maxArcs (duplicates count, arcs enabled by other commands or in any other way count too!)
 			{
-				for (auto& seqArc : arcCommand->getSequentialArcs())
+				for (auto* seqArc : arcCommand->getSequentialArcs())
 				{
 					if (save->isResearched(seqArc))
 						++arcsEnabled;
 					else
-						disabledSeqArcs.push_back(seqArc);
+						disabledSeqArcs.push_back(seqArc->getName());
 				}
 				WeightedOptions tmp = arcCommand->getRandomArcs(); // copy for the iterator, because of getNames()
 				disabledRngArcs = tmp; // copy for us to modify
 				for (auto& rngArc : tmp.getNames())
 				{
-					if (save->isResearched(rngArc))
+					auto* research = mod->getResearch(rngArc, true);
+					if (save->isResearched(research))
 					{
 						++arcsEnabled;
-						disabledRngArcs.set(rngArc, 0); // delete
+						disabledRngArcs.set(research->getName(), 0); // delete
 					}
 				}
 			}
@@ -3821,14 +3806,14 @@ void GeoscapeState::determineAlienMissions(bool isNewMonth, const RuleEvent* eve
 				++arcsEnabled;
 				if (ruleResearchSeq)
 				{
-					if (ruleResearchSeq->getLookup().empty())
+					if (ruleResearchSeq->getLookup())
 					{
-						Ufopaedia::openArticle(_game, ruleResearchSeq->getName());
+						save->addFinishedResearch(ruleResearchSeq->getLookup(), mod, hq, true);
+						Ufopaedia::openArticle(_game, ruleResearchSeq->getLookup()->getName());
 					}
 					else
 					{
-						save->addFinishedResearch(mod->getResearch(ruleResearchSeq->getLookup(), true), mod, hq, true);
-						Ufopaedia::openArticle(_game, ruleResearchSeq->getLookup());
+						Ufopaedia::openArticle(_game, ruleResearchSeq->getName());
 					}
 				}
 			}
@@ -3840,14 +3825,14 @@ void GeoscapeState::determineAlienMissions(bool isNewMonth, const RuleEvent* eve
 				++arcsEnabled; // for good measure :)
 				if (ruleResearchRng)
 				{
-					if (ruleResearchRng->getLookup().empty())
+					if (ruleResearchRng->getLookup())
 					{
-						Ufopaedia::openArticle(_game, ruleResearchRng->getName());
+						save->addFinishedResearch(ruleResearchRng->getLookup(), mod, hq, true);
+						Ufopaedia::openArticle(_game, ruleResearchRng->getLookup()->getName());
 					}
 					else
 					{
-						save->addFinishedResearch(mod->getResearch(ruleResearchRng->getLookup(), true), mod, hq, true);
-						Ufopaedia::openArticle(_game, ruleResearchRng->getLookup());
+						Ufopaedia::openArticle(_game, ruleResearchRng->getName());
 					}
 				}
 			}
@@ -3863,10 +3848,10 @@ void GeoscapeState::determineAlienMissions(bool isNewMonth, const RuleEvent* eve
 		RuleMissionScript *command = isNewMonth ? mod->getMissionScript(missionScriptName) : mod->getAdhocScript(missionScriptName);
 
 		// level zero condition check: filter adhoc mission scripts by tags
-		if (!isNewMonth && eventRules)
+		if (!isNewMonth && p_eventRules)
 		{
 			bool matchFound = false;
-			for (auto& atag : eventRules->getAdhocMissionScriptTags())
+			for (auto& atag : p_eventRules->getAdhocMissionScriptTags())
 			{
 				for (auto& btag : command->getAdhocMissionScriptTags())
 				{
@@ -4316,7 +4301,7 @@ bool GeoscapeState::attemptAlienRaceEvolution(int month, AlienBase* ab) const
 {
 	for (const auto& tuple : ab->getDeployment()->getAlienRaceEvolution())
 	{
-		if (std::get<0>(tuple) <= month && std::get<1>(tuple) == ab->getAlienRace())
+		if ((int)std::get<0>(tuple) <= month && std::get<1>(tuple) == ab->getAlienRace())
 		{
 			auto* newRace = _game->getMod()->getAlienRace(std::get<2>(tuple), false);
 			if (newRace)

@@ -22,6 +22,7 @@
 #include "LoadYaml.h"
 #include "Mod.h"
 #include "Armor.h"
+#include "RuleVoiceSet.h"
 #include <algorithm>
 
 namespace OpenXcom
@@ -32,7 +33,8 @@ namespace OpenXcom
  * @param type String defining the type.
  */
 Unit::Unit(const std::string &type) :
-	_type(type), _liveAlienName(Mod::STR_NULL), _showFullNameInAlienInventory(-1), _armor(nullptr), _standHeight(0), _kneelHeight(0), _floatHeight(0), _value(0),
+	_type(type), _liveAlienName(Mod::STR_NULL), _showFullNameInAlienInventory(-1), _armor(nullptr), _standHeight(0), _kneelHeight(0), _floatHeight(0),
+	_valueKilled(0), _valueCaptured(-999), _valueCapturedResearched(10), _valueCivilian(-999), _valueCivilianKilledByXcom(-999), _valueVIP(-999),
 	_moraleLossWhenKilled(100), _moveSound(-1), _intelligence(0), _aggression(0),
 	_spotter(0), _sniper(0), _energyRecovery(30), _specab(SPECAB_NONE), _livingWeapon(false),
 	_psiWeapon("ALIEN_PSI_WEAPON"), _capturable(true), _canSurrender(false), _autoSurrender(false),
@@ -86,7 +88,12 @@ void Unit::load(const YAML::YamlNodeReader& node, Mod *mod)
 	{
 		throw Exception("Error with unit "+ _type +": Unit height may not exceed 25");
 	}
-	reader.tryRead("value", _value);
+	reader.tryRead("value", _valueKilled);
+	reader.tryRead("valueCaptured", _valueCaptured);
+	reader.tryRead("valueCapturedResearched", _valueCapturedResearched);
+	reader.tryRead("valueCivilian", _valueCivilian);
+	reader.tryRead("valueCivilianKilledByXcom", _valueCivilianKilledByXcom);
+	reader.tryRead("valueVIP", _valueVIP);
 	reader.tryRead("moraleLossWhenKilled", _moraleLossWhenKilled);
 	reader.tryRead("intelligence", _intelligence);
 	reader.tryRead("aggression", _aggression);
@@ -140,6 +147,8 @@ void Unit::load(const YAML::YamlNodeReader& node, Mod *mod)
 	mod->loadSoundOffset(_type, _selectWeaponSound, reader["selectWeaponSound"], "BATTLE.CAT");
 	mod->loadSoundOffset(_type, _annoyedSound, reader["annoyedSound"], "BATTLE.CAT");
 
+	mod->loadNames(_type, _voiceSetNames, reader["voiceSets"]);
+
 	mod->loadSoundOffset(_type, _moveSound, reader["moveSound"], "BATTLE.CAT");
 }
 
@@ -148,6 +157,16 @@ void Unit::load(const YAML::YamlNodeReader& node, Mod *mod)
  */
 void Unit::afterLoad(const Mod* mod)
 {
+	if (_valueCaptured == -999)
+		_valueCaptured = _valueKilled * 2;
+	// _valueCapturedResearched was already defaulted (10) in the constructor
+	if (_valueCivilian == -999)
+		_valueCivilian = _valueKilled;
+	if (_valueCivilianKilledByXcom == -999)
+		_valueCivilianKilledByXcom = (_valueCivilian * 5) / 3; // e.g. killed by aliens = 30, killed by xcom = 50
+	if (_valueVIP == -999)
+		_valueVIP = _valueKilled;
+
 	mod->linkRule(_armor, _armorName);
 	mod->linkRule(_spawnUnit, _spawnUnitName);
 	mod->linkRule(_builtInWeapons, _builtInWeaponsNames);
@@ -159,6 +178,8 @@ void Unit::afterLoad(const Mod* mod)
 	{
 		mod->linkRule(_liveAlien, _liveAlienName);
 	}
+
+	mod->linkRule(_voiceSets, _voiceSetNames);
 
 	if (Mod::isEmptyRuleName(_civilianRecoveryTypeName) == false)
 	{
@@ -223,7 +244,7 @@ const std::string& Unit::getType() const
  * Returns the unit's stats data object.
  * @return The unit's stats.
  */
-UnitStats *Unit::getStats()
+const UnitStats *Unit::getStats() const
 {
 	return &_stats;
 }
@@ -259,9 +280,9 @@ int Unit::getFloatHeight() const
  * Gets the unit's armor type.
  * @return The unit's armor type.
  */
-Armor* Unit::getArmor() const
+const Armor* Unit::getArmor() const
 {
-	return const_cast<Armor*>(_armor); //TODO: fix this function usage to remove const cast
+	return _armor;
 }
 
 /**
@@ -280,15 +301,6 @@ std::string Unit::getRace() const
 std::string Unit::getRank() const
 {
 	return _rank;
-}
-
-/**
- * Gets the unit's value - for scoring.
- * @return The unit's value.
- */
-int Unit::getValue() const
-{
-	return _value;
 }
 
 /**
@@ -316,6 +328,19 @@ const std::vector<int> &Unit::getPanicSounds() const
 const std::vector<int> &Unit::getBerserkSounds() const
 {
 	return _berserkSound;
+}
+
+/**
+ * Gets a random voice set.
+ * @return A random voice set.
+ */
+const RuleVoiceSet* Unit::getRandomVoiceSet() const
+{
+	if (!_voiceSets.empty())
+	{
+		return _voiceSets[RNG::seedless(0, _voiceSets.size() - 1)];
+	}
+	return nullptr;
 }
 
 /**
@@ -536,6 +561,10 @@ void Unit::ScriptRegister(ScriptParserBase* parser)
 	Bind<Unit> un = { parser };
 
 	un.add<&getTypeScript>("getType");
+	un.add<&Unit::getSpawnUnit>("getSpawnUnit");
+	un.add<&Unit::getCivilianRecoveryItemType>("getCivilianRecoveryItemType");
+	// un.add<&Unit::getCivilianRecoverySoldierType>("getCivilianRecoverySoldierType"); //TODO: add `RuleSoldier` to scripts
+	un.add<&Unit::getLiveAlienGeoscape>("getLiveAlienGeoscape");
 
 	un.addDebugDisplay<&debugDisplayScript>();
 }
