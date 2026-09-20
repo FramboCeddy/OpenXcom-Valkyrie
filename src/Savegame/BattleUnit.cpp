@@ -2528,22 +2528,23 @@ int BattleUnit::getPsiAccuracy(BattleActionAttack::ReadOnly attack)
 	auto actionType = attack.type;
 	auto item = attack.weapon_item;
 
-	int psiAcc = 0;
-	if (actionType == BA_MINDCONTROL)
-	{
-		psiAcc = item->getRules()->getAccuracyMind();
-	}
-	else if (actionType == BA_PANIC)
-	{
-		psiAcc = item->getRules()->getAccuracyPanic();
-	}
-	else if (actionType == BA_USE)
-	{
-		psiAcc = item->getRules()->getAccuracyUse();
-	}
+	int psiAcc = item->getRules()->getAccuracyMultiplier(attack);
+	psiAcc = psiAcc * attack.attacker->getHandModifier(attack) / 100;
 
-	psiAcc += item->getRules()->getAccuracyMultiplier(attack);
-
+	switch (actionType)
+	{
+	case BA_MINDCONTROL:
+		psiAcc += item->getRules()->getAccuracyMind();
+		break;
+	case BA_PANIC:
+		psiAcc += item->getRules()->getAccuracyPanic();
+		break;
+	case BA_USE:
+		psiAcc += item->getRules()->getAccuracyUse();
+		break;
+	default:
+		break;
+	}
 	return psiAcc;
 }
 
@@ -2554,7 +2555,7 @@ int BattleUnit::getPsiAccuracy(BattleActionAttack::ReadOnly attack)
  * @param item
  * @return firing Accuracy
  */
-int BattleUnit::getFiringAccuracy(BattleActionAttack::ReadOnly attack, const Mod *mod)
+int BattleUnit::getFiringAccuracy(BattleActionAttack::ReadOnly attack)
 {
 	auto actionType = attack.type;
 	auto item = attack.weapon_item;
@@ -2584,7 +2585,7 @@ int BattleUnit::getFiringAccuracy(BattleActionAttack::ReadOnly attack, const Mod
 		break;
 	case BA_CQB:
 		kneeled = false;
-		result = item->getRules()->getCloseQuartersMultiplier(attack) * item->getRules()->getAccuracyCloseQuarters(mod) / 100;
+		result = item->getRules()->getCloseQuartersMultiplier(attack) * item->getRules()->getAccuracyCloseQuarters() / 100;
 		break;
 	default:
 		break;
@@ -2592,27 +2593,35 @@ int BattleUnit::getFiringAccuracy(BattleActionAttack::ReadOnly attack, const Mod
 
 	if (kneeled)
 	{
-		result = result * item->getRules()->getKneelBonus(mod) / 100;
+		result = result * item->getRules()->getKneelBonus() / 100;
 	}
 
-	if (item->getRules()->isTwoHanded() && actionType != BA_THROW)
-	{
-		// two handed weapon, means one hand should be empty
-		if (attack.attacker->getRightHandWeapon() != 0 && attack.attacker->getLeftHandWeapon() != 0)
-		{
-			result = result * item->getRules()->getOneHandedPenalty(mod) / 100;
-		}
-		else if (item->getRules()->isSpecialUsingEmptyHand())
-		{
-			// for special weapons that use an empty hand... already one hand with an item is enough for the penalty to apply
-			if (attack.attacker->getRightHandWeapon() != 0 || attack.attacker->getLeftHandWeapon() != 0)
-			{
-				result = result * item->getRules()->getOneHandedPenalty(mod) / 100;
-			}
-		}
-	}
-
+	result = result * attack.attacker->getHandModifier(attack) / 100;
 	return result * modifier / 100;
+}
+
+/// @brief Gets the penalty for using a two-handed weapon as a one-handed
+/// @param attack the attack being made
+/// @return modifier to accuracy, in percentage points
+int BattleUnit::getHandModifier(BattleActionAttack::ReadOnly attack) const
+{
+	if (!attack.weapon_item->getRules()->isTwoHanded() || attack.type == BA_THROW)
+	{
+		return 100;
+	}
+
+	// two handed weapon, means one hand should be empty
+	if (attack.attacker->getRightHandWeapon() && attack.attacker->getLeftHandWeapon())
+	{
+		return attack.weapon_item->getRules()->getOneHandedPenalty();
+	}
+	// for special weapons that use an empty hand, one hand with an item is enough for penalty
+	else if (attack.weapon_item->getRules()->isSpecialUsingEmptyHand() && (attack.attacker->getRightHandWeapon() || attack.attacker->getLeftHandWeapon()))
+	{
+		return attack.weapon_item->getRules()->getOneHandedPenalty();
+	}
+
+	return 100;
 }
 
 /**

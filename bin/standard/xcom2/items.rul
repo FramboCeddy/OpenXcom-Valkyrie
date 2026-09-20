@@ -737,7 +737,7 @@ items: #done
     handSprite: 384
     hitSound: 43
     battleType: 9
-    twoHanded: true
+    twoHanded: false
     invWidth: 1
     invHeight: 3
     tuUse: 25

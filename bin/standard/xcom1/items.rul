@@ -620,7 +620,7 @@ items:
     handSprite: 88
     hitSound: 36
     battleType: 9
-    twoHanded: true
+    twoHanded: false
     invWidth: 1
     invHeight: 3
     tuUse: 25

@@ -124,7 +124,7 @@ void SkillMenuState::addItem(const RuleSkill* skill, int *id, SDLKey key)
 
 	if (_action->weapon)
 	{
-		int acc = BattleUnit::getFiringAccuracy(BattleActionAttack::GetBeforeShoot(ba, _action->actor, _action->weapon, _action->skillRules), _game->getMod());
+		int acc = BattleUnit::getFiringAccuracy(BattleActionAttack::GetBeforeShoot(ba, _action->actor, _action->weapon, _action->skillRules));
 		if (ba == BA_THROW || ba == BA_AIMEDSHOT || ba == BA_SNAPSHOT || ba == BA_AUTOSHOT || ba == BA_LAUNCH || ba == BA_HIT)
 			s1 = tr("STR_ACCURACY_SHORT").arg(Unicode::formatPercentage(acc));
 	}

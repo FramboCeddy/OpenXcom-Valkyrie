@@ -1913,7 +1913,7 @@ void StatsForNerdsState::initItemList()
 
 	if (itemBattleType == BT_GRENADE || _showDebug)
 	{
-		addInteger(ss, itemRule->getExplodeInventory(mod), "explodeInventory", 0); // not raw!
+		addInteger(ss, itemRule->getExplodeInventory(), "explodeInventory", 0); // not raw!
 	}
 	if (itemBattleType == BT_FIREARM
 		|| itemBattleType == BT_GRENADE
@@ -1921,15 +1921,15 @@ void StatsForNerdsState::initItemList()
 		|| itemBattleType == BT_FLARE
 		|| _showDebug)
 	{
-		addIntegerPercent(ss, itemRule->getNoLOSAccuracyPenalty(mod), "noLOSAccuracyPenalty", -1); // not raw!
+		addIntegerPercent(ss, itemRule->getNoLOSAccuracyPenalty(), "noLOSAccuracyPenalty", -1); // not raw!
 	}
 	if (itemBattleType == BT_FIREARM || _showDebug)
 	{
-		addIntegerPercent(ss, itemRule->getKneelBonus(mod), "kneelBonus", 115); // not raw!
+		addIntegerPercent(ss, itemRule->getKneelBonus(), "kneelBonus", 115); // not raw!
 	}
 	addBoolean(ss, itemRule->isTwoHanded(), "twoHanded");
 	addBoolean(ss, itemRule->isBlockingBothHands(), "blockBothHands");
-	int oneHandedPenaltyCurrent = itemRule->getOneHandedPenalty(mod);
+	int oneHandedPenaltyCurrent = itemRule->getOneHandedPenalty();
 	int oneHandedPenaltyDefault = itemRule->isTwoHanded() ? 80 : oneHandedPenaltyCurrent;
 	addIntegerPercent(ss, oneHandedPenaltyCurrent, "oneHandedPenalty", oneHandedPenaltyDefault); // not raw!
 
@@ -1996,7 +1996,7 @@ void StatsForNerdsState::initItemList()
 	if ((mod->getEnableCloseQuartersCombat() && itemBattleType == BT_FIREARM) || _showDebug)
 	{
 		addRuleStatBonus(ss, *itemRule->getCloseQuartersMultiplierRaw(), "closeQuartersMultiplier");
-		addIntegerPercent(ss, itemRule->getAccuracyCloseQuarters(mod), "accuracyCloseQuarters", 100); // not raw!
+		addIntegerPercent(ss, itemRule->getAccuracyCloseQuarters(), "accuracyCloseQuarters", 100); // not raw!
 	}
 
 	for (int i = 0; i < 2; i++)

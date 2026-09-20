@@ -345,13 +345,8 @@ void AlienInventoryState::calculateMeleeWeapon(BattleUnit* unit, BattleItem* wea
 	ss << tr(weapon->getRules()->getType()) << " > ";
 	if (meleeDodgeTarget)
 	{
-		BattleActionAttack attack;
-		attack.type = BA_HIT;
-		attack.attacker = unit;
-		attack.weapon_item = weapon;
-		attack.damage_item = weapon;
-		attack.skill_rules = nullptr;
-		int hitChance = BattleUnit::getFiringAccuracy(attack, _game->getMod());
+		BattleActionAttack attack = {BA_HIT, unit, weapon, weapon, nullptr};
+		int hitChance = BattleUnit::getFiringAccuracy(attack);
 
 		BattleUnit* victim = meleeDodgeTarget;
 		if (victim)
@@ -426,13 +421,8 @@ void AlienInventoryState::calculateRangedWeapon(BattleUnit* unit, BattleItem* we
 		for (const auto* victim : closeQuartersTargetList)
 		{
 			{
-				BattleActionAttack attack;
-				attack.type = BA_CQB;
-				attack.attacker = unit;
-				attack.weapon_item = weapon;
-				attack.damage_item = weapon;
-				attack.skill_rules = nullptr;
-				int hitChance = BattleUnit::getFiringAccuracy(attack, _game->getMod());
+				BattleActionAttack attack = {BA_CQB, unit, weapon, weapon, nullptr};
+				int hitChance = BattleUnit::getFiringAccuracy(attack);
 
 				if (victim)
 				{

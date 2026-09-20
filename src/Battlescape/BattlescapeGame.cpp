@@ -545,7 +545,7 @@ void BattlescapeGame::endTurn()
 				BattleUnit *unit = item->getOwner();
 				if (!tile && unit && item->getFuseTimer() != -1 && !_allEnemiesNeutralized)
 				{
-					int explodeAnyway = rule->getExplodeInventory(getMod());
+					int explodeAnyway = rule->getExplodeInventory();
 					if (explodeAnyway >= 2 || (explodeAnyway == 1 && item->getSlot() && item->getSlot()->getType() != INV_HAND))
 					{
 						tile = unit->getTile();

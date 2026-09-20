@@ -357,7 +357,7 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	// maxRange is the maximum range a projectile shall ever travel in voxel space
 	// up to 2 tiles diagonally for melee hits (like reaper v reaper)			// 1000 tiles
 	double maxRange = (_action.type == BA_HIT) ? 46 :
-					  keepRange ? realDistance : 16 * 1000; 
+					  keepRange ? realDistance : 16 * 1000;
 
 	if (_action.type != BA_HIT)
 	{
@@ -395,7 +395,7 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 	}
 
 	// Apply penalty for having no LOS to target
-	int noLOSAccuracyPenalty = _action.weapon->getRules()->getNoLOSAccuracyPenalty(_mod);
+	int noLOSAccuracyPenalty = _action.weapon->getRules()->getNoLOSAccuracyPenalty();
 	if (noLOSAccuracyPenalty != -1)
 	{
 		Tile *tile = _save->getTile(target->toTile());

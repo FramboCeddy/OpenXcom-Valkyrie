@@ -1710,7 +1710,7 @@ int AIModule::scoreFiringMode(BattleAction *action, BattleUnit *target, bool che
 	auto* weapon = action->weapon->getRules();
 
 	// Get base accuracy for the action
-	int accuracy = BattleUnit::getFiringAccuracy(BattleActionAttack::GetBeforeShoot(*action), _save->getMod());
+	int accuracy = BattleUnit::getFiringAccuracy(BattleActionAttack::GetBeforeShoot(*action));
 	int distanceSq = _unit->distance3dToUnitSq(target);
 	int distance = (int)std::ceil(sqrt(float(distanceSq)));
 

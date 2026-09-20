@@ -2638,7 +2638,7 @@ std::vector<TileEngine::ReactionScore> TileEngine::getSpottingUnits(BattleUnit* 
 					if (reactionFireThreshold > 0)
 					{
 						BattleItem *weapon = rs.weapon;
-						int accuracy = BattleUnit::getFiringAccuracy(BattleActionAttack::GetBeforeShoot(rs.attackType, rs.unit, weapon), _save->getBattleGame()->getMod());
+						int accuracy = BattleUnit::getFiringAccuracy(BattleActionAttack::GetBeforeShoot(rs.attackType, rs.unit, weapon));
 						int distanceSq = unit->distance3dToUnitSq(bu);
 						int distance = (int)std::ceil(sqrt(float(distanceSq)));
 
@@ -4764,7 +4764,9 @@ void TileEngine::togglePersonalLighting()
 int TileEngine::psiAttackCalculate(BattleActionAttack::ReadOnly attack, const BattleUnit *victim)
 {
 	if (!victim)
+	{
 		return 0;
+	}
 
 	BattleActionType type = attack.type;
 	auto* attacker = attack.attacker;
@@ -4931,7 +4933,7 @@ int TileEngine::meleeAttackCalculate(BattleActionAttack::ReadOnly attack, const 
 	if (!victim)
 		return 0;
 
-	int attackStrength = BattleUnit::getFiringAccuracy(attack, _save->getBattleGame()->getMod());
+	int attackStrength = BattleUnit::getFiringAccuracy(attack);
 	int defenseStrength = victim->getArmor()->getMeleeDodge(victim);
 	int arc = getArcDirection(getDirectionTo(victim->getPositionVexels(), attack.attacker->getPositionVexels()), victim->getDirection());
 	int defenseStrengthPenalty = Clamp((int)(defenseStrength * (arc * victim->getArmor()->getMeleeDodgeBackPenalty() / 4.0f)), 0, std::max(0, defenseStrength));

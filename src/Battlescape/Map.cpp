@@ -1276,8 +1276,7 @@ void Map::drawTerrain(Surface *surface)
 
 							if (_cursorType == CT_AIM || _cursorType == CT_THROW) // TODO: add launch accuracy here
 							{
-								int accuracy = BattleUnit::getFiringAccuracy(attack, _game->getMod());
-
+								int accuracy = BattleUnit::getFiringAccuracy(attack);
 								{
 									int upperLimit, lowerLimit;
 									int dropoff = weapon->calculateLimits(upperLimit, lowerLimit, _save->getDepth(), action->type);
@@ -1301,7 +1300,7 @@ void Map::drawTerrain(Surface *surface)
 
 								// Include LOS penalty for tiles in the unit's current view range
 								// Don't recalculate LOS for outside of the current FOV
-								int noLOSAccuracyPenalty = action->weapon->getRules()->getNoLOSAccuracyPenalty(_game->getMod());
+								int noLOSAccuracyPenalty = action->weapon->getRules()->getNoLOSAccuracyPenalty();
 								if (noLOSAccuracyPenalty != -1)
 								{
 									bool hasLOS = false;

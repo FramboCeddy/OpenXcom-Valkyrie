@@ -396,7 +396,9 @@ public:
 	/// Calculate psi attack accuracy.
 	static int getPsiAccuracy(BattleActionAttack::ReadOnly attack);
 	/// Calculate firing accuracy.
-	static int getFiringAccuracy(BattleActionAttack::ReadOnly attack, const Mod *mod);
+	static int getFiringAccuracy(BattleActionAttack::ReadOnly attack);
+	/// get's the modifier for using a two-handed weapon as a one-handed weapon
+	int getHandModifier(BattleActionAttack::ReadOnly attack) const;
 	/// Calculate accuracy modifier.
 	int getAccuracyModifier(const BattleItem *item = 0) const;
 	/// get's the modifier for firing/melee/throwing from health reduction.

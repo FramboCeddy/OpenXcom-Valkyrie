@@ -475,7 +475,7 @@ bool ProjectileFlyBState::createNewProjectile()
 	BattleActionAttack attack = BattleActionAttack::GetAferShoot(_action, _ammo);
 	if (_action.type == BA_THROW)
 	{
-		_projectileImpact = projectile->calculateThrow(BattleUnit::getFiringAccuracy(attack, _parent->getMod()) / accuracyDivider);
+		_projectileImpact = projectile->calculateThrow(BattleUnit::getFiringAccuracy(attack) / accuracyDivider);
 		const RuleItem *ruleItem = _action.weapon->getRules();
 		if (_projectileImpact != V_OUTOFBOUNDS && _projectileImpact != V_EMPTY)
 		{
@@ -509,7 +509,7 @@ bool ProjectileFlyBState::createNewProjectile()
 	}
 	else if (_action.weapon->getArcingShot(_action.type)) // special code for the "spit" trajectory
 	{
-		_projectileImpact = projectile->calculateThrow(BattleUnit::getFiringAccuracy(attack, _parent->getMod()) / accuracyDivider);
+		_projectileImpact = projectile->calculateThrow(BattleUnit::getFiringAccuracy(attack) / accuracyDivider);
 		if (_projectileImpact != V_EMPTY)
 		{
 			// set the soldier in an aiming position
@@ -546,11 +546,11 @@ bool ProjectileFlyBState::createNewProjectile()
 	{
 		if (_originVoxel != TileEngine::invalid)
 		{
-			_projectileImpact = projectile->calculateTrajectory(BattleUnit::getFiringAccuracy(attack, _parent->getMod()) / accuracyDivider, _originVoxel, false);
+			_projectileImpact = projectile->calculateTrajectory(BattleUnit::getFiringAccuracy(attack) / accuracyDivider, _originVoxel, false);
 		}
 		else
 		{
-			_projectileImpact = projectile->calculateTrajectory(BattleUnit::getFiringAccuracy(attack, _parent->getMod()) / accuracyDivider);
+			_projectileImpact = projectile->calculateTrajectory(BattleUnit::getFiringAccuracy(attack) / accuracyDivider);
 		}
 		if (_targetVoxel != TileEngine::invalid.toVoxel() && (_projectileImpact != V_EMPTY || _action.type == BA_LAUNCH))
 		{
@@ -969,7 +969,7 @@ void ProjectileFlyBState::projectileHitUnit(Position pos)
 		{
 			int distanceSq = _action.actor->distance3dToUnitSq(victim);
 			int distance = (int)std::ceil(sqrt(float(distanceSq)));
-			int accuracy = BattleUnit::getFiringAccuracy(BattleActionAttack::GetAferShoot(_action, _ammo), _parent->getMod());
+			int accuracy = BattleUnit::getFiringAccuracy(BattleActionAttack::GetAferShoot(_action, _ammo));
 
 			{
 				int upperLimit, lowerLimit;

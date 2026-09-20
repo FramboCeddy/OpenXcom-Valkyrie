@@ -813,6 +813,30 @@ void RuleItem::afterLoad(const Mod* mod)
 		}
 	}
 
+	// assign global values if we do not have a custom value set
+	if (_kneelBonus == -1)
+	{
+		_kneelBonus = mod->getKneelBonusGlobal();
+	}
+	if (_noLOSAccuracyPenalty == -1)
+	{
+		_noLOSAccuracyPenalty = mod->getNoLOSAccuracyPenaltyGlobal();
+	}
+	if (_oneHandedPenalty == -1)
+	{
+		_oneHandedPenalty = mod->getOneHandedPenaltyGlobal();
+	}
+	if (_accuracyCloseQuarters == -1)
+	{
+		_accuracyCloseQuarters = mod->getCloseQuartersAccuracyGlobal();
+	}
+	if (_explodeInventory == -1)
+	{
+		_explodeInventory = _battleType == BT_GRENADE ? mod->getExplodeInventoryGlobal() : 0;
+	}
+
+
+
 	//remove not needed data
 	Collections::removeAll(_requiresName);
 	Collections::removeAll(_requiresBuyName);
@@ -1470,27 +1494,27 @@ int RuleItem::getAccuracyThrow() const
  * Gets the item's accuracy for close quarters combat.
  * @return The close quarters accuracy.
  */
-int RuleItem::getAccuracyCloseQuarters(const Mod *mod) const
+int RuleItem::getAccuracyCloseQuarters() const
 {
-	return _accuracyCloseQuarters != -1 ? _accuracyCloseQuarters : mod->getCloseQuartersAccuracyGlobal();
+	return _accuracyCloseQuarters;
 }
 
 /**
  * Gets the item's accuracy penalty for out-of-LOS targets
  * @return The no-LOS accuracy penalty.
  */
-int RuleItem::getNoLOSAccuracyPenalty(Mod *mod) const
+int RuleItem::getNoLOSAccuracyPenalty() const
 {
-	return _noLOSAccuracyPenalty != -1 ? _noLOSAccuracyPenalty : mod->getNoLOSAccuracyPenaltyGlobal();
+	return _noLOSAccuracyPenalty;
 }
 
 /**
  * Gets the setting for primed explosives exploding in the inventory.
  * @return The setting (0 = no, 1 = yes, except when in hands, 2 = always).
  */
-int RuleItem::getExplodeInventory(const Mod* mod) const
+int RuleItem::getExplodeInventory() const
 {
-	return _explodeInventory != -1 ? _explodeInventory : (_battleType == BT_GRENADE ? mod->getExplodeInventoryGlobal() : 0);
+	return _explodeInventory;
 }
 
 /**
@@ -2731,18 +2755,18 @@ const std::vector<int> &RuleItem::getCustomItemPreviewIndex() const
 * Gets the kneel bonus (15% bonus is encoded as 100+15 = 115).
 * @return Kneel bonus.
 */
-int RuleItem::getKneelBonus(const Mod *mod) const
+int RuleItem::getKneelBonus() const
 {
-	return _kneelBonus != -1 ? _kneelBonus : mod->getKneelBonusGlobal();
+	return _kneelBonus;
 }
 
 /**
 * Gets the one-handed penalty (20% penalty is encoded as 100-20 = 80).
 * @return One-handed penalty.
 */
-int RuleItem::getOneHandedPenalty(const Mod *mod) const
+int RuleItem::getOneHandedPenalty() const
 {
-	return _oneHandedPenalty != -1 ? _oneHandedPenalty : mod->getOneHandedPenaltyGlobal();
+	return _oneHandedPenalty;
 }
 
 /**
