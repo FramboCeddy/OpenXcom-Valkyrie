@@ -2798,10 +2798,11 @@ inline void BattlescapeState::handle(Action *action)
 							ss << "\n";
 							for (int i = 0; i < BODYPART_MAX; ++i)
 							{
-								if (bu->getFatalWound((UnitBodyPart)i))
+								if (int woundCount = bu->getFatalWound((UnitBodyPart)i))
 								{
 									ss << "\n";
 									ss << _game->getLanguage()->getString(PARTS_STRING[i]);
+									ss << " (x" << woundCount << ")";
 								}
 							}
 							_game->pushState(new InfoboxState(ss.str()));
@@ -3446,9 +3447,9 @@ void BattlescapeState::saveVoxelMap()
 	std::ostringstream ss;
 	std::vector<unsigned char> image;
 	image.reserve((size_t)_save->getMapSizeX() * 16ULL * (size_t)_save->getMapSizeY() * 16ULL * 3ULL); // 3 values per xy voxel
-	static const std::array<unsigned char, 30> pal = 
+	static const std::array<unsigned char, 30> pal =
 	{255,255,255,  224,224,224,  128,160,255,  255,160,128,  128,255,128,  192,0,255,  255,255,255,  255,255,255,  224,192,0,  255,64,128 };
-	
+
 	Tile *tile;
 
 	for (int z = 0; z < _save->getMapSizeZ()*24; ++z)

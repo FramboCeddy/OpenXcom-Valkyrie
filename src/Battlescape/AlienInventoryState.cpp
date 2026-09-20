@@ -229,10 +229,10 @@ AlienInventoryState::AlienInventoryState(BattleUnit *unit)
 			std::ostringstream ss;
 			for (int i = 0; i < BODYPART_MAX; ++i)
 			{
-				if (unit->getFatalWound((UnitBodyPart)i))
+				if (int woundCount = unit->getFatalWound((UnitBodyPart)i))
 				{
 					ss << _game->getLanguage()->getString(PARTS_STRING[i]);
-					ss << "\n";
+					ss << " (x" << woundCount << ")\n";
 				}
 			}
 			_txtFatalWounds->setText(ss.str());
