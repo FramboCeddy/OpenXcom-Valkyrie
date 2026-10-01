@@ -209,13 +209,16 @@ void Bar::setBorderColor(Uint8 bc)
 
 void Bar::drawThresholdLine(int percentage, Uint8 color)
 {
-	if (percentage <= 0 || percentage >= 100)
+	if (percentage < 0 || percentage > 100)
 	{
 		return;
 	}
-	draw();
-	Sint16 x = _max * percentage / 100;
-	drawLine(x, 1, x, (Sint16)(getHeight() - 2), color);
+	if (_redraw)
+	{
+		draw();
+	}
+	Sint16 x = (_max * percentage / 100) - 1;
+	drawLine(x, 0, x, (Sint16)getHeight(), color);
 }
 
 }

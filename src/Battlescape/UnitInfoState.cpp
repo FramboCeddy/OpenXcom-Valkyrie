@@ -552,6 +552,13 @@ void UnitInfoState::init()
 	_numMorale->setText(ss.str());
 	_barMorale->setMax(100);
 	_barMorale->setValue(_unit->getMorale());
+	if (Options::showPanicThresholds)
+	{
+		// TODO VALK: consider coloring the border with low-med-high colors to better showcase which section of panicking our morale falls under
+		const auto& [panicMin, panicMax] = Mod::PANIC_THRESHOLDS;
+		_barMorale->drawThresholdLine(panicMin, _barMorale->getSecondaryColor());
+		_barMorale->drawThresholdLine(panicMax, _barMorale->getSecondaryColor());
+	}
 
 	ss.str("");
 	ss << _unit->getBaseStats()->reactions;

@@ -205,3 +205,4 @@ OPT bool legWoundsDisableSprinting;
 OPT int changeValueByMouseWheelWithCtrl;
 OPT bool singleExplosionInstanceHeight;
 OPT bool singleExplosionInstanceLarge;
+OPT bool showPanicThresholds;

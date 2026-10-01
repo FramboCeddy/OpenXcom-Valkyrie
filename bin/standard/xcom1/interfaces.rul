@@ -2232,6 +2232,7 @@ interfaces:
         color: 192
       - id: barMorale
         color: 192
+        color2: 196 # panic thresholds
       - id: barReactions
         color: 144
       - id: barFiring
@@ -2250,19 +2251,19 @@ interfaces:
         color: 192
       - id: barFrontArmor
         color: 80
-        color2: 80 # indestructible armor %
+        color2: 84 # indestructible armor %
       - id: barLeftArmor
         color: 80
-        color2: 80
+        color2: 84
       - id: barRightArmor
         color: 80
-        color2: 80
+        color2: 84
       - id: barRearArmor
         color: 80
-        color2: 80
+        color2: 84
       - id: barUnderArmor
         color: 80
-        color2: 80
+        color2: 84
       - id: button
         color: 64
       # required

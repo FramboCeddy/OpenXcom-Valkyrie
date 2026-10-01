@@ -55,6 +55,8 @@ en-GB:
   STR_SINGLE_EXPLOSION_INSTANCE_HEIGHT_DESC: "Only count a single damage instance from explosions overlapping both elevations of a unit standing inbetween two tiles will"
   STR_SINGLE_EXPLOSION_INSTANCE_LARGE: "Single Explosion Instance (large)"
   STR_SINGLE_EXPLOSION_INSTANCE_LARGE_DESC: "Only count a single damage instance from explosions overlapping multiple tiles of a large unit. Note: This can make large units a lot more resilient to explosions."
+  STR_SHOW_PANIC_THRESHOLDS: "Show Panic Thresholds"
+  STR_SHOW_PANIC_THRESHOLDS_DESC: "Show the thresholds for no/guaranteed panic chance on the morale bar."
 
   # Stats For Nerds
   gravPower: "Grav shield power"

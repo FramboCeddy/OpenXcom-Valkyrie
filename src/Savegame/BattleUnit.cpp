@@ -2848,17 +2848,18 @@ void BattleUnit::prepareMorale(int morale)
 	{
 		moraleChange(morale);
 		int chance = 0;
-		if (Mod::PANIC_THRESHOLDS[1] != Mod::PANIC_THRESHOLDS[0])
+		const auto& [panicMin, panicMax] = Mod::PANIC_THRESHOLDS;
+		if (panicMax != panicMin)
 		{
 			// lerp chance to panic
-			int inverseChance = 100 * (getMorale() - Mod::PANIC_THRESHOLDS[0]) / (Mod::PANIC_THRESHOLDS[1] - Mod::PANIC_THRESHOLDS[0]);
+			int inverseChance = 100 * (getMorale() - panicMin) / (panicMax - panicMin);
 			chance = std::clamp(100 - inverseChance, 0, 100);
 		}
 		else
 		{
 			// if both thresholds are equal, having that exact morale will be 50/50
-			chance = getMorale() == Mod::PANIC_THRESHOLDS[0] ? 50 :
-					 getMorale() > Mod::PANIC_THRESHOLDS[0] ? 0 : 100;
+			chance = getMorale() == panicMin ? 50 :
+					 getMorale() > panicMin ? 0 : 100;
 		}
 
 		if (RNG::percent(chance))
