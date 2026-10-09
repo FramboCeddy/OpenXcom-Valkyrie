@@ -1713,23 +1713,13 @@ Position TileEngine::getSightOriginVoxel(BattleUnit *currentUnit)
 	auto* tile = currentUnit->getTile();
 
 	// determine the origin and target voxels for the raytrace
-	Position originVoxel;
-	originVoxel = pos.toVoxel() + Position(8, 8, 0);
-	originVoxel.z += -tile->getTerrainLevel();
-	originVoxel.z += currentUnit->getHeight() + currentUnit->getFloatHeight() - 1; //one voxel lower (eye level)
+	int eyeLevel = currentUnit->getFloatHeight() + currentUnit->getHeight() - tile->getTerrainLevel() - 1;
+	Position originVoxel = currentUnit->getPositionVexels() + Position(0, 0, eyeLevel);
 	Tile *tileAbove = _save->getAboveTile(tile);
-	if (currentUnit->isBigUnit())
+
+	if (originVoxel.z >= (pos.z + 1) * Position::TileZ && (!tileAbove || !tileAbove->hasNoFloor(nullptr)))
 	{
-		originVoxel.x += 8;
-		originVoxel.y += 8;
-		originVoxel.z += 1; //topmost voxel
-	}
-	if (originVoxel.z >= (pos.z + 1)*Position::TileZ && (!tileAbove || !tileAbove->hasNoFloor(0)))
-	{
-		while (originVoxel.z >= (pos.z + 1)*Position::TileZ)
-		{
-			originVoxel.z--;
-		}
+		originVoxel.z = (pos.z + 1) * Position::TileZ - 1;
 	}
 
 	return originVoxel;
@@ -2305,7 +2295,7 @@ bool TileEngine::canTargetTile(Position *originVoxel, Tile *tile, int part, Posi
 	static int westWallSpiral[14] = {0,7, 0,9, 0,6, 0,11, 0,4, 0,13, 0,2};
 	static int northWallSpiral[14] = {7,0, 9,0, 6,0, 11,0, 4,0, 13,0, 2,0};
 
-	Position targetVoxel = Position((tile->getPosition().x * 16), (tile->getPosition().y * 16), tile->getPosition().z * 24);
+	Position targetVoxel = tile->getPosition().toVoxel();
 	std::vector<Position> _trajectory;
 
 	int *spiralArray;
@@ -2443,9 +2433,7 @@ bool TileEngine::canTargetTile(Position *originVoxel, Tile *tile, int part, Posi
 			int test = calculateLineVoxel(*originVoxel, *scanVoxel, false, &_trajectory, excludeUnit);
 			if (test == part && !dummy) //bingo
 			{
-				if (_trajectory.at(0).x/16 == scanVoxel->x/16 &&
-					_trajectory.at(0).y/16 == scanVoxel->y/16 &&
-					_trajectory.at(0).z/24 == scanVoxel->z/24)
+				if (_trajectory.at(0).toTile() == scanVoxel->toTile())
 				{
 					return true;
 				}
@@ -2847,8 +2835,8 @@ bool TileEngine::tryReaction(ReactionScore *reaction, BattleUnit *target, const 
 	action.target = target->getPosition();
 	action.updateTU();
 
-	auto* unit = action.actor;
-	auto* ammo = action.weapon->getAmmoForAction(action.type);
+	BattleUnit* unit = action.actor;
+	BattleItem* ammo = action.weapon->getAmmoForAction(action.type);
 	if (ammo && action.haveTU())
 	{
 		action.targeting = true;

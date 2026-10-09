@@ -486,7 +486,7 @@ private:
 	ScriptValues<RuleItem> _scriptValues;
 
 	bool _directionalScan = false;
-	bool _staticScan = false;
+	bool _stationaryScan = false;
 
 	/// Load RuleItemUseCost from yaml.
 	void loadCost(RuleItemUseCost& a, const YAML::YamlNodeReader& reader, const std::string& name) const;
@@ -1048,9 +1048,10 @@ public:
 	const typename Script::Container &getScript() const { return _battleItemScripts.get<Script>(); }
 	/// Get all script values.
 	const ScriptValues<RuleItem> &getScriptValuesRaw() const { return _scriptValues; }
-	/// Gets whether the motion scanner is directional
+	/// does the scanner only scan in the current facing?
 	bool isDirectionalScan() const { return _directionalScan; }
-	bool scanStaticTargets() const { return _staticScan; }
+	/// can the scanner scan stationary units?
+	bool scanStationaryTargets() const { return _stationaryScan; }
 };
 
 }

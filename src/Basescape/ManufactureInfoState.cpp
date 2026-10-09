@@ -358,17 +358,14 @@ void ManufactureInfoState::btnOkClick(Action *)
 		_production->startItem(_base, _game->getSavedGame(), _game->getMod());
 	}
 	_production->setSellItems(_btnSell->getPressed());
+	_production->setFallback(_btnFallback->getPressed());
+	
 	if (_btnFallback->getPressed())
 	{
 		for (auto* p : _base->getProductions())
 		{
 			p->setFallback(false);
 		}
-		_production->setFallback(true);
-	}
-	else
-	{
-		_production->setFallback(false);
 	}
 
 	exitState();
@@ -444,7 +441,10 @@ void ManufactureInfoState::moreEngineer(int change)
  */
 void ManufactureInfoState::moreEngineerPress(Action *action)
 {
-	if (_game->isLeftClick(action, true)) _timerMoreEngineer->start();
+	if (_game->isLeftClick(action, true))
+	{
+		_timerMoreEngineer->start();
+	}
 }
 
 /**
@@ -466,8 +466,14 @@ void ManufactureInfoState::moreEngineerRelease(Action *action)
  */
 void ManufactureInfoState::moreEngineerClick(Action *action)
 {
-	if (_game->isRightClick(action, true)) moreEngineer(INT_MAX);
-	if (_game->isLeftClick(action, true)) moreEngineer(_game->getScrollStep());
+	if (_game->isRightClick(action, true))
+	{
+		moreEngineer(INT_MAX);
+	}
+	if (_game->isLeftClick(action, true))
+	{
+		moreEngineer(_game->getScrollStep());
+	}
 }
 
 /**
@@ -493,7 +499,10 @@ void ManufactureInfoState::lessEngineer(int change)
  */
 void ManufactureInfoState::lessEngineerPress(Action *action)
 {
-	if (_game->isLeftClick(action, true)) _timerLessEngineer->start();
+	if (_game->isLeftClick(action, true))
+	{
+		_timerLessEngineer->start();
+	}
 }
 
 /**
@@ -515,8 +524,14 @@ void ManufactureInfoState::lessEngineerRelease(Action *action)
  */
 void ManufactureInfoState::lessEngineerClick(Action *action)
 {
-	if (_game->isRightClick(action, true)) lessEngineer(INT_MAX);
-	if (_game->isLeftClick(action, true)) lessEngineer(_game->getScrollStep());
+	if (_game->isRightClick(action, true))
+	{
+		lessEngineer(INT_MAX);
+	}
+	if (_game->isLeftClick(action, true))
+	{
+		lessEngineer(_game->getScrollStep());
+	}
 }
 
 /**
@@ -553,7 +568,9 @@ void ManufactureInfoState::moreUnit(int change)
 void ManufactureInfoState::moreUnitPress(Action *action)
 {
 	if (_game->isLeftClick(action, true) && _production->getAmountTotal() < INT_MAX)
+	{
 		_timerMoreUnit->start();
+	}
 }
 
 /**
@@ -632,7 +649,10 @@ void ManufactureInfoState::lessUnit(int change)
  */
 void ManufactureInfoState::lessUnitPress(Action *action)
 {
-	if (_game->isLeftClick(action, true)) _timerLessUnit->start();
+	if (_game->isLeftClick(action, true))
+	{
+		_timerLessUnit->start();
+	}
 }
 
 /**

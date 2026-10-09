@@ -405,7 +405,10 @@ void ProjectileFlyBState::init()
 			// temporarily turn off camera following projectiles to prevent annoying flashing effects (e.g. on minigun-like weapons)
 			_parent->getMap()->setFollowProjectile(false);
 		}
-		if (_range == 0) _action.spendTU();
+		if (_range == 0)
+		{
+			_action.spendTU();
+		}
 		_parent->getMap()->setCursorType(CT_NONE);
 		_parent->getMap()->getCamera()->stopMouseScrolling();
 		_parent->getMap()->disableObstacles();
@@ -465,12 +468,8 @@ bool ProjectileFlyBState::createNewProjectile()
 	// let it calculate a trajectory
 	_projectileImpact = V_EMPTY;
 
-	double accuracyDivider = 100.0;
 	// berserking units are half as accurate
-	if (!_parent->getPanicHandled())
-	{
-		accuracyDivider = 200.0;
-	}
+	double accuracyDivider = _parent->getPanicHandled() ? 100.0 : 200.0;
 
 	BattleActionAttack attack = BattleActionAttack::GetAferShoot(_action, _ammo);
 	if (_action.type == BA_THROW)

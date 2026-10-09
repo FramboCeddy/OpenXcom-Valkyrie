@@ -443,10 +443,9 @@ void Projectile::applyAccuracy(Position origin, Position *target, double accurac
 
 	if (extendLine)
 	{
-		double rotation, tilt;
-		rotation = atan2(double(target->y - origin.y), double(target->x - origin.x));
-		tilt = atan2(double(target->z - origin.z),
-			sqrt((target->x - origin.x) * (target->x - origin.x) + (target->y - origin.y) * (target->y - origin.y)));
+		Position diff = *target - origin;
+		double rotation = atan2(diff.y, diff.x);
+		double tilt = atan2(diff.z, sqrt(diff.x * diff.x + diff.y * diff.y));
 		// calculate new target
 		// this new target can be very far out of the map, but we don't care about that right now
 		target->x = (int)(origin.x + maxRange * cos(rotation) * cos(tilt));

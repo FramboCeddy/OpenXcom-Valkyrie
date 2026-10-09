@@ -82,7 +82,7 @@ void ScannerView::draw()
 				{
 					continue;
 				}
-				if (!_item->scanStaticTargets() && !t->getUnit()->getMotionPoints())
+				if (!_item->scanStationaryTargets() && !t->getUnit()->getMotionPoints())
 				{
 					continue;
 				}

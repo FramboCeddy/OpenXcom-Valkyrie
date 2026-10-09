@@ -248,7 +248,10 @@ void ResearchInfoState::handleWheel(Action *action)
  */
 void ResearchInfoState::morePress(Action *action)
 {
-	if (_game->isLeftClick(action, true)) _timerMore->start();
+	if (_game->isLeftClick(action, true))
+	{
+		_timerMore->start();
+	}
 }
 
 /**
@@ -272,9 +275,13 @@ void ResearchInfoState::moreRelease(Action *action)
 void ResearchInfoState::moreClick(Action *action)
 {
 	if (_game->isRightClick(action, true))
+	{
 		moreByValue(INT_MAX);
+	}
 	if (_game->isLeftClick(action, true))
+	{
 		moreByValue(_game->getScrollStep());
+	}
 }
 
 /**
@@ -283,7 +290,10 @@ void ResearchInfoState::moreClick(Action *action)
  */
 void ResearchInfoState::lessPress(Action *action)
 {
-	if (_game->isLeftClick(action, true)) _timerLess->start();
+	if (_game->isLeftClick(action, true))
+	{
+		_timerLess->start();
+	}
 }
 
 /**
@@ -307,9 +317,13 @@ void ResearchInfoState::lessRelease(Action *action)
 void ResearchInfoState::lessClick(Action *action)
 {
 	if (_game->isRightClick(action, true))
+	{
 		lessByValue(INT_MAX);
+	}
 	if (_game->isLeftClick(action, true))
+	{
 		lessByValue(_game->getScrollStep());
+	}
 }
 
 /**

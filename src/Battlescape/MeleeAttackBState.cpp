@@ -125,7 +125,7 @@ void MeleeAttackBState::init()
 	// terrain melee
 	if (terrainMeleeTilePart > 0)
 	{
-		_voxel = _action.target.toVoxel() + Position(8, 8, 12);
+		_voxel = _action.target.toVoxel() + TileEngine::voxelTileCenter;
 		performMeleeAttack(terrainMeleeTilePart);
 		return;
 	}

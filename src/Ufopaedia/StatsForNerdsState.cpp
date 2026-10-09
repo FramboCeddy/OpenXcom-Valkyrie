@@ -2250,6 +2250,7 @@ void StatsForNerdsState::initItemList()
 	addFloatAsPercentage(ss, itemRule->getPainKillerRecovery(), "painKillerRecovery", 1.0f);
 
 	addBoolean(ss, itemRule->isDirectionalScan(), "directionalScan");
+	addBoolean(ss, itemRule->scanStationaryTargets(), "stationaryScan");
 
 	addVectorOfResearch(ss, itemRule->getRequirements(), "requires");
 	addVectorOfResearch(ss, itemRule->getBuyRequirements(), "requiresBuy");

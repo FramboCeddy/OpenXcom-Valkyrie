@@ -108,7 +108,7 @@ private:
 	/// Checks if the camera is showing a single map layer.
 	bool getShowSingleLayer() const { return _showSingleLayer; }
 	/// Toggles showing walls and objects
-	void toggleShowWallsAndObjects() { _showWallsAndObjects = (++_showWallsAndObjects) % 3; }
+	void toggleShowWallsAndObjects() { _showWallsAndObjects = (_showWallsAndObjects + 1) % 3; }
 	/// Checks if the camera is showing walls and objects
 	int getShowWallsAndObjects() const { return _showWallsAndObjects; }
 	/// Checks if map coordinates X,Y,Z are on screen.

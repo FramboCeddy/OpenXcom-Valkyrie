@@ -205,7 +205,7 @@ private:
 	/// Helper function preparing Energy recovery at beginning of turn.
 	void prepareEnergy(int energy);
 	/// Helper function preparing Health recovery at beginning of turn.
-	void prepareHealth(int helath);
+	void prepareHealth(int health);
 	/// Helper function preparing Mana recovery at beginning of turn.
 	void prepareMana(int mana);
 	/// Helper function preparing Stun recovery at beginning of turn.

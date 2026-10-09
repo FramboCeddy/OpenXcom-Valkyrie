@@ -83,7 +83,8 @@ CraftEquipmentSaveState::CraftEquipmentSaveState(CraftEquipmentState *parent) : 
 
 	_edtSave->setColor(_lstLoadout->getSecondaryColor());
 	_edtSave->setVisible(false);
-	_edtSave->onKeyboardPress((ActionHandler)&CraftEquipmentSaveState::edtSaveKeyPress);
+	_edtSave->onKeyboardPress((ActionHandler)&CraftEquipmentSaveState::edtSaveKeyPress, SDLK_RETURN);
+	_edtSave->onKeyboardPress((ActionHandler)&CraftEquipmentSaveState::edtSaveKeyPress, SDLK_KP_ENTER);
 
 	for (int i = 0; i < SavedGame::MAX_CRAFT_LOADOUT_TEMPLATES; ++i)
 	{
@@ -150,7 +151,7 @@ void CraftEquipmentSaveState::lstLoadoutPress(Action *action)
 	}
 	_selected = _lstLoadout->getCellText(_selectedRow, 0);
 
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT && _edtSave->isFocused())
+	if (_game->isRightClick(action) && _edtSave->isFocused())
 	{
 		_previousSelectedRow = -1;
 		_selectedRow = -1;
@@ -160,7 +161,7 @@ void CraftEquipmentSaveState::lstLoadoutPress(Action *action)
 		_edtSave->setFocus(false, false);
 		_lstLoadout->setScrolling(true);
 	}
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (_game->isLeftClick(action))
 	{
 		_lstLoadout->setCellText(_selectedRow, 0, "");
 
@@ -180,11 +181,7 @@ void CraftEquipmentSaveState::lstLoadoutPress(Action *action)
 */
 void CraftEquipmentSaveState::edtSaveKeyPress(Action *action)
 {
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
-	{
-		saveTemplate();
-	}
+	saveTemplate();
 }
 
 /**

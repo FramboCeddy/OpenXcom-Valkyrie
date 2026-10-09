@@ -50,8 +50,7 @@ struct BattleUnitKills
 	/// Check to see if turn was on HOSTILE side
 	bool hostileTurn() const
 	{
-		if ((turn - 1) % 3 == 0) return true;
-		return false;
+		return (turn - 1) % 3 == 0;
 	}
 
 	/// Make turn unique across mission

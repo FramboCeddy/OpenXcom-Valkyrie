@@ -96,12 +96,14 @@ NewResearchListState::NewResearchListState(Base *base, bool sortByCost) : _base(
 	if (_isSortingEnabled)
 	{
 		_btnShowOnlyNew->setVisible(false);
-		std::vector<std::string> sortOptions;
-		sortOptions.push_back("STR_SORT_DEFAULT");
-		sortOptions.push_back("STR_SORT_BY_COST");
-		sortOptions.push_back("STR_SORT_BY_NAME");
-		sortOptions.push_back("STR_SHOW_ONLY_NEW"); // this is a filter, replacement for the hidden "Show Only New" toggle button
-		sortOptions.push_back("STR_FILTER_HIDDEN"); // this is a filter
+		std::vector<std::string> sortOptions =
+		{
+			"STR_SORT_DEFAULT",
+			"STR_SORT_BY_COST",
+			"STR_SORT_BY_NAME",
+			"STR_SHOW_ONLY_NEW", // this is a filter, replacement for the hidden "Show Only New" toggle button
+			"STR_FILTER_HIDDEN", // this is a filter
+		};
 		_cbxSort->setOptions(sortOptions, true);
 		if (_sortByCost)
 		{

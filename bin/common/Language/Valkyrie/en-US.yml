@@ -66,6 +66,7 @@ en-US:
   woundStatyReduction: "Wound based stat loss"
   moraleGainOnPanic: "Morale gained on panic"
   directionalScan: "Directional scan"
+  stationaryScan: "Scan stationary targets"
   powerMinRangeThreshold: "Power red. min range"
   powerRangeThreshold: "Power red. max range"
   scanImmune: "Immune to scanners?"

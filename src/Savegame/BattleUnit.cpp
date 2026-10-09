@@ -2790,7 +2790,7 @@ void BattleUnit::prepareEnergy(int energy)
 
 /**
  * Helper function preparing Health recovery at beginning of turn.
- * @param health Health grain this turn.
+ * @param health Health gain this turn.
  */
 void BattleUnit::prepareHealth(int health)
 {

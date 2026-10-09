@@ -476,6 +476,7 @@ MCDPatches: #will never be done
         TUFly: 4
         TUSlide: 4
         terrainHeight: -16
+        LOFTS: [6,6,6,6,6,6,6,18,16,14,12,10]
       - MCDIndex: 21
         bigWall: 0
         terrainHeight: -12
@@ -494,6 +495,7 @@ MCDPatches: #will never be done
         TUFly: 4
         TUSlide: 4
         terrainHeight: -16
+        LOFTS: [6,6,6,6,6,6,6,18,16,14,12,10]
       - MCDIndex: 27
         TUWalk: 4
         TUFly: 4
@@ -612,3 +614,11 @@ MCDPatches: #will never be done
         bigWall: 0
       - MCDIndex: 14
         bigWall: 0
+  - type: WEEDS
+    data:
+      - MCDIndex: 6
+        LOFTS: [0,0,0,0,5,5,5,5,0,0,0,0]
+      - MCDIndex: 7
+        LOFTS: [0,0,0,0,0,0,0,0,5,5,5,5]
+      - MCDIndex: 8
+        terrainHeight: -6

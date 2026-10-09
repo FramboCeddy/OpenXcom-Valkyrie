@@ -1192,7 +1192,7 @@ void Globe::drawRadars()
 		{
 			int maxSpeed = _craft->getCraftStats().speedMax;
 			// fuel consumption is per 10 minutes so we mult by 6 to get hours
-			double maxDistance = _craft->getFuel() / (6.0 * _craft->getFuelConsumption(maxSpeed, 0)) * Nautical(maxSpeed); 
+			double maxDistance = _craft->getFuel() / (6.0 * _craft->getFuelConsumption(maxSpeed, 0)) * Nautical(maxSpeed);
 
 			drawGlobeEllipse(maxDistance, 64);
 			drawGlobeEllipse(maxDistance - 0.025, 64, 2);
@@ -1343,7 +1343,7 @@ void Globe::drawGlobeCircle(double lat, double lon, double radius, int segments,
 void Globe::drawGlobeEllipse(double range, int segments, int frac)
 {
 	// if radius is less than distance to base, we can only fly directly back to base
-	// farthest point from both craft and baseis if they all lie on the same geodesic, meaning c->t + t->b = 2pi - c->b
+	// farthest point from both craft and base is if they all lie on the same geodesic, meaning c->t + t->b = 2pi - c->b
 	double baseDistance = _craft->getDistanceFromBase();
 	if (range <= baseDistance || range > 2 * M_PI - baseDistance)
 	{

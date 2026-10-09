@@ -95,7 +95,8 @@ InventorySaveState::InventorySaveState(InventoryState *parent) : _parent(parent)
 	_edtSave->setHighContrast(true);
 	_edtSave->setColor(_lstLayout->getSecondaryColor());
 	_edtSave->setVisible(false);
-	_edtSave->onKeyboardPress((ActionHandler)&InventorySaveState::edtSaveKeyPress);
+	_edtSave->onKeyboardPress((ActionHandler)&InventorySaveState::edtSaveKeyPress, SDLK_KP_ENTER);
+	_edtSave->onKeyboardPress((ActionHandler)&InventorySaveState::edtSaveKeyPress, SDLK_RETURN);
 
 	for (int i = 0; i < Options::oxceMaxEquipmentLayoutTemplates; ++i)
 	{
@@ -216,11 +217,7 @@ void InventorySaveState::lstLayoutPress(Action *action)
 */
 void InventorySaveState::edtSaveKeyPress(Action *action)
 {
-	if (action->getDetails()->key.keysym.sym == SDLK_RETURN ||
-		action->getDetails()->key.keysym.sym == SDLK_KP_ENTER)
-	{
-		saveTemplate(false);
-	}
+	saveTemplate(false);
 }
 
 /**
