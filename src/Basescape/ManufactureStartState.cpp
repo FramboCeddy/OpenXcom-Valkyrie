@@ -103,10 +103,11 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 	_btnCancel->onMouseClick((ActionHandler)&ManufactureStartState::btnCancelClick);
 	_btnCancel->onKeyboardPress((ActionHandler)&ManufactureStartState::btnCancelClick, Options::keyCancel);
 
+	auto* missingElement = _ruleInterface->getElementOptional("missing");
 	bool productionPossible = _item->haveEnoughMoneyForOneMoreUnit(_game->getSavedGame()->getFunds());
-	if (!_item->haveEnoughMoneyForOneMoreUnit(_game->getSavedGame()->getFunds()))
+	if (!_item->haveEnoughMoneyForOneMoreUnit(_game->getSavedGame()->getFunds()) && missingElement)
 	{
-		_txtCost->setSecondaryColor(241); // FIXME: Red in default palette but should be more dynamic for custom palettes
+		_txtCost->setSecondaryColor(missingElement->color);
 	}
 	// check available workspace later
 	//int availableWorkSpace = _base->getFreeWorkshops();
@@ -138,9 +139,9 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 		s2 << count;
 		productionPossible &= (count >= iter.second);
 		_lstRequiredItems->addRow(3, tr(iter.first->getType()).c_str(), s1.str().c_str(), s2.str().c_str());
-		if (count < iter.second)
+		if (count < iter.second && missingElement)
 		{
-			_lstRequiredItems->setCellColor(row, 0, 241);
+			_lstRequiredItems->setCellColor(row, 0, missingElement->color);
 		}
 		_lstRequiredItems->setCellColor(row, 1, _lstRequiredItems->getSecondaryColor());
 		_lstRequiredItems->setCellColor(row, 2, _lstRequiredItems->getSecondaryColor());
@@ -155,9 +156,9 @@ ManufactureStartState::ManufactureStartState(Base *base, RuleManufacture *item) 
 		s2 << count;
 		productionPossible &= (count >= iter.second);
 		_lstRequiredItems->addRow(3, tr(iter.first->getType()).c_str(), s1.str().c_str(), s2.str().c_str());
-		if (count < iter.second)
+		if (count < iter.second && missingElement)
 		{
-			_lstRequiredItems->setCellColor(row, 0, 241);
+			_lstRequiredItems->setCellColor(row, 0, missingElement->color);
 		}
 		_lstRequiredItems->setCellColor(row, 1, _lstRequiredItems->getSecondaryColor());
 		_lstRequiredItems->setCellColor(row, 2, _lstRequiredItems->getSecondaryColor());

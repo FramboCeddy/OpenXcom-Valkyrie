@@ -364,3 +364,21 @@ MCDPatches:
         deathTile: 7
       - MCDIndex: 24
         deathTile: 25
+  - type: MARS
+    data:
+      - MCDIndex: 24
+        stopLOS: true
+      - MCDIndex: 25
+        stopLOS: true
+      - MCDIndex: 26
+        stopLOS: true
+      - MCDIndex: 27
+        stopLOS: true
+      - MCDIndex: 28
+        stopLOS: true
+      - MCDIndex: 30
+        stopLOS: true
+      - MCDIndex: 31
+        stopLOS: true
+      - MCDIndex: 32
+        stopLOS: true

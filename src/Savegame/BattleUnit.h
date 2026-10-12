@@ -209,7 +209,7 @@ private:
 	/// Helper function preparing Mana recovery at beginning of turn.
 	void prepareMana(int mana);
 	/// Helper function preparing Stun recovery at beginning of turn.
-	void prepareStun(int strun);
+	void prepareStun(int stun);
 	/// Helper function preparing Morale recovery at beginning of turn.
 	void prepareMorale(int morale);
 	/// Helper function preparing unit sounds.
@@ -253,6 +253,8 @@ public:
 	int distance3dToPositionSq(const Position& pos) const;
 	/// Calculates the distance squared between the unit and a given other unit.
 	int distance3dToUnitSq(BattleUnit* otherUnit) const;
+	/// Gets the unit's elevation from the terrain.
+	int getTerrainLevel(const SavedBattleGame* save) const;
 	/// Sets the unit's position
 	void setPosition(Position pos, bool updateLastPos = true);
 	/// Gets the unit's position.

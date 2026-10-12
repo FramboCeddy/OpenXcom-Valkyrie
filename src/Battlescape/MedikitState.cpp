@@ -234,8 +234,11 @@ void MedikitState::onHealClick(Action *)
 	if (_action->spendTU(&_action->result))
 	{
 		bool canContinueHealing = _tileEngine->medikitUse(_action, _targetUnit, BMA_HEAL, (UnitBodyPart)_medikitView->getSelectedPart());
-		_medikitView->updateSelectedPart();
-		_medikitView->invalidate();
+		// Only change selected part if current part has no more wounds to heal, this way a player selected part will stick for multiple heals
+		if (_targetUnit->getFatalWound((UnitBodyPart)_medikitView->getSelectedPart()) == 0)
+		{
+			_medikitView->updateSelectedPart();
+		}
 		update();
 		if (!canContinueHealing)
 		{

@@ -665,7 +665,7 @@ void Map::drawUnit(UnitSprite &unitSprite, Tile *unitTile, Tile *currTile, Posit
 	//get shade helpers
 	auto getTileShade = [&](Tile* tile)
 	{
-		return tile ? (tile->isDiscovered(O_FLOOR) ? reShade(tile) : 16) : 16;
+		return tile ? reShade(tile) : 16;
 	};
 	auto getMixedTileShade = [&](Tile* tile, int heightOffset, bool below)
 	{
@@ -705,10 +705,14 @@ void Map::drawUnit(UnitSprite &unitSprite, Tile *unitTile, Tile *currTile, Posit
 			shade = getShadePulseForFrame(shade, _animFrame);
 		}
 	}
-	if (_debugVisionMode == 1)
-	{
-		shade = std::min(+NIGHT_VISION_SHADE, shade);
-	}
+	// if (_debugVisionMode == 1)
+	// {
+	// 	shade = std::min(+NIGHT_VISION_SHADE, shade);
+	// }
+	// else if (_debugVisionMode == 2)
+	// {
+	// 	shade = 0;
+	// }
 	unitSprite.draw(bu, part, tileScreenPosition.x + offsets.ScreenOffset.x, tileScreenPosition.y + offsets.ScreenOffset.y, shade, mask, _isAltPressed && !_isCtrlPressed);
 }
 

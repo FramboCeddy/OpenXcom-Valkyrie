@@ -19,6 +19,7 @@
  */
 #include "BattleState.h"
 #include "Position.h"
+#include "TileEngine.h"
 
 namespace OpenXcom
 {
@@ -34,15 +35,16 @@ class Tile;
 class MeleeAttackBState : public BattleState
 {
 private:
-	BattleUnit *_unit, *_target;
-	BattleItem *_weapon, *_ammo;
-	Position _voxel;
-	int _hitNumber;
-	bool _initialized;
-	bool _reaction;
+	BattleUnit *_unit = nullptr, *_target = nullptr;
+	BattleItem *_weapon = nullptr, *_ammo = nullptr;
+	Position _voxel = TileEngine::invalid;
+	int _hitNumber = -1;
+	bool _initialized = false;
+	bool _reaction = false;
 public:
 	/// Creates a new MeleeAttackBState class
 	MeleeAttackBState(BattlescapeGame *parent, BattleAction action);
+	MeleeAttackBState(BattlescapeGame *parent, BattleAction action, int hitNumber);
 	/// Cleans up the MeleeAttackBState.
 	~MeleeAttackBState();
 	/// Initializes the state.

@@ -284,20 +284,23 @@ void FundingState::updateList()
 	}
 	else
 	{
+		int totalChange = 0;
+		int totalCurr = 0;
 		for (const auto& country : _fundingCountryList)
 		{
+			totalChange += country.change;
+			totalCurr += country.funding;
 			std::ostringstream ss;
 			ss << Unicode::TOK_COLOR_FLIP << Unicode::formatFunding(country.funding) << Unicode::TOK_COLOR_FLIP;
 
 			std::ostringstream ss2;
 			if (country.change != 0) ss2 << Unicode::TOK_COLOR_FLIP;
-			if (country.change > 0)  ss2 << '+';
-			ss2 << Unicode::formatFunding(country.change);
+			ss2 << Unicode::formatFunding(country.change, true);
 			if (country.change != 0) ss2 << Unicode::TOK_COLOR_FLIP;
 
 			_lstCountries->addRow(3, country.name.c_str(), ss.str().c_str(), ss2.str().c_str());
 		}
-		_lstCountries->addRow(2, tr("STR_TOTAL_UC").c_str(), Unicode::formatFunding(_game->getSavedGame()->getCountryFunding()).c_str());
+		_lstCountries->addRow(3, tr("STR_TOTAL_UC").c_str(), Unicode::formatFunding(totalCurr).c_str(), Unicode::formatFunding(totalChange, true).c_str());
 		_lstCountries->setRowColor(_game->getSavedGame()->getCountries()->size(), _txtCountry->getColor());
 	}
 }
@@ -330,7 +333,7 @@ void FundingState::sortChangeClick(Action*)
 }
 
 /*
- *	Gives the string reference of satisfaction enum, ready for translation 
+ *	Gives the string reference of satisfaction enum, ready for translation
  */
 std::string FundingState::getSatisfactionText(size_t satisfaction)
 {

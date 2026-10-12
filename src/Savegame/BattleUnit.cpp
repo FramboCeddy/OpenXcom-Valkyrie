@@ -997,6 +997,28 @@ int BattleUnit::distance3dToUnitSq(BattleUnit* otherUnit) const
 }
 
 /**
+ * Gets the unit's elevation from the terrain.
+ * Terrainlevel goes from 0 to -24. For a larger sized unit, we need to pick the highest terrain level, which is the lowest number...
+ * @param save SavedBattleGame.
+ * @return terrainlevel.
+ */
+int BattleUnit::getTerrainLevel(const SavedBattleGame* save) const
+{
+	int terrainlevel = 0;
+	int size = getArmor()->getSize();
+	for (int x = 0; x < size; ++x)
+	{
+		for (int y = 0; y < size; ++y)
+		{
+			int l = save->getTile(_pos + Position(x, y, 0))->getTerrainLevel();
+			terrainlevel = std::min(l, terrainlevel);
+		}
+	}
+
+	return terrainlevel;
+}
+
+/**
  * Changes the BattleUnit's position.
  * @param pos position
  * @param updateLastPos refresh last stored position
@@ -1031,9 +1053,8 @@ Position BattleUnit::getLastPosition() const
  */
 Position BattleUnit::getPositionVexels() const
 {
-	Position center = _pos.toVoxel();
-	center += Position(8, 8, 0) * _armor->getSize();
-	return center;
+	int sizeOffset = 8 * _armor->getSize();
+	return _pos.toVoxel() + Position(sizeOffset, sizeOffset, 0);
 }
 
 /**

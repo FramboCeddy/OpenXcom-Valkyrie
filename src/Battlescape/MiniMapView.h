@@ -37,18 +37,21 @@ class MiniMapView : public InteractiveSurface
 	Camera * _camera;
 	SavedBattleGame * _battleGame;
 	int _maxShade;
-	int _frame;
+	int _frame = 0;
 	SurfaceSet * _set;
 	int _emptySpaceIndex;
 	// these two are required for right-button scrolling on the minimap
-	bool _isMouseScrolling;
-	bool _isMouseScrolled;
-	int _xBeforeMouseScrolling, _yBeforeMouseScrolling;
-	int _mouseScrollX, _mouseScrollY;
+	bool _isMouseScrolling = false;
+	bool _isMouseScrolled = false;
+	int _xBeforeMouseScrolling = 0;
+	int _yBeforeMouseScrolling = 0;
+	int _mouseScrollX = 0;
+	int _mouseScrollY = 0;
 	Position _posBeforeMouseScrolling, _cursorPosition;
-	Uint32 _mouseScrollingStartTime;
-	int _totalMouseMoveX, _totalMouseMoveY;
-	bool _mouseMovedOverThreshold;
+	Uint32 _mouseScrollingStartTime = 0;
+	int _totalMouseMoveX = 0;
+	int _totalMouseMoveY = 0;
+	bool _mouseMovedOverThreshold = false;
 	/// Handles pressing on the MiniMap.
 	void mousePress(Action *action, State *state) override;
 	/// Handles clicking on the MiniMap.

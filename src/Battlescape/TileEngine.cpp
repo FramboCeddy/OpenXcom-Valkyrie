@@ -2224,7 +2224,7 @@ bool TileEngine::canTargetUnit(Position *originVoxel, Tile *tile, Position *scan
 	int sliceTargets[] = {0,0, relX,relY, -relX,-relY, relY,-relX, -relY,relX};
 
 	int heightRange = potentialUnit->isOut() ? 12 : potentialUnit->getHeight();
-	int targetMinHeight = targetVoxel.z - tile->getTerrainLevel() + potentialUnit->getFloatHeight();
+	int targetMinHeight = targetVoxel.z - potentialUnit->getTerrainLevel(_save) + potentialUnit->getFloatHeight();
 	int targetMaxHeight = targetMinHeight + heightRange;
 	int targetCenterHeight = (targetMaxHeight + targetMinHeight) / 2;
 	heightRange /= 2;
@@ -2671,15 +2671,19 @@ std::vector<TileEngine::ReactionScore> TileEngine::getSpottingUnits(BattleUnit* 
  */
 TileEngine::ReactionScore *TileEngine::getReactor(std::vector<TileEngine::ReactionScore> &spotters, BattleUnit *unit)
 {
-	ReactionScore *best = 0;
-	for (std::vector<ReactionScore>::iterator i = spotters.begin(); i != spotters.end(); ++i)
+	ReactionScore *best = nullptr;
+	for (auto& score : spotters)
 	{
-		if (!(*i).unit->isOut() && !(*i).unit->getRespawn() && (!best || (*i).reactionScore > best->reactionScore))
+		if (score.unit->isOut() || score.unit->getRespawn())
 		{
-			best = &(*i);
+			continue;
+		}
+		if (!best || score.reactionScore > best->reactionScore)
+		{
+			best = &score;
 		}
 	}
-	if (best &&(unit->getReactionScore() <= best->reactionScore))
+	if (best && (unit->getReactionScore() <= best->reactionScore))
 	{
 		if (best->unit->getOriginalFaction() == FACTION_PLAYER)
 		{
@@ -2688,7 +2692,7 @@ TileEngine::ReactionScore *TileEngine::getReactor(std::vector<TileEngine::Reacti
 	}
 	else
 	{
-		best = 0;
+		best = nullptr;
 	}
 	return best;
 }
@@ -3284,14 +3288,8 @@ void TileEngine::hit(BattleActionAttack attack, Position center, int power, cons
 		BattleUnit *bu = tile->getOverlappingUnit(_save);
 		if (bu && bu->getHealth() > 0)
 		{
-			int verticaloffset = 0;
-			if (bu != tile->getUnit())
-			{
-				verticaloffset = 24;
-			}
-			const int sz = bu->getArmor()->getSize() * 8;
-			const Position target = bu->getPosition().toVoxel() + Position(sz,sz, bu->getFloatHeight() - tile->getTerrainLevel());
-			const Position relative = (center - target) - Position(0,0,verticaloffset);
+			const Position target = bu->getPositionVexels() + Position(0, 0, bu->getFloatHeight() - bu->getTerrainLevel(_save));
+			const Position relative = (center - target);
 
 			hitUnit(attack, bu, relative, damage, type, rangeAtack);
 			if (bu->getFire())
@@ -4672,19 +4670,8 @@ VoxelType TileEngine::voxelCheck(Position voxel, BattleUnit *excludeUnit, bool e
 		if (unit && !unit->isOut() && unit != excludeUnit && (!excludeAllBut || unit == excludeAllBut) && (!onlyVisible || unit->getVisible()))
 		{
 			Position unitpos = unit->getPosition();
-			int terrainHeight = 0;
-			for (int x = 0; x < unit->getArmor()->getSize(); ++x)
-			{
-				for (int y = 0; y < unit->getArmor()->getSize(); ++y)
-				{
-					Tile *tempTile = _save->getTile(unitpos + Position(x,y,0));
-					if (tempTile->getTerrainLevel() < terrainHeight)
-					{
-						terrainHeight = tempTile->getTerrainLevel();
-					}
-				}
-			}
-			int tz = unitpos.z*24 + unit->getFloatHeight() - terrainHeight; //bottom most voxel, terrain heights are negative, so we subtract.
+			int terrainHeight = unit->getTerrainLevel(_save);
+			int tz = unitpos.z*Position::TileZ + unit->getFloatHeight() - terrainHeight; //bottom most voxel, terrain heights are negative, so we subtract.
 			if ((voxel.z >= tz) && (voxel.z < tz + unit->getHeight()) )
 			{
 				int x = 15 - voxel.x%16;
@@ -5454,7 +5441,7 @@ bool TileEngine::validMeleeRange(Position pos, int direction, BattleUnit *attack
 				{
 					targetTile = aboveTargetTile;
 				}
-				else if (belowTargetTile && targetTile->hasNoFloor(_save) && !targetTile->getUnit() && belowTargetTile->getTerrainLevel() <= -16)
+				else if (belowTargetTile && targetTile->hasNoFloor(_save) && !targetTile->getUnit() && belowTargetTile->getUnit() && belowTargetTile->getUnit()->getTerrainLevel(_save) <= -16)
 				{
 					targetTile = belowTargetTile;
 				}
@@ -5908,9 +5895,6 @@ int TileEngine::getArcDirection(int directionA, int directionB) const
  */
 Position TileEngine::getOriginVoxel(BattleAction &action, Tile *tile)
 {
-	static const int dirXshift[8] = {5, 6, 8, 10, 11, 10, 8, 6};
-	static const int dirYshift[8] = {8, 6, 5, 6, 8, 10, 11, 10};
-
 	if (!tile)
 	{
 		tile = action.actor->getTile();
@@ -5919,52 +5903,38 @@ Position TileEngine::getOriginVoxel(BattleAction &action, Tile *tile)
 	Position origin = tile->getPosition();
 	Position originVoxel = origin.toVoxel();
 
-	// take into account soldier height and terrain level if the projectile is launched from a soldier
-	if (action.type != BA_LAUNCH || action.actor->getPosition() == origin)
+	if (action.type == BA_LAUNCH && action.actor->getPosition() != origin)
 	{
-		int weaponShift = action.actor->isKneeled() ? 2 : 4; // kneeled units put weapon closer to eyes
-		// calculate offset of the starting point of the projectile
-		originVoxel.z += -tile->getTerrainLevel() + action.actor->getHeight() + action.actor->getFloatHeight() - weaponShift;
-
-		Tile* tileAbove = _save->getTile(origin + Position(0, 0, 1));
-		// bonk our head on the ceiling
-		if (!tileAbove || !tileAbove->hasNoFloor())
-		{
-			while (originVoxel.z >= (origin.z + 1) * 24)
-			{
-				--originVoxel.z;
-			}
-			originVoxel.z -= weaponShift;
-		}
+		// don't take into account soldier height and terrain level if the projectile is not launched from a soldier(from a waypoint)
+		originVoxel += Position(8, 8, 16);
+	}
+	else
+	{
+		// take into account soldier height and terrain level if the projectile is launched from a soldier
+		originVoxel = getSightOriginVoxel(action.actor); // sightOriginVoxel bumps us down if there is a floor above us
+		originVoxel.z -= action.type == BA_THROW ? 2 : 3; // sightOriginVoxel has 1 voxel lower than height
+		static const std::array<int, 8> dirXshift = { 0, 6, 6, 6 ,0,-6,-6, -6};
+		static const std::array<int, 8> dirYshift = {-6,-6, 0, 6, 6, 6, 0, -6};
+		int size = action.actor->getArmor()->getSize();
 		int direction = getDirectionTo(origin, action.target);
-		int unitSize = action.actor->getArmor()->getSize();
-		// Offset for different relativeOrigin values
+		// TODO VALK: firing straight up/down does not fire from center of unit?
 		switch (action.relativeOrigin)
 		{
 		case BattleActionOrigin::CENTRE:
 			// Standard offset.
-			originVoxel.x += 8 * unitSize;
-			originVoxel.y += 8 * unitSize;
+			originVoxel.x += dirXshift[direction] * size;
+			originVoxel.y += dirYshift[direction] * size;
 			break;
-
 		case BattleActionOrigin::LEFT:
-			originVoxel.x += dirXshift[direction] * unitSize;
-			originVoxel.y += dirYshift[direction] * unitSize;
+			// Average of the center offset and next/previous direction.
+			originVoxel.x += (dirXshift[direction] + dirXshift[(direction + 7) % 8]) * size / 2;
+			originVoxel.y += (dirYshift[direction] + dirYshift[(direction + 7) % 8]) * size / 2;
 			break;
-
 		case BattleActionOrigin::RIGHT:
-			direction = (direction + 4) % 8; // set opposite direction
-			originVoxel.x += dirXshift[direction] * unitSize;
-			originVoxel.y += dirYshift[direction] * unitSize;
+			originVoxel.x += (dirXshift[direction] + dirXshift[(direction + 1) % 8]) * size / 2;
+			originVoxel.y += (dirYshift[direction] + dirYshift[(direction + 1) % 8]) * size / 2;
 			break;
-		};
-	}
-	else
-	{
-		// don't take into account soldier height and terrain level if the projectile is not launched from a soldier(from a waypoint)
-		originVoxel.x += 8;
-		originVoxel.y += 8;
-		originVoxel.z += 16;
+		}
 	}
 	return originVoxel;
 }

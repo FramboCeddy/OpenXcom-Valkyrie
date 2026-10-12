@@ -2414,7 +2414,7 @@ interfaces: #done
         color: 80
         TFTDMode: true
       - id: emptySpace
-        color: 180
+        color: 102
   - type: medikit
     elements:
       - id: textPK

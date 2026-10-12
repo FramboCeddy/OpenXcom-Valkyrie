@@ -48,8 +48,8 @@ namespace OpenXcom
 		const std::vector<const RuleItem*> dummy;
 		const std::vector<const RuleItem*> *ammo_data = ammoSlot != RuleItem::AmmoSlotSelfUse ? item->getCompatibleAmmoForSlot(ammoSlot) : &dummy;
 
-		// SHOT STATS TABLE (for firearms only)
-		if (item->getBattleType() == BT_FIREARM)
+		// SHOT STATS TABLE (for firearms and melee only)
+		if (item->getBattleType() == BT_FIREARM || item->getBattleType() == BT_MELEE)
 		{
 			_txtShotType = new Text(53, 17, 8, 157);
 			add(_txtShotType);
@@ -74,28 +74,30 @@ namespace OpenXcom
 
 			_lstInfo->setColor(_listColor2); // color for % data!
 			_lstInfo->setColumns(3, 70, 40, 30);
+		}
 
-
-			auto addAttack = [&](int& row, const std::string& name, const RuleItemUseCost& cost, const RuleItemUseFlat& flat, const RuleItemAction *config, const RuleItem* weapon)
+		auto addAttack = [&](int& row, const std::string& name, const RuleItemUseCost& cost, const RuleItemUseFlat& flat, const RuleItemAction *config, const RuleItem* weapon)
+		{
+			if (row < 3 && cost.Time > 0 && config->ammoSlot == ammoSlot)
 			{
-				if (row < 3 && cost.Time > 0 && config->ammoSlot == ammoSlot)
+				std::string tu = Unicode::formatPercentage(cost.Time);
+				if (flat.Time)
 				{
-					std::string tu = Unicode::formatPercentage(cost.Time);
-					if (flat.Time)
-					{
-						tu.erase(tu.end() - 1);
-					}
-					int range = std::min(config->range, weapon->getMaxRange());
-					std::string label = config->shortName.empty() ? tr(name).arg(config->shots).arg(range) : tr(config->shortName).arg(config->shots).arg(range);
-					_lstInfo->addRow(3,
-						label.c_str(),
-						Unicode::formatPercentage(config->accuracy).c_str(),
-						tu.c_str());
-					_lstInfo->setCellColor(row, 0, _listColor1);
-					row++;
+					tu.erase(tu.end() - 1);
 				}
-			};
+				int range = std::min(config->range, weapon->getMaxRange());
+				std::string label = config->shortName.empty() ? tr(name).arg(config->shots).arg(range) : tr(config->shortName).arg(config->shots).arg(range);
+				_lstInfo->addRow(3,
+					label.c_str(),
+					Unicode::formatPercentage(config->accuracy).c_str(),
+					tu.c_str());
+				_lstInfo->setCellColor(row, 0, _listColor1);
+				row++;
+			}
+		};
 
+		if (item->getBattleType() == BT_FIREARM)
+		{
 			int current_row = 0;
 
 			addAttack(current_row, "STR_SHOT_TYPE_AUTO", item->getCostAuto(), item->getFlatAuto(), item->getConfigAuto(), item);
@@ -105,6 +107,12 @@ namespace OpenXcom
 			addAttack(current_row, "STR_SHOT_TYPE_AIMED", item->getCostAimed(), item->getFlatAimed(), item->getConfigAimed(), item);
 
 			//optional melee
+			addAttack(current_row, "STR_SHOT_TYPE_MELEE", item->getCostMelee(), item->getFlatMelee(), item->getConfigMelee(), item);
+		}
+		else if (item->getBattleType() == BT_MELEE)
+		{
+			int current_row = 0;
+
 			addAttack(current_row, "STR_SHOT_TYPE_MELEE", item->getCostMelee(), item->getFlatMelee(), item->getConfigMelee(), item);
 		}
 

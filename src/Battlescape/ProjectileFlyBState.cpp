@@ -782,13 +782,14 @@ void ProjectileFlyBState::think()
 				{
 					Projectile* proj = new Projectile(_parent->getMod(), _parent->getSave(), _action, _origin, _targetVoxel, _ammo);
 					VoxelType secondaryImpact = proj->calculateTrajectory(std::max(0.0, (1.0 - spread / 100.0) * choke / 100.0));
+					// shotgun pellets skip to the end of it's path
+					proj->skipTrajectory();
+
 					if (secondaryImpact == V_EMPTY || secondaryImpact == V_OUTOFBOUNDS)
 					{
 						delete proj;
 						continue;
 					}
-					// shotgun pellets skip to the end of it's path
-					proj->skipTrajectory();
 
 					if (secondaryImpact == V_UNIT)
 					{

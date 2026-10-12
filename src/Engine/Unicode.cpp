@@ -757,11 +757,17 @@ std::string formatNumber(int64_t value, const std::string &currency)
  * Takes an integer value and formats it as currency,
  * spacing the thousands and adding a $ sign to the front.
  * @param funds The funding value.
+ * @param explicitPlusSign add a plus sign for positive values
  * @return The formatted string.
  */
-std::string formatFunding(int64_t funds)
+std::string formatFunding(int64_t funds, bool explicitPlusSign)
 {
-	return formatNumber(funds, OXCE_CURRENCY_SYMBOL);
+	std::string number = formatNumber(funds, OXCE_CURRENCY_SYMBOL);
+	if (explicitPlusSign && funds > 0)
+	{
+		number.insert(0, "+");
+	}
+	return number;
 }
 
 /**

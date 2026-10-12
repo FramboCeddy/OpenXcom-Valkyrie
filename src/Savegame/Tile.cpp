@@ -745,7 +745,7 @@ BattleUnit *Tile::getOverlappingUnit(const SavedBattleGame *saveBattleGame, Tile
 	{
 		auto* tileBelow = saveBattleGame->getBelowTile(this);
 		bu = tileBelow->getUnit();
-		if (bu && bu->getHeight() + bu->getFloatHeight() - tileBelow->getTerrainLevel() <= static_cast<int>(range))
+		if (bu && bu->getHeight() + bu->getFloatHeight() - bu->getTerrainLevel(saveBattleGame) <= static_cast<int>(range))
 		{
 			bu = nullptr; // if the unit below has no voxels poking into the tile, don't select it.
 		}

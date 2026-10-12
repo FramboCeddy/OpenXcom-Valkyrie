@@ -42,7 +42,11 @@ namespace OpenXcom
 /**
  * Sets up a MeleeAttackBState.
  */
-MeleeAttackBState::MeleeAttackBState(BattlescapeGame *parent, BattleAction action) : BattleState(parent, action), _unit(0), _target(0), _weapon(0), _ammo(0), _hitNumber(0), _initialized(false), _reaction(false)
+MeleeAttackBState::MeleeAttackBState(BattlescapeGame *parent, BattleAction action) : BattleState(parent, action)
+{
+}
+
+MeleeAttackBState::MeleeAttackBState(BattlescapeGame *parent, BattleAction action, int hitNumber) : BattleState(parent, action), _hitNumber(hitNumber)
 {
 }
 
@@ -149,16 +153,15 @@ void MeleeAttackBState::init()
 		throw Exception("This is a known (but tricky) bug... still fixing it, sorry. In the meantime, try save scumming option or kill all aliens in debug mode to finish the mission.");
 	}
 
-	int height = _target->getFloatHeight() + (_target->getHeight() / 2) - _parent->getSave()->getTile(_action.target)->getTerrainLevel();
-	int sizeOffset = _target->getArmor()->getSize() * 8;
-	_voxel = _action.target.toVoxel() + Position(sizeOffset, sizeOffset, height);
+	int height = _target->getFloatHeight() + (_target->getHeight() / 2) - _target->getTerrainLevel(_parent->getSave());
+	_voxel = _target->getPositionVexels() + Position(0, 0, height);
 
 	if (!_parent->getSave()->getTile(_voxel.toTile()))
 	{
 		throw Exception("Melee attack animation overflow: target voxel is outside of the map boundaries.");
 	}
 
-	if (_unit->getFaction() == FACTION_HOSTILE)
+	if (_hitNumber != -1 && _unit->getFaction() == FACTION_HOSTILE)
 	{
 		_hitNumber = _weapon->getRules()->getAIMeleeHitCount() - 1;
 	}
@@ -193,32 +196,30 @@ void MeleeAttackBState::think()
 		_target && !_target->isOutThresholdExceed() &&
 		// and we still have ammo to make the attack
 		_weapon->getAmmoForAction(BA_HIT) &&
-		// spend the TUs immediately
-		_action.spendTU())
+		// and have enough TUs remaining
+		_action.haveTU())
 	{
-		--_hitNumber;
-		performMeleeAttack();
+		// make enemy units repeat the attack
+		_parent->statePushBack(new MeleeAttackBState(_parent, _action, --_hitNumber));
 	}
-	else
+
+	if (_action.cameraPosition.z != -1)
 	{
-		if (_action.cameraPosition.z != -1)
-		{
-			_parent->getMap()->getCamera()->setMapOffset(_action.cameraPosition);
-			_parent->getMap()->invalidate();
-		}
-
-		if (_unit->getFaction() == _parent->getSave()->getSide()) // not a reaction attack
-		{
-			_parent->getCurrentAction()->type = BA_NONE; // do this to restore cursor
-		}
-
-		if (_parent->getSave()->getSide() == FACTION_PLAYER || _parent->getSave()->getDebugMode())
-		{
-			_parent->setupCursor();
-		}
-		_parent->convertInfected();
-		_parent->popState();
+		_parent->getMap()->getCamera()->setMapOffset(_action.cameraPosition);
+		_parent->getMap()->invalidate();
 	}
+
+	if (_unit->getFaction() == _parent->getSave()->getSide()) // not a reaction attack
+	{
+		_parent->getCurrentAction()->type = BA_NONE; // do this to restore cursor
+	}
+
+	if (_parent->getSave()->getSide() == FACTION_PLAYER || _parent->getSave()->getDebugMode())
+	{
+		_parent->setupCursor();
+	}
+	_parent->convertInfected();
+	_parent->popState();
 }
 
 /**
@@ -233,23 +234,8 @@ void MeleeAttackBState::performMeleeAttack(int terrainMeleeTilePart)
 	_action.weapon->spendAmmoForAction(BA_HIT, _parent->getSave());
 	_parent->getMap()->setCursorType(CT_NONE);
 
-	Position difference = _unit->getPositionVexels() - _voxel;
-	// we need to reduce the voxel offset because this damagePosition also gets used for LoF voxelcheck
-	// so it must be a low enough difference to not miss on small LoFs
-	if (_unit->isBigUnit() && _target && _target->isBigUnit())
-	{
-		// large vs large is 2 tiles 'away'
-		difference.x = difference.x / 32;
-		difference.y = difference.y / 32;
-	}
-	else
-	{
-		// small vs small, large vs small, or terrain melee is 1 tile away
-		difference.x = difference.x / 16;
-		difference.y = difference.y / 16;
-	}
-	difference.z = 0; // I don't think we need the z-difference as we have already selected a target
 	// offset the damage voxel ever so slightly so that the target knows which side the attack came from
+	Position difference = !_target ? _unit->getPosition() - _action.target : (_unit->getPositionVexels() - _target->getPositionVexels()).toTile();
 	Position damagePosition = _voxel + difference;
 
 	// make an explosion action

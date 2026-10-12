@@ -1349,6 +1349,8 @@ interfaces:
         color2: 208  # white
       - id: button
         color: 218   # blue
+      - id: missing
+        color: 241   # pink
   - type: manufactureInfo
     backgroundImage: BACK17.SCR
     parent: manufactureMenu
@@ -2276,7 +2278,7 @@ interfaces:
       - id: textLevel
         color: 64
       - id: emptySpace
-        color: 260
+        color: 245
   - type: medikit
     elements:
       - id: numPK

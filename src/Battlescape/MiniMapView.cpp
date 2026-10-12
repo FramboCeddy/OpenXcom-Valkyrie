@@ -51,11 +51,7 @@ const int MAX_FRAME = 2;
  * @param camera The Battlescape camera.
  * @param battleGame Pointer to the SavedBattleGame.
  */
-MiniMapView::MiniMapView(int w, int h, int x, int y, Game * game, Camera * camera, SavedBattleGame * battleGame, int maxShade) : InteractiveSurface(w, h, x, y),
-	_game(game), _camera(camera), _battleGame(battleGame), _maxShade(maxShade),
-	_frame(0), _isMouseScrolling(false), _isMouseScrolled(false),
-	_xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _mouseScrollX(0), _mouseScrollY(0),
-	_mouseScrollingStartTime(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(false)
+MiniMapView::MiniMapView(int w, int h, int x, int y, Game * game, Camera * camera, SavedBattleGame * battleGame, int maxShade) : InteractiveSurface(w, h, x, y), _game(game), _camera(camera), _battleGame(battleGame), _maxShade(maxShade)
 {
 	_set = _game->getMod()->getSurfaceSet("SCANG.DAT");
 	_emptySpaceIndex = _game->getMod()->getInterface("minimap")->getElement("emptySpace")->color;
@@ -74,48 +70,33 @@ void MiniMapView::draw()
 	{
 		return;
 	}
-	drawRect(0, 0, getWidth(), getHeight(), 15);
+	int bgColor = _game->isAltPressed(true) ? _emptySpaceIndex : 15;
+	drawRect(0, 0, getWidth(), getHeight(), bgColor);
 	this->lock();
-	Surface * emptySpace = _set->getFrame(_emptySpaceIndex);
-	bool isAltPressed = _game->isAltPressed(true);
-	if (Options::isPasswordCorrect())
-	{
-		isAltPressed = !isAltPressed;
-	}
 	for (int lvl = 0; lvl <= _camera->getCenterPosition().z; lvl++)
 	{
 		int py = _startY;
-		for (int y = 0; y < getHeight(); y += CELL_HEIGHT)
+		for (int y = 0; y < getHeight(); y += CELL_HEIGHT, ++py)
 		{
 			int px = _startX;
-			for (int x = 0; x < getWidth(); x += CELL_WIDTH)
+			for (int x = 0; x < getWidth(); x += CELL_WIDTH, ++px)
 			{
 				Position p(px, py, lvl);
 				Tile *t = _battleGame->getTile(p);
 				if (!t)
 				{
-					if (isAltPressed)
-					{
-						emptySpace->blitNShade(this, x, y, 0);
-					}
-					px++;
 					continue;
 				}
+
 				for (int i = O_FLOOR; i < O_MAX; i++)
 				{
 					MapData *data = t->getMapData((TilePart)i);
 
 					if (data && data->getMiniMapIndex())
 					{
-						Surface *s = _set->getFrame(data->getMiniMapIndex() + 35);
-						if (s)
+						if (Surface *s = _set->getFrame(data->getMiniMapIndex() + 35))
 						{
-							int shade = 16;
-							if (t->isDiscovered(O_FLOOR))
-							{
-								shade = t->getShade();
-								if (shade > _maxShade) shade = _maxShade; //vanilla
-							}
+							int shade = t->isDiscovered(O_FLOOR) ? std::min(t->getShade(), _maxShade) : 16;
 							s->blitNShade(this, x, y, shade);
 						}
 					}
@@ -172,10 +153,7 @@ void MiniMapView::draw()
 						s->blitNShade(this, x, y, 0);
 					}
 				}
-
-				px++;
 			}
-			py++;
 		}
 	}
 	this->unlock();

@@ -46,11 +46,6 @@ namespace OpenXcom
  */
 NewResearchListState::NewResearchListState(Base *base, bool sortByCost) : _base(base), _sortByCost(sortByCost), _lstScroll(0)
 {
-	if (Options::isPasswordCorrect())
-	{
-		_sortByCost = !_sortByCost;
-	}
-
 	_screen = false;
 
 	_window = new Window(this, 230, 140, 45, 30, POPUP_BOTH);
@@ -309,16 +304,16 @@ void NewResearchListState::fillProjectList(bool markAllAsSeen)
 	size_t selectedSort = _cbxSort->getSelected();
 	if (selectedSort == 1 || (selectedSort == 3 && _sortByCost))
 	{
-		std::sort(_projects.begin(), _projects.end(), [&](RuleResearch* a, RuleResearch* b) { return a->getCost() < b->getCost(); });
+		std::stable_sort(_projects.begin(), _projects.end(), [&](RuleResearch* a, RuleResearch* b) { return a->getCost() < b->getCost(); });
 	}
 	else if (selectedSort == 2)
 	{
-		std::sort(_projects.begin(), _projects.end(), [&](RuleResearch* a, RuleResearch* b) { return Unicode::naturalCompare(tr(a->getName()), tr(b->getName())); });
+		std::stable_sort(_projects.begin(), _projects.end(), [&](RuleResearch* a, RuleResearch* b) { return Unicode::naturalCompare(tr(a->getName()), tr(b->getName())); });
 	}
 	else
 	{
 		// sort by list order
-		std::sort(_projects.begin(), _projects.end(), [&](RuleResearch* a, RuleResearch* b) { return a->getListOrder() < b->getListOrder(); });
+		std::stable_sort(_projects.begin(), _projects.end(), [&](RuleResearch* a, RuleResearch* b) { return a->getListOrder() < b->getListOrder(); });
 	}
 	auto researchRuleIt = _projects.begin();
 	RuleResearch* rule = nullptr;
