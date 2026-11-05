@@ -206,3 +206,4 @@ OPT int changeValueByMouseWheelWithCtrl;
 OPT bool singleExplosionInstanceHeight;
 OPT bool singleExplosionInstanceLarge;
 OPT bool showPanicThresholds;
+OPT bool spotterDuringFactionSide;

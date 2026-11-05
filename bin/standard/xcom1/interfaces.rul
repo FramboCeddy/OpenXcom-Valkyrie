@@ -834,6 +834,8 @@ interfaces:
         border: 218  # blue
       - id: button
         color: 218   # blue
+      - id: max      # trainingStatCap reached
+        color: 241   # pink
   - type: fundingWindow
     backgroundImage: BACK13.SCR
     elements:

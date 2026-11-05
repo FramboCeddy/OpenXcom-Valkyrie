@@ -1988,7 +1988,12 @@ int BattleUnit::damage(Position relative, int damage, const RuleDamageType *type
 					ai->setWasHitBy(attack.attacker);
 				}
 
-				std::get<arg_attackerTurnsSinceSpotted>(args.data) = 0;
+				//see https://www.ufopaedia.org/index.php/UNITPOS.DAT 0x08
+				if (!Options::spotterDuringFactionSide || !this->isOutThresholdExceed())
+				{
+					std::get<arg_attackerTurnsSinceSpotted>(args.data) = 0;
+				}
+
 				if (Mod::EXTENDED_SPOT_ON_HIT_FOR_SNIPING > 0)
 				{
 					// 0 = don't spot

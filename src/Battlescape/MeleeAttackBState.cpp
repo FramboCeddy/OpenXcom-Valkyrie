@@ -175,6 +175,31 @@ void MeleeAttackBState::init()
 void MeleeAttackBState::think()
 {
 	_parent->getSave()->getBattleState()->clearMouseScrollingState();
+
+	bool validTarget = true;
+	// we are doing a terrain hit and there is no tile or no tile part left
+	if (_action.terrainMeleeTilePart > 0
+		&& (!_parent->getSave()->getTile(_action.target) || !_parent->getSave()->getTile(_action.target)->getMapData((TilePart)_action.terrainMeleeTilePart)))
+	{
+		validTarget = false;
+	}
+	// we are doing a unit hit and the unit became stunned/dead
+	if (_target && _target->isOut())
+	{
+		validTarget = false;
+	}
+	bool hasFloor = _action.actor->haveNoFloorBelow() == false;
+	bool unitCanFly = _action.actor->getMovementType() == MT_FLY;
+	if (_action.weapon->haveNextShotsForAction(_action.type, _action.autoShotCounter)
+		&& !_action.actor->isOut()
+		&& _ammo->getAmmoQuantity() != 0
+		&& validTarget && (hasFloor || unitCanFly))
+	{
+		// we have more attacks to do
+		performMeleeAttack(_action.terrainMeleeTilePart);
+		return;
+	}
+	// we are done with attacks
 	if (_reaction && !_parent->getSave()->getUnitsFalling())
 	{
 		_reaction = false;
@@ -229,6 +254,7 @@ void MeleeAttackBState::performMeleeAttack(int terrainMeleeTilePart)
 {
 	// set the soldier in an aiming position
 	_unit->aim(true);
+	++_action.autoShotCounter;
 
 	// use up ammo if applicable
 	_action.weapon->spendAmmoForAction(BA_HIT, _parent->getSave());

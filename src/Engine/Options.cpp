@@ -597,6 +597,7 @@ void createAdvancedOptionsVALK()
 	_info.push_back(OptionInfo(OPTION_VALK, "singleExplosionInstanceHeight", &singleExplosionInstanceHeight, false, "STR_SINGLE_EXPLOSION_INSTANCE_HEIGHT", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "singleExplosionInstanceLarge", &singleExplosionInstanceLarge, false, "STR_SINGLE_EXPLOSION_INSTANCE_LARGE", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo(OPTION_VALK, "showPanicThresholds", &showPanicThresholds, false, "STR_SHOW_PANIC_THRESHOLDS", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo(OPTION_VALK, "spotterDuringFactionSide", &spotterDuringFactionSide, false, "STR_SPOTTER_DURING_FACTION_SIDE", "STR_BATTLESCAPE"));
 }
 
 void createControlsVALK()

@@ -23,6 +23,9 @@ en-GB:
 #=================== Battlescape ===================
 #InventoryState.cpp
   STR_PSI_SHORT: "PSI>{ALT}{0}/{1}"
+#AdvancedUserOptions.cpp
+  STR_NIGHT_VISION_COLOR: "Select Night Vision colour"
+  STR_NIGHT_VISION_COLOR_DESC: "Each value represents a different colour: {ALT}1>{ALT}White, {ALT}2>{ALT}Orange, {ALT}3>{ALT}Red, {ALT}4>{ALT}Green, {ALT}5>{ALT}Green, {ALT}6>{ALT}Cream, {ALT}7>{ALT}Orange, {ALT}8>{ALT}Blue, {ALT}9>{ALT}Blue, {ALT}10>{ALT}Yellow, {ALT}11>{ALT}Brown, {ALT}12>{ALT}Pink, {ALT}13>{ALT}Purple, {ALT}14>{ALT}Blue, {ALT}15>{ALT}Silver."
 #=================== Geoscape ===================
 #DogfightState.cpp
   STR_EVASIVE_MANEUVERS: "EVASIVE MANEUVERS"

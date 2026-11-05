@@ -320,7 +320,7 @@ void AllocateTrainingState::initList(size_t scrl)
 	size_t row = 0;
 	_lstSoldiers->clearList();
 	for (auto* soldier : *_base->getSoldiers())
-	{	
+	{
 		bool isDone = soldier->isFullyTrained();
 		bool isWounded = soldier->isWounded();
 		bool isTraining = soldier->isInTraining();
@@ -396,7 +396,7 @@ void AllocateTrainingState::ColourTrainingStats(size_t row)
 	{
 		auto& currentStat = stats->*statPtr;
 		auto& trainingStatCap = trainingCaps.*statPtr;
-		auto color = currentStat >= trainingStatCap ? 241 : _lstSoldiers->getSecondaryColor(); // 241 is a red-ish hue
+		auto color = currentStat >= trainingStatCap ? _ruleInterface->getElement("max")->color : _lstSoldiers->getSecondaryColor(); // 241 is a red-ish hue
 		_lstSoldiers->setCellColor(row, col, color);
 		++col;
 	}

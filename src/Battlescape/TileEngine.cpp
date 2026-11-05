@@ -1527,7 +1527,8 @@ bool TileEngine::calculateUnitsInFOV(BattleUnit* unit, const Position eventPos, 
 								unit->addToVisibleTiles(bu->getTile());
 							}
 
-							if (unit->getFaction() != bu->getFaction())
+							// see https://www.ufopaedia.org/index.php/UNITPOS.DAT 0x08
+							if ((!Options::spotterDuringFactionSide || unit->getFaction() == _save->getSide()) && unit->getFaction() != bu->getFaction())
 							{
 								bu->setTurnsSinceSpottedByFaction(unit->getFaction(), 0);
 								bu->setTurnsLeftSpottedForSnipersByFaction(
@@ -2918,10 +2919,10 @@ int TileEngine::hitTile(Tile* tile, int damage, const RuleDamageType* type)
 		{
 			tile->setFire(0);
 			const auto& [min, max] = _save->getBattleGame()->getMod()->SMOKE_RANGE;
-			int smoke = (max == min) ? max : RNG::generate(min, max);
+			int smoke = RNG::generate(min, max);
 			if (damage < type->SmokeThreshold * 2)
 			{
-				// scale linearly between 100% and 200% smokeTreshold
+				// scale linearly between 100% and 200% smokeThreshold
 				smoke = smoke * (damage - type->SmokeThreshold) / type->SmokeThreshold;
 			}
 			tile->setSmoke(smoke);
