@@ -1,4 +1,4 @@
-cmake_minimum_required ( VERSION 3.5 )
+cmake_minimum_required ( VERSION 3.10 )
 
 project ( OpenXcom )
 
@@ -86,7 +86,7 @@ include_directories(${CMAKE_SOURCE_DIR}/libs/rapidyaml)
 
 if(NOT UNIX AND IS_DIRECTORY ${DEPS_DIR})
    include_directories ( ${DEPS_DIR}/include/SDL ${DEPS_DIR}/include )
-   if ( CMAKE_CL_64 )
+   if ( CMAKE_SIZEOF_VOID_P EQUAL 8 ) # 8-byte is 64 bit architecture
      link_directories ( ${DEPS_DIR}/lib/x64 )
    else ( )
      link_directories ( ${DEPS_DIR}/lib/Win32 )
@@ -193,7 +193,7 @@ if ( BUILD_PACKAGE )
     set ( CPACK_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-${TARGET_PLATFORM}" )
   else ()
     set ( CPACK_PACKAGE_FILE_NAME "Extended-${CPACK_PACKAGE_VERSION}-unknown" )
-    message ( WARNING "Missing OPENXCOM_TARGET for package naming. Please set it." )
+    message ( WARNING "Missing TARGET_PLATFORM for package naming. Please set it." )
   endif()
 
   # DEB-specific -- set -DCPACK_GENERATOR=DEB

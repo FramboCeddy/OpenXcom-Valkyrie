@@ -655,7 +655,7 @@ endif ()
 
 # Copy Windows DLLs to bin folder
 if ( WIN32 )
-  if ( CMAKE_CL_64 )
+  if ( CMAKE_SIZEOF_VOID_P EQUAL 8 )
     file ( GLOB Windows_dll "${DEPS_DIR}/lib/x64/*.dll" )
   else ( )
     file ( GLOB Windows_dll "${DEPS_DIR}/lib/Win32/*.dll" )
